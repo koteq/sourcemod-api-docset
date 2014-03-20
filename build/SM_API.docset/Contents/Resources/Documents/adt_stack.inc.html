@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<title>adt_stack.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_adt_stack_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_adt_stack_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Creates a stack structure.  A stack is a LIFO (last in, first out) 
+<a name="40"></a> * vector (array) of items.  It has O(1) insertion and O(1) removal.
+<a name="41"></a> *
+<a name="42"></a> * Stacks have two operations: Push (adding an item) and Pop (removes 
+<a name="43"></a> * items in reverse-push order).
+<a name="44"></a> * 
+<a name="45"></a> * The contents of the stack are uniform; i.e. storing a string and then 
+<a name="46"></a> * retrieving it as an integer is NOT the same as StringToInt()!
+<a name="47"></a> *
+<a name="48"></a> * The "blocksize" determines how many cells each slot has; it cannot
+<a name="49"></a> * be changed after creation.
+<a name="50"></a> *
+<a name="51"></a> * <span class="doctag">@param</span> blocksize		The number of cells each entry in the stack can 
+<a name="52"></a> *						hold.  For example, 32 cells is equivalent to:
+<a name="53"></a> *						new Array[X][32]
+<a name="54"></a> * <span class="doctag">@return</span>				New stack Handle.
+<a name="55"></a> */</span>
+<a name="56"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateStack</span>(<span class="identifier">blocksize</span>=<span class="number">1</span>);
+<a name="57"></a>
+<a name="58"></a><span class="comment">/**
+<a name="59"></a> * Pushes a value onto the end of the stack, adding a new index.
+<a name="60"></a> *
+<a name="61"></a> * This may safely be used even if the stack has a blocksize
+<a name="62"></a> * greater than 1.
+<a name="63"></a> *
+<a name="64"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="65"></a> * <span class="doctag">@param</span> value			Value to push.
+<a name="66"></a> * <span class="doctag">@noreturn</span>
+<a name="67"></a> * <span class="doctag">@error</span>				Invalid Handle or out of memory.
+<a name="68"></a> */</span>
+<a name="69"></a><span class="keyword">native</span> <span class="identifier">PushStackCell</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>, <span class="keyword type">any</span>:<span class="identifier">value</span>);
+<a name="70"></a>
+<a name="71"></a><span class="comment">/**
+<a name="72"></a> * Pushes a string onto the end of a stack, truncating it if it is 
+<a name="73"></a> * too big.
+<a name="74"></a> *
+<a name="75"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="76"></a> * <span class="doctag">@param</span> value			String to push.
+<a name="77"></a> * <span class="doctag">@noreturn</span>
+<a name="78"></a> * <span class="doctag">@error</span>				Invalid Handle or out of memory.
+<a name="79"></a> */</span>
+<a name="80"></a><span class="keyword">native</span> <span class="identifier">PushStackString</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="81"></a>
+<a name="82"></a><span class="comment">/**
+<a name="83"></a> * Pushes an array of cells onto the end of a stack.  The cells
+<a name="84"></a> * are pushed as a block (i.e. the entire array takes up one stack slot),
+<a name="85"></a> * rather than pushing each cell individually.
+<a name="86"></a> *
+<a name="87"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="88"></a> * <span class="doctag">@param</span> values		Block of values to copy.
+<a name="89"></a> * <span class="doctag">@param</span> size			If not set, the number of elements copied from the array
+<a name="90"></a> *						will be equal to the blocksize.  If set higher than the 
+<a name="91"></a> *						blocksize, the operation will be truncated.
+<a name="92"></a> * <span class="doctag">@noreturn</span>
+<a name="93"></a> * <span class="doctag">@error</span>				Invalid Handle or out of memory.
+<a name="94"></a> */</span>
+<a name="95"></a><span class="keyword">native</span> <span class="identifier">PushStackArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>, <span class="keyword">const</span> <span class="keyword type">any</span>:<span class="identifier">values</span>[], <span class="identifier">size</span>=-<span class="number">1</span>);
+<a name="96"></a>
+<a name="97"></a><span class="comment">/**
+<a name="98"></a> * Pops a cell value from a stack.
+<a name="99"></a> *
+<a name="100"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="101"></a> * <span class="doctag">@param</span> value			Variable to store the value.
+<a name="102"></a> * <span class="doctag">@param</span> block			Optionally specify which block to read from
+<a name="103"></a> *						(useful if the blocksize &gt; 0).
+<a name="104"></a> * <span class="doctag">@param</span> asChar		Optionally read as a byte instead of a cell.
+<a name="105"></a> * <span class="doctag">@return</span>				True on success, false if the stack is empty.
+<a name="106"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="107"></a> */</span>
+<a name="108"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">PopStackCell</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>, &amp;<span class="keyword type">any</span>:<span class="identifier">value</span>, <span class="identifier">block</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">asChar</span>=<span class="keyword literal">false</span>);
+<a name="109"></a>
+<a name="110"></a><span class="comment">/**
+<a name="111"></a> * Pops a string value from a stack.
+<a name="112"></a> *
+<a name="113"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="114"></a> * <span class="doctag">@param</span> buffer		Buffer to store string.
+<a name="115"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the buffer.
+<a name="116"></a> * <span class="doctag">@return</span>				True on success, false if the stack is empty.
+<a name="117"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="118"></a> */</span>
+<a name="119"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">PopStackString</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, &amp;<span class="identifier">written</span>=<span class="number">0</span>);
+<a name="120"></a>
+<a name="121"></a><span class="comment">/**
+<a name="122"></a> * Pops an array of cells from a stack.
+<a name="123"></a> *
+<a name="124"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="125"></a> * <span class="doctag">@param</span> buffer		Buffer to store the array in.
+<a name="126"></a> * <span class="doctag">@param</span> size			If not set, assumes the buffer size is equal to the
+<a name="127"></a> *						blocksize.  Otherwise, the size passed is used.
+<a name="128"></a> * <span class="doctag">@return</span>				True on success, false if the stack is empty.
+<a name="129"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="130"></a> */</span>
+<a name="131"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">PopStackArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>, <span class="keyword type">any</span>:<span class="identifier">buffer</span>[], <span class="identifier">size</span>=-<span class="number">1</span>);
+<a name="132"></a>
+<a name="133"></a><span class="comment">/**
+<a name="134"></a> * Checks if a stack is empty.
+<a name="135"></a> *
+<a name="136"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="137"></a> * <span class="doctag">@return</span>				True if empty, false if not empty.
+<a name="138"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="139"></a> */</span>
+<a name="140"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsStackEmpty</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>);
+<a name="141"></a>
+<a name="142"></a><span class="comment">/**
+<a name="143"></a> * Pops a value off a stack, ignoring it completely.
+<a name="144"></a> *
+<a name="145"></a> * <span class="doctag">@param</span> stack			Stack Handle.
+<a name="146"></a> * <span class="doctag">@return</span>				True if something was popped, false otherwise.
+<a name="147"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="148"></a> */</span>
+<a name="149"></a><span class="keyword">stock</span> <span class="identifier">PopStack</span>(<span class="keyword type">Handle</span>:<span class="identifier">stack</span>)
+<a name="150"></a>{
+<a name="151"></a>	<span class="keyword">new</span> <span class="identifier">value</span>;
+<a name="152"></a>	
+<a name="153"></a>	<span class="keyword statement">return</span> <span class="identifier">PopStackCell</span>(<span class="identifier">stack</span>, <span class="identifier">value</span>);
+<a name="154"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

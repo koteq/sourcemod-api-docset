@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<title>tf2.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_tf2_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_tf2_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="preprocessor">#define <span class="identifier">TF_STUNFLAG_SLOWDOWN</span>        (<span class="number">1</span> &lt;&lt; <span class="number">0</span>)	<span class="comment">/**&lt; activates slowdown modifier */</span>
+<a name="39"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAG_BONKSTUCK</span>       (<span class="number">1</span> &lt;&lt; <span class="number">1</span>)	<span class="comment">/**&lt; bonk sound, stuck */</span>
+<a name="40"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAG_LIMITMOVEMENT</span>   (<span class="number">1</span> &lt;&lt; <span class="number">2</span>)	<span class="comment">/**&lt; disable forward/backward movement */</span>
+<a name="41"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAG_CHEERSOUND</span>      (<span class="number">1</span> &lt;&lt; <span class="number">3</span>)	<span class="comment">/**&lt; cheering sound */</span>
+<a name="42"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAG_NOSOUNDOREFFECT</span> (<span class="number">1</span> &lt;&lt; <span class="number">5</span>)	<span class="comment">/**&lt; no sound or particle */</span>
+<a name="43"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAG_THIRDPERSON</span>     (<span class="number">1</span> &lt;&lt; <span class="number">6</span>)	<span class="comment">/**&lt; panic animation */</span>
+<a name="44"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAG_GHOSTEFFECT</span>     (<span class="number">1</span> &lt;&lt; <span class="number">7</span>)	<span class="comment">/**&lt; ghost particles */</span>
+<a name="45"></a></span>
+<a name="46"></a><span class="preprocessor">#define <span class="identifier">TF_STUNFLAGS_LOSERSTATE</span>     <span class="identifier">TF_STUNFLAG_SLOWDOWN</span>|<span class="identifier">TF_STUNFLAG_NOSOUNDOREFFECT</span>|<span class="identifier">TF_STUNFLAG_THIRDPERSON</span>
+<a name="47"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAGS_GHOSTSCARE</span>     <span class="identifier">TF_STUNFLAG_GHOSTEFFECT</span>|<span class="identifier">TF_STUNFLAG_THIRDPERSON</span>
+<a name="48"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAGS_SMALLBONK</span>      <span class="identifier">TF_STUNFLAG_THIRDPERSON</span>|<span class="identifier">TF_STUNFLAG_SLOWDOWN</span>
+<a name="49"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAGS_NORMALBONK</span>     <span class="identifier">TF_STUNFLAG_BONKSTUCK</span>
+<a name="50"></a></span><span class="preprocessor">#define <span class="identifier">TF_STUNFLAGS_BIGBONK</span>        <span class="identifier">TF_STUNFLAG_CHEERSOUND</span>|<span class="identifier">TF_STUNFLAG_BONKSTUCK</span>
+<a name="51"></a></span>
+<a name="52"></a><span class="keyword">enum</span> <span class="identifier">TFClassType</span>
+<a name="53"></a>{
+<a name="54"></a>	<span class="identifier">TFClass_Unknown</span> = <span class="number">0</span>,
+<a name="55"></a>	<span class="identifier">TFClass_Scout</span>,
+<a name="56"></a>	<span class="identifier">TFClass_Sniper</span>,
+<a name="57"></a>	<span class="identifier">TFClass_Soldier</span>,
+<a name="58"></a>	<span class="identifier">TFClass_DemoMan</span>,
+<a name="59"></a>	<span class="identifier">TFClass_Medic</span>,
+<a name="60"></a>	<span class="identifier">TFClass_Heavy</span>,
+<a name="61"></a>	<span class="identifier">TFClass_Pyro</span>,
+<a name="62"></a>	<span class="identifier">TFClass_Spy</span>,
+<a name="63"></a>	<span class="identifier">TFClass_Engineer</span>
+<a name="64"></a>};
+<a name="65"></a>
+<a name="66"></a><span class="keyword">enum</span> <span class="identifier">TFTeam</span>
+<a name="67"></a>{
+<a name="68"></a>	<span class="identifier">TFTeam_Unassigned</span> = <span class="number">0</span>,
+<a name="69"></a>	<span class="identifier">TFTeam_Spectator</span> = <span class="number">1</span>,
+<a name="70"></a>	<span class="identifier">TFTeam_Red</span> = <span class="number">2</span>,
+<a name="71"></a>	<span class="identifier">TFTeam_Blue</span> = <span class="number">3</span>	
+<a name="72"></a>};
+<a name="73"></a>
+<a name="74"></a><span class="keyword">enum</span> <span class="identifier">TFCond</span>
+<a name="75"></a>{
+<a name="76"></a>	<span class="identifier">TFCond_Slowed</span> = <span class="number">0</span>,
+<a name="77"></a>	<span class="identifier">TFCond_Zoomed</span>,
+<a name="78"></a>	<span class="identifier">TFCond_Disguising</span>,
+<a name="79"></a>	<span class="identifier">TFCond_Disguised</span>,
+<a name="80"></a>	<span class="identifier">TFCond_Cloaked</span>,
+<a name="81"></a>	<span class="identifier">TFCond_Ubercharged</span>,
+<a name="82"></a>	<span class="identifier">TFCond_TeleportedGlow</span>,
+<a name="83"></a>	<span class="identifier">TFCond_Taunting</span>,
+<a name="84"></a>	<span class="identifier">TFCond_UberchargeFading</span>,
+<a name="85"></a>	<span class="identifier">TFCond_Unknown1</span>, <span class="commentline">//9
+<a name="86"></a></span>	<span class="identifier">TFCond_CloakFlicker</span> = <span class="number">9</span>,
+<a name="87"></a>	<span class="identifier">TFCond_Teleporting</span>,
+<a name="88"></a>	<span class="identifier">TFCond_Kritzkrieged</span>,
+<a name="89"></a>	<span class="identifier">TFCond_Unknown2</span>, <span class="commentline">//12
+<a name="90"></a></span>	<span class="identifier">TFCond_TmpDamageBonus</span> = <span class="number">12</span>,
+<a name="91"></a>	<span class="identifier">TFCond_DeadRingered</span>,
+<a name="92"></a>	<span class="identifier">TFCond_Bonked</span>,
+<a name="93"></a>	<span class="identifier">TFCond_Dazed</span>,
+<a name="94"></a>	<span class="identifier">TFCond_Buffed</span>,
+<a name="95"></a>	<span class="identifier">TFCond_Charging</span>,
+<a name="96"></a>	<span class="identifier">TFCond_DemoBuff</span>,
+<a name="97"></a>	<span class="identifier">TFCond_CritCola</span>,
+<a name="98"></a>	<span class="identifier">TFCond_InHealRadius</span>,
+<a name="99"></a>	<span class="identifier">TFCond_Healing</span>,
+<a name="100"></a>	<span class="identifier">TFCond_OnFire</span>,
+<a name="101"></a>	<span class="identifier">TFCond_Overhealed</span>,
+<a name="102"></a>	<span class="identifier">TFCond_Jarated</span>,
+<a name="103"></a>	<span class="identifier">TFCond_Bleeding</span>,
+<a name="104"></a>	<span class="identifier">TFCond_DefenseBuffed</span>,
+<a name="105"></a>	<span class="identifier">TFCond_Milked</span>,
+<a name="106"></a>	<span class="identifier">TFCond_MegaHeal</span>,
+<a name="107"></a>	<span class="identifier">TFCond_RegenBuffed</span>,
+<a name="108"></a>	<span class="identifier">TFCond_MarkedForDeath</span>,
+<a name="109"></a>	<span class="identifier">TFCond_NoHealingDamageBuff</span>,
+<a name="110"></a>	<span class="identifier">TFCond_SpeedBuffAlly</span>,		<span class="commentline">//32
+<a name="111"></a></span>	<span class="identifier">TFCond_HalloweenCritCandy</span>,
+<a name="112"></a>	<span class="identifier">TFCond_CritCanteen</span>,
+<a name="113"></a>	<span class="identifier">TFCond_CritDemoCharge</span>,
+<a name="114"></a>	<span class="identifier">TFCond_CritHype</span>,
+<a name="115"></a>	<span class="identifier">TFCond_CritOnFirstBlood</span>,
+<a name="116"></a>	<span class="identifier">TFCond_CritOnWin</span>,
+<a name="117"></a>	<span class="identifier">TFCond_CritOnFlagCapture</span>,
+<a name="118"></a>	<span class="identifier">TFCond_CritOnKill</span>,
+<a name="119"></a>	<span class="identifier">TFCond_RestrictToMelee</span>,
+<a name="120"></a>	<span class="identifier">TFCond_DefenseBuffNoCritBlock</span>,
+<a name="121"></a>	<span class="identifier">TFCond_Reprogrammed</span>,
+<a name="122"></a>	<span class="identifier">TFCond_CritMmmph</span>,
+<a name="123"></a>	<span class="identifier">TFCond_DefenseBuffMmmph</span>,
+<a name="124"></a>	<span class="identifier">TFCond_FocusBuff</span>,
+<a name="125"></a>	<span class="identifier">TFCond_DisguiseRemoved</span>,
+<a name="126"></a>	<span class="identifier">TFCond_MarkedForDeathSilent</span>,
+<a name="127"></a>	<span class="identifier">TFCond_DisguisedAsDispenser</span>,
+<a name="128"></a>	<span class="identifier">TFCond_Sapped</span>,
+<a name="129"></a>	<span class="identifier">TFCond_UberchargedHidden</span>,
+<a name="130"></a>	<span class="identifier">TFCond_UberchargedCanteen</span>,
+<a name="131"></a>	<span class="identifier">TFCond_HalloweenBombHead</span>,
+<a name="132"></a>	<span class="identifier">TFCond_HalloweenThriller</span>,
+<a name="133"></a>	<span class="identifier">TFCond_RadiusHealOnDamage</span>,
+<a name="134"></a>	<span class="identifier">TFCond_CritOnDamage</span>,
+<a name="135"></a>	<span class="identifier">TFCond_UberchargedOnTakeDamage</span>,
+<a name="136"></a>	<span class="identifier">TFCond_UberBulletResist</span>,
+<a name="137"></a>	<span class="identifier">TFCond_UberBlastResist</span>,
+<a name="138"></a>	<span class="identifier">TFCond_UberFireResist</span>,
+<a name="139"></a>	<span class="identifier">TFCond_SmallBulletResist</span>,
+<a name="140"></a>	<span class="identifier">TFCond_SmallBlastResist</span>,
+<a name="141"></a>	<span class="identifier">TFCond_SmallFireResist</span>,
+<a name="142"></a>	<span class="identifier">TFCond_Stealthed</span>, <span class="commentline">// 64
+<a name="143"></a></span>	<span class="identifier">TFCond_MedigunDebuff</span>,
+<a name="144"></a>	<span class="identifier">TFCond_StealthedUserBuffFade</span>,
+<a name="145"></a>	<span class="identifier">TFCond_BulletImmune</span>,
+<a name="146"></a>	<span class="identifier">TFCond_BlastImmune</span>,
+<a name="147"></a>	<span class="identifier">TFCond_FireImmune</span>,
+<a name="148"></a>	<span class="identifier">TFCond_PreventDeath</span>,
+<a name="149"></a>	<span class="identifier">TFCond_MVMBotRadiowave</span>,
+<a name="150"></a>	<span class="identifier">TFCond_HalloweenSpeedBoost</span>,
+<a name="151"></a>	<span class="identifier">TFCond_HalloweenQuickHeal</span>,
+<a name="152"></a>	<span class="identifier">TFCond_HalloweenGiant</span>,
+<a name="153"></a>	<span class="identifier">TFCond_HalloweenTiny</span>,
+<a name="154"></a>	<span class="identifier">TFCond_HalloweenInHell</span>,
+<a name="155"></a>	<span class="identifier">TFCond_HalloweenGhostMode</span>,
+<a name="156"></a>};
+<a name="157"></a>
+<a name="158"></a><span class="keyword">enum</span> <span class="identifier">TFHoliday</span>
+<a name="159"></a>{
+<a name="160"></a>	<span class="identifier">TFHoliday_Birthday</span> = <span class="number">1</span>,
+<a name="161"></a>	<span class="identifier">TFHoliday_Halloween</span>,
+<a name="162"></a>	<span class="identifier">TFHoliday_Christmas</span>,
+<a name="163"></a>	<span class="identifier">TFHoliday_ValentinesDay</span>,
+<a name="164"></a>	<span class="identifier">TFHoliday_MeetThePyro</span>,
+<a name="165"></a>	<span class="identifier">TFHoliday_FullMoon</span>,
+<a name="166"></a>	<span class="identifier">TFHoliday_HalloweenOrFullMoon</span>,
+<a name="167"></a>	<span class="identifier">TFHoliday_HalloweenOrFullMoonOrValentines</span>,
+<a name="168"></a>};
+<a name="169"></a>
+<a name="170"></a><span class="keyword">enum</span> <span class="identifier">TFObjectType</span>
+<a name="171"></a>{
+<a name="172"></a>	<span class="identifier">TFObject_CartDispenser</span> = <span class="number">0</span>,
+<a name="173"></a>	<span class="identifier">TFObject_Dispenser</span> = <span class="number">0</span>,
+<a name="174"></a>	<span class="identifier">TFObject_Teleporter</span> = <span class="number">1</span>,
+<a name="175"></a>	<span class="identifier">TFObject_Sentry</span> = <span class="number">2</span>,
+<a name="176"></a>	<span class="identifier">TFObject_Sapper</span> = <span class="number">3</span>
+<a name="177"></a>};
+<a name="178"></a>
+<a name="179"></a><span class="keyword">enum</span> <span class="identifier">TFObjectMode</span>
+<a name="180"></a>{
+<a name="181"></a>	<span class="identifier">TFObjectMode_None</span> = <span class="number">0</span>,
+<a name="182"></a>	<span class="identifier">TFObjectMode_Entrance</span> = <span class="number">0</span>,
+<a name="183"></a>	<span class="identifier">TFObjectMode_Exit</span> = <span class="number">1</span>
+<a name="184"></a>};
+<a name="185"></a>
+<a name="186"></a><span class="comment">/**
+<a name="187"></a> * Sets a client on fire for 10 seconds.
+<a name="188"></a> *
+<a name="189"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="190"></a> * <span class="doctag">@param</span> attacker		Attacker's index.
+<a name="191"></a> * <span class="doctag">@noreturn</span>
+<a name="192"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="193"></a> */</span>
+<a name="194"></a><span class="keyword">native</span> <span class="identifier">TF2_IgnitePlayer</span>(<span class="identifier">client</span>, <span class="identifier">attacker</span>);
+<a name="195"></a>
+<a name="196"></a><span class="comment">/**
+<a name="197"></a> * Respawns a client
+<a name="198"></a> *
+<a name="199"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="200"></a> * <span class="doctag">@noreturn</span>
+<a name="201"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="202"></a> */</span>
+<a name="203"></a><span class="keyword">native</span> <span class="identifier">TF2_RespawnPlayer</span>(<span class="identifier">client</span>);
+<a name="204"></a>
+<a name="205"></a><span class="comment">/**
+<a name="206"></a> * Regenerates a client's health and ammunition
+<a name="207"></a> *
+<a name="208"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="209"></a> * <span class="doctag">@noreturn</span>
+<a name="210"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="211"></a> */</span>
+<a name="212"></a><span class="keyword">native</span> <span class="identifier">TF2_RegeneratePlayer</span>(<span class="identifier">client</span>);
+<a name="213"></a>
+<a name="214"></a><span class="comment">/**
+<a name="215"></a> * Adds a condition to a player
+<a name="216"></a> *
+<a name="217"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="218"></a> * <span class="doctag">@param</span> condition		Integer identifier of condition to apply.
+<a name="219"></a> * <span class="doctag">@param</span> duration		Duration of condition (does not apply to all conditions).
+<a name="220"></a> * <span class="doctag">@param</span> inflictor		Condition inflictor's index (0 for no inflictor).
+<a name="221"></a> * <span class="doctag">@noreturn</span>
+<a name="222"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="223"></a> */</span>
+<a name="224"></a><span class="keyword">native</span> <span class="identifier">TF2_AddCondition</span>(<span class="identifier">client</span>, <span class="identifier">TFCond</span>:<span class="identifier">condition</span>, <span class="keyword type">Float</span>:<span class="identifier">duration</span>, <span class="identifier">inflictor</span>=<span class="number">0</span>);
+<a name="225"></a>
+<a name="226"></a><span class="comment">/**
+<a name="227"></a> * Removes a condition from a player
+<a name="228"></a> *
+<a name="229"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="230"></a> * <span class="doctag">@param</span> condition		Integer identifier of condition to remove.
+<a name="231"></a> * <span class="doctag">@noreturn</span>
+<a name="232"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="233"></a> */</span>
+<a name="234"></a><span class="keyword">native</span> <span class="identifier">TF2_RemoveCondition</span>(<span class="identifier">client</span>, <span class="identifier">TFCond</span>:<span class="identifier">condition</span>);
+<a name="235"></a>
+<a name="236"></a><span class="comment">/**
+<a name="237"></a> * Enables/disables PowerPlay mode on a player.
+<a name="238"></a> *
+<a name="239"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="240"></a> * <span class="doctag">@param</span> enabled		Whether to enable or disable PowerPlay on player.
+<a name="241"></a> * <span class="doctag">@noreturn</span>
+<a name="242"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="243"></a> */</span>
+<a name="244"></a><span class="keyword">native</span> <span class="identifier">TF2_SetPlayerPowerPlay</span>(<span class="identifier">client</span>, <span class="keyword type">bool</span>:<span class="identifier">enabled</span>);
+<a name="245"></a>
+<a name="246"></a><span class="comment">/**
+<a name="247"></a> * Disguises a client to the given model and team. Only has an effect on spies.
+<a name="248"></a> *
+<a name="249"></a> * Note: This only starts the disguise process and a delay occurs before the spy is fully disguised
+<a name="250"></a> *
+<a name="251"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="252"></a> * <span class="doctag">@param</span> team			Team to disguise the player as (only TFTeam_Red and TFTeam_Blue have an effect)
+<a name="253"></a> * <span class="doctag">@param</span> class			TFClassType class to disguise the player as
+<a name="254"></a> * <span class="doctag">@param</span> target		Specific target player to disguise as (0 for any)
+<a name="255"></a> * <span class="doctag">@noreturn</span>
+<a name="256"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="257"></a> */</span>
+<a name="258"></a><span class="keyword">native</span> <span class="identifier">TF2_DisguisePlayer</span>(<span class="identifier">client</span>, <span class="identifier">TFTeam</span>:<span class="identifier">team</span>, <span class="identifier">TFClassType</span>:<span class="identifier">class</span>, <span class="identifier">target</span>=<span class="number">0</span>);
+<a name="259"></a>
+<a name="260"></a><span class="comment">/**
+<a name="261"></a> * Removes the current disguise from a client. Only has an effect on spies.
+<a name="262"></a> *
+<a name="263"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="264"></a> * <span class="doctag">@noreturn</span>
+<a name="265"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="266"></a> */</span>
+<a name="267"></a><span class="keyword">native</span> <span class="identifier">TF2_RemovePlayerDisguise</span>(<span class="identifier">client</span>);
+<a name="268"></a>
+<a name="269"></a><span class="comment">/**
+<a name="270"></a> * Stuns a client
+<a name="271"></a> *
+<a name="272"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="273"></a> * <span class="doctag">@param</span> duration		Duration of stun.
+<a name="274"></a> * <span class="doctag">@param</span> slowdown		Slowdown percent (as decimal, 0.00-1.00)
+<a name="275"></a> *						Ignored if TF_STUNFLAG_SLOWDOWN is not set.
+<a name="276"></a> * <span class="doctag">@param</span> stunflags		Stun flags.
+<a name="277"></a> * <span class="doctag">@param</span> attacker		Attacker's index (0 is allowed for world).
+<a name="278"></a> * <span class="doctag">@noreturn</span>
+<a name="279"></a> */</span>
+<a name="280"></a><span class="keyword">native</span> <span class="identifier">TF2_StunPlayer</span>(<span class="identifier">client</span>, <span class="keyword type">Float</span>:<span class="identifier">duration</span>, <span class="keyword type">Float</span>:<span class="identifier">slowdown</span>=<span class="number">0.0</span>, <span class="identifier">stunflags</span>, <span class="identifier">attacker</span>=<span class="number">0</span>);
+<a name="281"></a>
+<a name="282"></a><span class="comment">/**
+<a name="283"></a> * Induces the bleed effect on a client
+<a name="284"></a> *
+<a name="285"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="286"></a> * <span class="doctag">@param</span> attacker		Attacker's index.
+<a name="287"></a> * <span class="doctag">@param</span> duration		Duration of bleeding (in seconds).
+<a name="288"></a> * <span class="doctag">@noreturn</span>
+<a name="289"></a> */</span>
+<a name="290"></a><span class="keyword">native</span> <span class="identifier">TF2_MakeBleed</span>(<span class="identifier">client</span>, <span class="identifier">attacker</span>, <span class="keyword type">Float</span>:<span class="identifier">duration</span>);
+<a name="291"></a>
+<a name="292"></a><span class="comment">/**
+<a name="293"></a> * Retrieves the entity index of the CPlayerResource entity
+<a name="294"></a> *
+<a name="295"></a> * <span class="doctag">@return</span>				The current resource entity index.
+<a name="296"></a> */</span>
+<a name="297"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">GetPlayerResourceEntity</span> <span class="identifier">instead</span>
+<a name="298"></a></span><span class="keyword">native</span> <span class="identifier">TF2_GetResourceEntity</span>();
+<a name="299"></a>
+<a name="300"></a><span class="comment">/**
+<a name="301"></a> * Finds the TFClassType for a given class name.
+<a name="302"></a> *
+<a name="303"></a> * <span class="doctag">@param</span> classname		A classname string such as "sniper" or "demoman"
+<a name="304"></a> * <span class="doctag">@return</span>				A TFClassType constant.
+<a name="305"></a> */</span>
+<a name="306"></a><span class="keyword">native</span> <span class="identifier">TFClassType</span>:<span class="identifier">TF2_GetClass</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">classname</span>[]);
+<a name="307"></a>
+<a name="308"></a><span class="comment">/**
+<a name="309"></a> * Called on weapon fire to decide if the current shot should be critical.
+<a name="310"></a> * Return Plugin_Continue to let the original calculation or return a higher
+<a name="311"></a> * action to override the decision with the value of 'result'
+<a name="312"></a> *
+<a name="313"></a> * <span class="doctag">@note</span> Since critical shots are also calculated client side any changes made with
+<a name="314"></a> *		 this will not show for the shooter. Projectile weapons such as the rocketlauncher
+<a name="315"></a> *		 and demoman weapons will show a critical bullet but no critical sound effect.
+<a name="316"></a> *		 Bullet hits should appear as expected.
+<a name="317"></a> *
+<a name="318"></a> * <span class="doctag">@param</span> client		Client Index.
+<a name="319"></a> * <span class="doctag">@param</span> weapon		Weapon entity Index.
+<a name="320"></a> * <span class="doctag">@param</span> weaponname	Classname of the weapon.
+<a name="321"></a> * <span class="doctag">@param</span> result		Buffer param for the result of the decision.
+<a name="322"></a> */</span>
+<a name="323"></a><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">TF2_CalcIsAttackCritical</span>(<span class="identifier">client</span>, <span class="identifier">weapon</span>, <span class="keyword type">String</span>:<span class="identifier">weaponname</span>[], &amp;<span class="keyword type">bool</span>:<span class="identifier">result</span>);
+<a name="324"></a>
+<a name="325"></a><span class="comment">/**
+<a name="326"></a> * <span class="doctag">@deprecated</span>		No longer called. Use TF2_OnIsHolidayActive.
+<a name="327"></a> */</span>
+<a name="328"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">No</span> <span class="identifier">longer</span> <span class="identifier">called</span>. <span class="identifier">Use</span> <span class="identifier">TF2_OnIsHolidayActive</span>.
+<a name="329"></a></span><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">TF2_OnGetHoliday</span>(&amp;<span class="identifier">TFHoliday</span>:<span class="identifier">holiday</span>);
+<a name="330"></a>
+<a name="331"></a><span class="comment">/**
+<a name="332"></a> * Called at various times when the game checks to see if the given holiday is active.
+<a name="333"></a> * Return Plugin_Continue to let the original calculation or return a higher
+<a name="334"></a> * action to override the decision with the value of 'result'
+<a name="335"></a> *
+<a name="336"></a> * <span class="doctag">@param</span> holiday		Holiday being checked.
+<a name="337"></a> * <span class="doctag">@param</span> result		Buffer param for the result of the decision.
+<a name="338"></a> * <span class="doctag">@return</span>				Plugin_Continue for original calculation, higher value to use 'result'.
+<a name="339"></a> */</span>
+<a name="340"></a><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">TF2_OnIsHolidayActive</span>(<span class="identifier">TFHoliday</span>:<span class="identifier">holiday</span>, &amp;<span class="keyword type">bool</span>:<span class="identifier">result</span>);
+<a name="341"></a>
+<a name="342"></a><span class="comment">/**
+<a name="343"></a> * Returns whether or not a client (Player) is in a duel.
+<a name="344"></a> *
+<a name="345"></a> * <span class="doctag">@param</span> client    Client Index.
+<a name="346"></a> * <span class="doctag">@return</span>          Boolean of whether or not the client/player is dueling.
+<a name="347"></a> */</span>
+<a name="348"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">TF2_IsPlayerInDuel</span>(<span class="identifier">client</span>);
+<a name="349"></a>
+<a name="350"></a><span class="comment">/**
+<a name="351"></a> * Called after a condition is added to a player
+<a name="352"></a> *
+<a name="353"></a> * <span class="doctag">@param</span> client		Index of the client to which the conditon is being added.
+<a name="354"></a> * <span class="doctag">@param</span> condition     Condition that is being added.
+<a name="355"></a> * <span class="doctag">@noreturn</span>
+<a name="356"></a> */</span>
+<a name="357"></a><span class="keyword">forward</span> <span class="identifier">TF2_OnConditionAdded</span>(<span class="identifier">client</span>, <span class="identifier">TFCond</span>:<span class="identifier">condition</span>);
+<a name="358"></a>
+<a name="359"></a><span class="comment">/**
+<a name="360"></a> * Called after a condition is removed from a player
+<a name="361"></a> *
+<a name="362"></a> * <span class="doctag">@param</span> client		Index of the client to which the condition is being removed.
+<a name="363"></a> * <span class="doctag">@param</span> condition		Condition that is being removed.
+<a name="364"></a> * <span class="doctag">@noreturn</span>
+<a name="365"></a> */</span>
+<a name="366"></a><span class="keyword">forward</span> <span class="identifier">TF2_OnConditionRemoved</span>(<span class="identifier">client</span>, <span class="identifier">TFCond</span>:<span class="identifier">condition</span>);
+<a name="367"></a>
+<a name="368"></a><span class="comment">/**
+<a name="369"></a> * Called when the server enters the Waiting for Players round state
+<a name="370"></a> *
+<a name="371"></a> * <span class="doctag">@noreturn</span>
+<a name="372"></a> */</span>
+<a name="373"></a><span class="keyword">forward</span> <span class="identifier">TF2_OnWaitingForPlayersStart</span>();
+<a name="374"></a>
+<a name="375"></a><span class="comment">/**
+<a name="376"></a> * Called when the server exits the Waiting for Players round state
+<a name="377"></a> *
+<a name="378"></a> * <span class="doctag">@noreturn</span>
+<a name="379"></a> */</span>
+<a name="380"></a><span class="keyword">forward</span> <span class="identifier">TF2_OnWaitingForPlayersEnd</span>();
+<a name="381"></a>
+<a name="382"></a><span class="comment">/**
+<a name="383"></a> * Called when a player attempts to use a teleporter to decide if the player should be allowed to teleport.
+<a name="384"></a> * Return Plugin_Continue to let the original calculation or return a higher
+<a name="385"></a> * action to override the decision with the value of 'result'
+<a name="386"></a> *
+<a name="387"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="388"></a> * <span class="doctag">@param</span> teleporter	Teleporter entity index.
+<a name="389"></a> * <span class="doctag">@param</span> result		Buffer param for the result of the decision.
+<a name="390"></a> *						This is prepopulated with the game's original decision to let a player teleport.
+<a name="391"></a> * <span class="doctag">@return</span>				Plugin_Continue for original calculation, higher value to use 'result'.
+<a name="392"></a> */</span>
+<a name="393"></a><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">TF2_OnPlayerTeleport</span>(<span class="identifier">client</span>, <span class="identifier">teleporter</span>, &amp;<span class="keyword type">bool</span>:<span class="identifier">result</span>);
+<a name="394"></a> 
+<a name="395"></a><span class="comment">/**
+<a name="396"></a> * Do not edit below this line!
+<a name="397"></a> */</span>
+<a name="398"></a><span class="keyword">public</span> <span class="identifier">Extension</span>:<span class="identifier">__ext_tf2</span> = 
+<a name="399"></a>{
+<a name="400"></a>	<span class="identifier">name</span> = <span class="string">"TF2 Tools"</span>,
+<a name="401"></a>	<span class="identifier">file</span> = <span class="string">"game.tf2.ext"</span>,
+<a name="402"></a>	<span class="identifier">autoload</span> = <span class="number">0</span>,
+<a name="403"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">REQUIRE_EXTENSIONS</span>
+<a name="404"></a></span>	<span class="identifier">required</span> = <span class="number">1</span>,
+<a name="405"></a><span class="preprocessor">#else
+<a name="406"></a></span>	<span class="identifier">required</span> = <span class="number">0</span>,
+<a name="407"></a><span class="preprocessor">#endif
+<a name="408"></a></span>};
+<a name="409"></a>
+<a name="410"></a><span class="preprocessor">#if !<span class="identifier">defined</span> <span class="identifier">REQUIRE_EXTENSIONS</span>
+<a name="411"></a></span><span class="keyword">public</span> <span class="identifier">__ext_tf2_SetNTVOptional</span>()
+<a name="412"></a>{
+<a name="413"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_IgnitePlayer"</span>);
+<a name="414"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_RespawnPlayer"</span>);
+<a name="415"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_RegeneratePlayer"</span>);
+<a name="416"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_AddCondition"</span>);
+<a name="417"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_RemoveCondition"</span>);
+<a name="418"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_SetPlayerPowerPlay"</span>);
+<a name="419"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_DisguisePlayer"</span>);
+<a name="420"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_RemovePlayerDisguise"</span>);
+<a name="421"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_StunPlayer"</span>);
+<a name="422"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_MakeBleed"</span>);
+<a name="423"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_GetResourceEntity"</span>);
+<a name="424"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_GetClass"</span>);
+<a name="425"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"TF2_IsPlayerInDuel"</span>);
+<a name="426"></a>}
+<a name="427"></a><span class="preprocessor">#endif
+<a name="428"></a></span><!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

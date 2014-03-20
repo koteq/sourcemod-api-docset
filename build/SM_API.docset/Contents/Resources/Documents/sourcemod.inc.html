@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<title>sourcemod.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_sourcemod_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_sourcemod_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Plugin public information.
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">struct</span> <span class="identifier">Plugin</span>
+<a name="42"></a>{
+<a name="43"></a>   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[],			<span class="comment">/**&lt; Plugin Name */</span>
+<a name="44"></a>   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">description</span>[],	<span class="comment">/**&lt; Plugin Description */</span>
+<a name="45"></a>   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">author</span>[],		<span class="comment">/**&lt; Plugin Author */</span>
+<a name="46"></a>   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">version</span>[],		<span class="comment">/**&lt; Plugin Version */</span>
+<a name="47"></a>   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">url</span>[],			<span class="comment">/**&lt; Plugin URL */</span>
+<a name="48"></a>};
+<a name="49"></a>
+<a name="50"></a><span class="preprocessor">#include <span class="tag">&lt;core&gt;</span>
+<a name="51"></a></span><span class="preprocessor">#include <span class="tag">&lt;float&gt;</span>
+<a name="52"></a></span><span class="preprocessor">#include <span class="tag">&lt;vector&gt;</span>
+<a name="53"></a></span><span class="preprocessor">#include <span class="tag">&lt;string&gt;</span>
+<a name="54"></a></span><span class="preprocessor">#include <span class="tag">&lt;handles&gt;</span>
+<a name="55"></a></span><span class="preprocessor">#include <span class="tag">&lt;functions&gt;</span>
+<a name="56"></a></span><span class="preprocessor">#include <span class="tag">&lt;files&gt;</span>
+<a name="57"></a></span><span class="preprocessor">#include <span class="tag">&lt;logging&gt;</span>
+<a name="58"></a></span><span class="preprocessor">#include <span class="tag">&lt;timers&gt;</span>
+<a name="59"></a></span><span class="preprocessor">#include <span class="tag">&lt;admin&gt;</span>
+<a name="60"></a></span><span class="preprocessor">#include <span class="tag">&lt;keyvalues&gt;</span>
+<a name="61"></a></span><span class="preprocessor">#include <span class="tag">&lt;dbi&gt;</span>
+<a name="62"></a></span><span class="preprocessor">#include <span class="tag">&lt;lang&gt;</span>
+<a name="63"></a></span><span class="preprocessor">#include <span class="tag">&lt;sorting&gt;</span>
+<a name="64"></a></span><span class="preprocessor">#include <span class="tag">&lt;textparse&gt;</span>
+<a name="65"></a></span><span class="preprocessor">#include <span class="tag">&lt;clients&gt;</span>
+<a name="66"></a></span><span class="preprocessor">#include <span class="tag">&lt;console&gt;</span>
+<a name="67"></a></span><span class="preprocessor">#include <span class="tag">&lt;events&gt;</span>
+<a name="68"></a></span><span class="preprocessor">#include <span class="tag">&lt;bitbuffer&gt;</span>
+<a name="69"></a></span><span class="preprocessor">#include <span class="tag">&lt;protobuf&gt;</span>
+<a name="70"></a></span><span class="preprocessor">#include <span class="tag">&lt;usermessages&gt;</span>
+<a name="71"></a></span><span class="preprocessor">#include <span class="tag">&lt;menus&gt;</span>
+<a name="72"></a></span><span class="preprocessor">#include <span class="tag">&lt;halflife&gt;</span>
+<a name="73"></a></span><span class="preprocessor">#include <span class="tag">&lt;adt&gt;</span>
+<a name="74"></a></span><span class="preprocessor">#include <span class="tag">&lt;banning&gt;</span>
+<a name="75"></a></span><span class="preprocessor">#include <span class="tag">&lt;commandfilters&gt;</span>
+<a name="76"></a></span><span class="preprocessor">#include <span class="tag">&lt;nextmap&gt;</span>
+<a name="77"></a></span>
+<a name="78"></a><span class="keyword">enum</span> <span class="identifier">APLRes</span>
+<a name="79"></a>{
+<a name="80"></a>	<span class="identifier">APLRes_Success</span> = <span class="number">0</span>,		<span class="comment">/**&lt; Plugin should load */</span>
+<a name="81"></a>	<span class="identifier">APLRes_Failure</span>,			<span class="comment">/**&lt; Plugin shouldn't load and should display an error */</span>
+<a name="82"></a>	<span class="identifier">APLRes_SilentFailure</span>	<span class="comment">/**&lt; Plugin shouldn't load but do so silently */</span>
+<a name="83"></a>};
+<a name="84"></a>
+<a name="85"></a><span class="comment">/**
+<a name="86"></a> * Declare this as a struct in your plugin to expose its information.
+<a name="87"></a> * Example:
+<a name="88"></a> *
+<a name="89"></a> * public Plugin:myinfo =
+<a name="90"></a> * {
+<a name="91"></a> *    name = "My Plugin",
+<a name="92"></a> *    //etc
+<a name="93"></a> * };
+<a name="94"></a> */</span>
+<a name="95"></a><span class="keyword">public</span> <span class="identifier">Plugin</span>:<span class="identifier">myinfo</span>;
+<a name="96"></a> 
+<a name="97"></a><span class="comment">/**
+<a name="98"></a> * Called when the plugin is fully initialized and all known external references 
+<a name="99"></a> * are resolved. This is only called once in the lifetime of the plugin, and is 
+<a name="100"></a> * paired with OnPluginEnd().
+<a name="101"></a> *
+<a name="102"></a> * If any run-time error is thrown during this callback, the plugin will be marked 
+<a name="103"></a> * as failed.
+<a name="104"></a> *
+<a name="105"></a> * It is not necessary to close any handles or remove hooks in this function.  
+<a name="106"></a> * SourceMod guarantees that plugin shutdown automatically and correctly releases 
+<a name="107"></a> * all resources.
+<a name="108"></a> *
+<a name="109"></a> * <span class="doctag">@noreturn</span>
+<a name="110"></a> */</span>
+<a name="111"></a><span class="keyword">forward</span> <span class="identifier">OnPluginStart</span>();
+<a name="112"></a>
+<a name="113"></a><span class="comment">/**
+<a name="114"></a> * <span class="doctag">@deprecated</span> Use AskPluginLoad2() instead.
+<a name="115"></a> * If a plugin contains both AskPluginLoad() and AskPluginLoad2(), the former will
+<a name="116"></a> * not be called, but old plugins with only AskPluginLoad() will work.
+<a name="117"></a> */</span>
+<a name="118"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">AskPluginLoad2</span>() <span class="identifier">instead</span>
+<a name="119"></a></span><span class="keyword">forward</span> <span class="keyword type">bool</span>:<span class="identifier">AskPluginLoad</span>(<span class="keyword type">Handle</span>:<span class="identifier">myself</span>, <span class="keyword type">bool</span>:<span class="identifier">late</span>, <span class="keyword type">String</span>:<span class="identifier">error</span>[], <span class="identifier">err_max</span>);
+<a name="120"></a>
+<a name="121"></a><span class="comment">/**
+<a name="122"></a> * Called before OnPluginStart, in case the plugin wants to check for load failure.
+<a name="123"></a> * This is called even if the plugin type is "private."  Any natives from modules are 
+<a name="124"></a> * not available at this point.  Thus, this forward should only be used for explicit 
+<a name="125"></a> * pre-emptive things, such as adding dynamic natives, setting certain types of load 
+<a name="126"></a> * filters (such as not loading the plugin for certain games).
+<a name="127"></a> * 
+<a name="128"></a> * <span class="doctag">@note</span> It is not safe to call externally resolved natives until OnPluginStart().
+<a name="129"></a> * <span class="doctag">@note</span> Any sort of RTE in this function will cause the plugin to fail loading.
+<a name="130"></a> * <span class="doctag">@note</span> If you do not return anything, it is treated like returning success. 
+<a name="131"></a> * <span class="doctag">@note</span> If a plugin has an AskPluginLoad2(), AskPluginLoad() will not be called.
+<a name="132"></a> *
+<a name="133"></a> *
+<a name="134"></a> * <span class="doctag">@param</span> myself	Handle to the plugin.
+<a name="135"></a> * <span class="doctag">@param</span> late		Whether or not the plugin was loaded "late" (after map load).
+<a name="136"></a> * <span class="doctag">@param</span> error		Error message buffer in case load failed.
+<a name="137"></a> * <span class="doctag">@param</span> err_max	Maximum number of characters for error message buffer.
+<a name="138"></a> * <span class="doctag">@return</span>			APLRes_Success for load success, APLRes_Failure or APLRes_SilentFailure otherwise
+<a name="139"></a> */</span>
+<a name="140"></a><span class="keyword">forward</span> <span class="identifier">APLRes</span>:<span class="identifier">AskPluginLoad2</span>(<span class="keyword type">Handle</span>:<span class="identifier">myself</span>, <span class="keyword type">bool</span>:<span class="identifier">late</span>, <span class="keyword type">String</span>:<span class="identifier">error</span>[], <span class="identifier">err_max</span>);
+<a name="141"></a>
+<a name="142"></a><span class="comment">/**
+<a name="143"></a> * Called when the plugin is about to be unloaded.
+<a name="144"></a> *
+<a name="145"></a> * <span class="doctag">@noreturn</span>
+<a name="146"></a> */</span>
+<a name="147"></a><span class="keyword">forward</span> <span class="identifier">OnPluginEnd</span>();
+<a name="148"></a>
+<a name="149"></a><span class="comment">/**
+<a name="150"></a> * Called when the plugin's pause status is changing.
+<a name="151"></a> *
+<a name="152"></a> * <span class="doctag">@param</span> pause			True if the plugin is being paused, false otherwise.
+<a name="153"></a> * <span class="doctag">@noreturn</span>
+<a name="154"></a> */</span>
+<a name="155"></a><span class="keyword">forward</span> <span class="identifier">OnPluginPauseChange</span>(<span class="keyword type">bool</span>:<span class="identifier">pause</span>);
+<a name="156"></a>
+<a name="157"></a><span class="comment">/**
+<a name="158"></a> * Called before every server frame.  Note that you should avoid
+<a name="159"></a> * doing expensive computations here, and you should declare large
+<a name="160"></a> * local arrays using 'decl' instead of 'new'.
+<a name="161"></a> */</span>
+<a name="162"></a><span class="keyword">forward</span> <span class="identifier">OnGameFrame</span>();
+<a name="163"></a>
+<a name="164"></a><span class="comment">/**
+<a name="165"></a> * Called when the map is loaded.
+<a name="166"></a> *
+<a name="167"></a> * <span class="doctag">@note</span> This used to be OnServerLoad(), which is now deprecated.
+<a name="168"></a> * Plugins still using the old forward will work.
+<a name="169"></a> */</span>
+<a name="170"></a><span class="keyword">forward</span> <span class="identifier">OnMapStart</span>();
+<a name="171"></a>
+<a name="172"></a><span class="comment">/**
+<a name="173"></a> * Called right before a map ends.
+<a name="174"></a> */</span>
+<a name="175"></a><span class="keyword">forward</span> <span class="identifier">OnMapEnd</span>();
+<a name="176"></a>
+<a name="177"></a><span class="comment">/**
+<a name="178"></a> * Called when the map has loaded, servercfgfile (server.cfg) has been 
+<a name="179"></a> * executed, and all plugin configs are done executing.  This is the best
+<a name="180"></a> * place to initialize plugin functions which are based on cvar data.  
+<a name="181"></a> *
+<a name="182"></a> * <span class="doctag">@note</span> This will always be called once and only once per map.  It will be 
+<a name="183"></a> * called after OnMapStart().
+<a name="184"></a> *
+<a name="185"></a> * <span class="doctag">@noreturn</span>
+<a name="186"></a> */</span>
+<a name="187"></a><span class="keyword">forward</span> <span class="identifier">OnConfigsExecuted</span>();
+<a name="188"></a>
+<a name="189"></a><span class="comment">/**
+<a name="190"></a> * This is called once, right after OnMapStart() but any time before 
+<a name="191"></a> * OnConfigsExecuted().  It is called after the "exec sourcemod.cfg" 
+<a name="192"></a> * command and all AutoExecConfig() exec commands have been added to 
+<a name="193"></a> * the ServerCommand() buffer.
+<a name="194"></a> *
+<a name="195"></a> * If you need to load per-map settings that override default values, 
+<a name="196"></a> * adding commands to the ServerCommand() buffer here will guarantee 
+<a name="197"></a> * that they're set before OnConfigsExecuted().
+<a name="198"></a> *
+<a name="199"></a> * Unlike OnMapStart() and OnConfigsExecuted(), this is not called on 
+<a name="200"></a> * late loads that occur after OnMapStart().
+<a name="201"></a> *
+<a name="202"></a> * <span class="doctag">@noreturn</span>
+<a name="203"></a> */</span>
+<a name="204"></a><span class="keyword">forward</span> <span class="identifier">OnAutoConfigsBuffered</span>();
+<a name="205"></a>
+<a name="206"></a><span class="comment">/**
+<a name="207"></a> * <span class="doctag">@deprecated</span> Use OnConfigsExecuted() instead.
+<a name="208"></a> */</span>
+<a name="209"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">OnConfigsExecuted</span>() <span class="identifier">instead</span>
+<a name="210"></a></span><span class="keyword">forward</span> <span class="identifier">OnServerCfg</span>();
+<a name="211"></a>
+<a name="212"></a><span class="comment">/**
+<a name="213"></a> * Called after all plugins have been loaded.  This is called once for 
+<a name="214"></a> * every plugin.  If a plugin late loads, it will be called immediately 
+<a name="215"></a> * after OnPluginStart().
+<a name="216"></a> */</span>
+<a name="217"></a><span class="keyword">forward</span> <span class="identifier">OnAllPluginsLoaded</span>();
+<a name="218"></a>
+<a name="219"></a><span class="comment">/**
+<a name="220"></a> * Returns the calling plugin's Handle.
+<a name="221"></a> *
+<a name="222"></a> * <span class="doctag">@return</span>				Handle of the calling plugin.
+<a name="223"></a> */</span>
+<a name="224"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">GetMyHandle</span>();
+<a name="225"></a>
+<a name="226"></a><span class="comment">/**
+<a name="227"></a> * Returns an iterator that can be used to search through plugins.
+<a name="228"></a> *
+<a name="229"></a> * <span class="doctag">@return</span>				Handle to iterate with.  Must be closed via 
+<a name="230"></a> * 						CloseHandle().
+<a name="231"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="232"></a> */</span>
+<a name="233"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">GetPluginIterator</span>();
+<a name="234"></a>
+<a name="235"></a><span class="comment">/**
+<a name="236"></a> * Returns whether there are more plugins available in the iterator.
+<a name="237"></a> *
+<a name="238"></a> * <span class="doctag">@param</span> iter			Handle to the plugin iterator.
+<a name="239"></a> * <span class="doctag">@return</span>				True on more plugins, false otherwise.
+<a name="240"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="241"></a> */</span>
+<a name="242"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">MorePlugins</span>(<span class="keyword type">Handle</span>:<span class="identifier">iter</span>);
+<a name="243"></a>
+<a name="244"></a><span class="comment">/**
+<a name="245"></a> * Returns the current plugin in the iterator and advances the iterator.
+<a name="246"></a> *
+<a name="247"></a> * <span class="doctag">@param</span> iter			Handle to the plugin iterator.
+<a name="248"></a> * <span class="doctag">@return</span>				Current plugin the iterator is at, before
+<a name="249"></a> *						the iterator is advanced.
+<a name="250"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="251"></a> */</span>
+<a name="252"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">ReadPlugin</span>(<span class="keyword type">Handle</span>:<span class="identifier">iter</span>);
+<a name="253"></a>
+<a name="254"></a><span class="comment">/**
+<a name="255"></a> * Returns a plugin's status.
+<a name="256"></a> *
+<a name="257"></a> * <span class="doctag">@param</span> plugin		Plugin Handle (INVALID_HANDLE uses the calling plugin).
+<a name="258"></a> * <span class="doctag">@return</span>				Status code for the plugin.
+<a name="259"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="260"></a> */</span>
+<a name="261"></a><span class="keyword">native</span> <span class="identifier">PluginStatus</span>:<span class="identifier">GetPluginStatus</span>(<span class="keyword type">Handle</span>:<span class="identifier">plugin</span>);
+<a name="262"></a>
+<a name="263"></a><span class="comment">/**
+<a name="264"></a> * Retrieves a plugin's file name relative to the plugins folder.
+<a name="265"></a> *
+<a name="266"></a> * <span class="doctag">@param</span> plugin		Plugin Handle (INVALID_HANDLE uses the calling plugin).
+<a name="267"></a> * <span class="doctag">@param</span> buffer		Buffer to the store the file name.
+<a name="268"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the name buffer.
+<a name="269"></a> * <span class="doctag">@noreturn</span>
+<a name="270"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="271"></a> */</span>
+<a name="272"></a><span class="keyword">native</span> <span class="identifier">GetPluginFilename</span>(<span class="keyword type">Handle</span>:<span class="identifier">plugin</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="273"></a>
+<a name="274"></a><span class="comment">/**
+<a name="275"></a> * Retrieves whether or not a plugin is being debugged.
+<a name="276"></a> *
+<a name="277"></a> * <span class="doctag">@param</span> plugin		Plugin Handle (INVALID_HANDLE uses the calling plugin).
+<a name="278"></a> * <span class="doctag">@return</span>				True if being debugged, false otherwise.
+<a name="279"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="280"></a> */</span>
+<a name="281"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsPluginDebugging</span>(<span class="keyword type">Handle</span>:<span class="identifier">plugin</span>);
+<a name="282"></a>
+<a name="283"></a><span class="comment">/**
+<a name="284"></a> * Retrieves a plugin's public info.
+<a name="285"></a> *
+<a name="286"></a> * <span class="doctag">@param</span> plugin		Plugin Handle (INVALID_HANDLE uses the calling plugin).
+<a name="287"></a> * <span class="doctag">@param</span> info			Plugin info property to retrieve.
+<a name="288"></a> * <span class="doctag">@param</span> buffer		Buffer to store info in.
+<a name="289"></a> * <span class="doctag">@param</span> maxlength		Maximum length of buffer.
+<a name="290"></a> * <span class="doctag">@return</span>				True on success, false if property is not available.
+<a name="291"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="292"></a> */</span>
+<a name="293"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetPluginInfo</span>(<span class="keyword type">Handle</span>:<span class="identifier">plugin</span>, <span class="identifier">PluginInfo</span>:<span class="identifier">info</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="294"></a>
+<a name="295"></a><span class="comment">/**
+<a name="296"></a> * Finds a plugin by its order in the list from the "plugins list" server 
+<a name="297"></a> * "sm" command.  You should not use this function to loop through all plugins, 
+<a name="298"></a> * use the iterator instead.  Looping through all plugins using this native 
+<a name="299"></a> * is O(n^2), whereas using the iterator is O(n).
+<a name="300"></a> *
+<a name="301"></a> * <span class="doctag">@param</span> order_num		Number of the plugin as it appears in "sm plugins list".
+<a name="302"></a> * <span class="doctag">@return</span>				Plugin Handle on success, INVALID_HANDLE if no plugin 
+<a name="303"></a> *						matches the given number.
+<a name="304"></a> */</span>
+<a name="305"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">FindPluginByNumber</span>(<span class="identifier">order_num</span>);
+<a name="306"></a>
+<a name="307"></a><span class="comment">/**
+<a name="308"></a> * Causes the plugin to enter a failed state.  An error will be thrown and
+<a name="309"></a> * the plugin will be paused until it is unloaded or reloaded.
+<a name="310"></a> *
+<a name="311"></a> * For backwards compatibility, if no extra arguments are passed, no 
+<a name="312"></a> * formatting is applied.  If one or more additional arguments is passed, 
+<a name="313"></a> * the string is formatted using Format().  If any errors are encountered 
+<a name="314"></a> * during formatting, both the format specifier string and an additional 
+<a name="315"></a> * error message are written.
+<a name="316"></a> *
+<a name="317"></a> * This function does not return, and no further code in the plugin is 
+<a name="318"></a> * executed.
+<a name="319"></a> *
+<a name="320"></a> * <span class="doctag">@param</span> string		Format specifier string.
+<a name="321"></a> * <span class="doctag">@param</span> ...			Formatting arguments.
+<a name="322"></a> * <span class="doctag">@noreturn</span>
+<a name="323"></a> * <span class="doctag">@error</span>				Always throws SP_ERROR_ABORT.
+<a name="324"></a> */</span>
+<a name="325"></a><span class="keyword">native</span> <span class="identifier">SetFailState</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">string</span>[], <span class="keyword type">any</span>:...);
+<a name="326"></a>
+<a name="327"></a><span class="comment">/**
+<a name="328"></a> * Aborts the current callback and throws an error.  This function
+<a name="329"></a> * does not return in that no code is executed following it.
+<a name="330"></a> *
+<a name="331"></a> * <span class="doctag">@param</span> fmt		String format.
+<a name="332"></a> * <span class="doctag">@param</span> ...			Format arguments.
+<a name="333"></a> * <span class="doctag">@noreturn</span>
+<a name="334"></a> * <span class="doctag">@error</span>				Always!
+<a name="335"></a> */</span>
+<a name="336"></a><span class="keyword">native</span> <span class="identifier">ThrowError</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[], <span class="keyword type">any</span>:...);
+<a name="337"></a>
+<a name="338"></a><span class="comment">/**
+<a name="339"></a> * Gets the system time as a unix timestamp.
+<a name="340"></a> *
+<a name="341"></a> * <span class="doctag">@param</span> bigStamp		Optional array to store the 64bit timestamp in.
+<a name="342"></a> * <span class="doctag">@return</span>				32bit timestamp (number of seconds since unix epoch).
+<a name="343"></a> */</span>
+<a name="344"></a><span class="keyword">native</span> <span class="identifier">GetTime</span>(<span class="identifier">bigStamp</span>[<span class="number">2</span>]={<span class="number">0</span>,<span class="number">0</span>});
+<a name="345"></a>
+<a name="346"></a><span class="comment">/**
+<a name="347"></a> * Produces a date and/or time string value for a timestamp.
+<a name="348"></a> *
+<a name="349"></a> * See this URL for valid parameters: 
+<a name="350"></a> * http://cplusplus.com/reference/clibrary/ctime/strftime.html
+<a name="351"></a> *
+<a name="352"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="353"></a> * <span class="doctag">@param</span> maxlength		Maximum length of output string buffer.
+<a name="354"></a> * <span class="doctag">@param</span> format		Formatting rules (passing NULL_STRING will use the rules defined in sm_datetime_format).
+<a name="355"></a> * <span class="doctag">@param</span> stamp			Optional time stamp.
+<a name="356"></a> * <span class="doctag">@noreturn</span>
+<a name="357"></a> * <span class="doctag">@error</span>			Buffer too small or invalid time format.
+<a name="358"></a> */</span>
+<a name="359"></a><span class="keyword">native</span> <span class="identifier">FormatTime</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="identifier">stamp</span>=-<span class="number">1</span>);
+<a name="360"></a>
+<a name="361"></a><span class="comment">/**
+<a name="362"></a> * Loads a game config file.
+<a name="363"></a> *
+<a name="364"></a> * <span class="doctag">@param</span> file			File to load.  The path must be relative to the 'gamedata' folder under the config folder 
+<a name="365"></a> *					and the extension should be omitted.
+<a name="366"></a> * <span class="doctag">@return</span>			A handle to the game config file or INVALID_HANDLE in failure.
+<a name="367"></a> */</span>
+<a name="368"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">LoadGameConfigFile</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">file</span>[]);
+<a name="369"></a>
+<a name="370"></a><span class="comment">/**
+<a name="371"></a> * Returns an offset value.
+<a name="372"></a> *
+<a name="373"></a> * <span class="doctag">@param</span> gc			Game config handle.
+<a name="374"></a> * <span class="doctag">@param</span> key			Key to retrieve from the offset section.
+<a name="375"></a> * <span class="doctag">@return</span>			An offset, or -1 on failure.
+<a name="376"></a> */</span>
+<a name="377"></a><span class="keyword">native</span> <span class="identifier">GameConfGetOffset</span>(<span class="keyword type">Handle</span>:<span class="identifier">gc</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[]);
+<a name="378"></a>
+<a name="379"></a><span class="comment">/**
+<a name="380"></a> * Gets the value of a key from the "Keys" section.
+<a name="381"></a> *
+<a name="382"></a> * <span class="doctag">@param</span> gc			Game config handle.
+<a name="383"></a> * <span class="doctag">@param</span> key			Key to retrieve from the Keys section.
+<a name="384"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="385"></a> * <span class="doctag">@param</span> maxlen		Maximum length of output string buffer.
+<a name="386"></a> * <span class="doctag">@return</span>				True if key existed, false otherwise.
+<a name="387"></a> */</span>
+<a name="388"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GameConfGetKeyValue</span>(<span class="keyword type">Handle</span>:<span class="identifier">gc</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>);
+<a name="389"></a>
+<a name="390"></a><span class="comment">/*
+<a name="391"></a> * Finds an address calculation in a GameConfig file,
+<a name="392"></a> * performs LoadFromAddress on it as appropriate, then returns the final address.
+<a name="393"></a> *
+<a name="394"></a> * <span class="doctag">@param</span> gameconf      GameConfig Handle, or INVALID_HANDLE to use sdktools.games.txt.
+<a name="395"></a> * <span class="doctag">@param</span> name          Name of the property to find.
+<a name="396"></a> * <span class="doctag">@return</span>              An address calculated on success, or 0 on failure.
+<a name="397"></a> */</span>
+<a name="398"></a><span class="keyword">native</span> <span class="identifier">Address</span>:<span class="identifier">GameConfGetAddress</span>(<span class="keyword type">Handle</span>:<span class="identifier">gameconf</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="399"></a>
+<a name="400"></a><span class="comment">/**
+<a name="401"></a> * Returns the operating system's "tick count," which is a number of 
+<a name="402"></a> * milliseconds since the operating system loaded.  This can be used
+<a name="403"></a> * for basic benchmarks.
+<a name="404"></a> *
+<a name="405"></a> * <span class="doctag">@return</span>				Tick count in milliseconds.
+<a name="406"></a> */</span>
+<a name="407"></a><span class="keyword">native</span> <span class="identifier">GetSysTickCount</span>();
+<a name="408"></a>
+<a name="409"></a><span class="comment">/**
+<a name="410"></a> * Specifies that the given config file should be executed after plugin load.
+<a name="411"></a> * OnConfigsExecuted() will not be called until the config file has executed, 
+<a name="412"></a> * but it will be called if the execution fails.
+<a name="413"></a> *
+<a name="414"></a> * <span class="doctag">@param</span> autoCreate	If true, and the config file does not exist, such a config
+<a name="415"></a> *						file will be automatically created and populated with
+<a name="416"></a> *						information from the plugin's registered cvars.
+<a name="417"></a> * <span class="doctag">@param</span> name			Name of the config file, excluding the .cfg extension.
+<a name="418"></a> *						If empty, &lt;plugin.filename.cfg&gt; is assumed.
+<a name="419"></a> * <span class="doctag">@param</span> folder		Folder under cfg/ to use.  By default this is "sourcemod."
+<a name="420"></a> * <span class="doctag">@noreturn</span>
+<a name="421"></a> */</span>
+<a name="422"></a><span class="keyword">native</span> <span class="identifier">AutoExecConfig</span>(<span class="keyword type">bool</span>:<span class="identifier">autoCreate</span>=<span class="keyword literal">true</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]=<span class="string">""</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">folder</span>[]=<span class="string">"sourcemod"</span>);
+<a name="423"></a>
+<a name="424"></a><span class="comment">/**
+<a name="425"></a> * Registers a library name for identifying as a dependency to 
+<a name="426"></a> * other plugins.
+<a name="427"></a> *
+<a name="428"></a> * <span class="doctag">@param</span> name			Library name.
+<a name="429"></a> * <span class="doctag">@noreturn</span>
+<a name="430"></a> */</span>
+<a name="431"></a><span class="keyword">native</span> <span class="identifier">RegPluginLibrary</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="432"></a>
+<a name="433"></a><span class="comment">/**
+<a name="434"></a> * Returns whether a library exists.  This function should be considered 
+<a name="435"></a> * expensive; it should only be called on plugin to determine availability 
+<a name="436"></a> * of resources.  Use OnLibraryAdded()/OnLibraryRemoved() to detect changes 
+<a name="437"></a> * in optional resources.
+<a name="438"></a> *
+<a name="439"></a> * <span class="doctag">@param</span> name			Library name of a plugin or extension.
+<a name="440"></a> * <span class="doctag">@return</span>				True if exists, false otherwise.
+<a name="441"></a> */</span>
+<a name="442"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">LibraryExists</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="443"></a>
+<a name="444"></a><span class="comment">/**
+<a name="445"></a> * Returns the status of an extension, by filename.
+<a name="446"></a> *
+<a name="447"></a> * <span class="doctag">@param</span> name			Extension name (like "sdktools.ext").
+<a name="448"></a> * <span class="doctag">@param</span> error			Optional error message buffer.
+<a name="449"></a> * <span class="doctag">@param</span> maxlength		Length of optional error message buffer.
+<a name="450"></a> * <span class="doctag">@return</span>				-2 if the extension was not found.
+<a name="451"></a> *						-1 if the extension was found but failed to load.
+<a name="452"></a> * 						 0 if the extension loaded but reported an error.
+<a name="453"></a> * 						 1 if the extension is running without error.
+<a name="454"></a> */</span>
+<a name="455"></a><span class="keyword">native</span> <span class="identifier">GetExtensionFileStatus</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="keyword type">String</span>:<span class="identifier">error</span>[]=<span class="string">""</span>, <span class="identifier">maxlength</span>=<span class="number">0</span>);
+<a name="456"></a>
+<a name="457"></a><span class="comment">/**
+<a name="458"></a> * Called after a library is added that the current plugin references 
+<a name="459"></a> * optionally. A library is either a plugin name or extension name, as 
+<a name="460"></a> * exposed via its include file.
+<a name="461"></a> *
+<a name="462"></a> * <span class="doctag">@param</span> name			Library name.
+<a name="463"></a> */</span>
+<a name="464"></a><span class="keyword">forward</span> <span class="identifier">OnLibraryAdded</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="465"></a>
+<a name="466"></a><span class="comment">/**
+<a name="467"></a> * Called right before a library is removed that the current plugin references 
+<a name="468"></a> * optionally.  A library is either a plugin name or extension name, as 
+<a name="469"></a> * exposed via its include file.
+<a name="470"></a> *
+<a name="471"></a> * <span class="doctag">@param</span> name			Library name.
+<a name="472"></a> */</span>
+<a name="473"></a><span class="keyword">forward</span> <span class="identifier">OnLibraryRemoved</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="474"></a>
+<a name="475"></a><span class="preprocessor">#define <span class="identifier">MAPLIST_FLAG_MAPSFOLDER</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)		<span class="comment">/**&lt; On failure, use all maps in the maps folder. */</span>
+<a name="476"></a></span><span class="preprocessor">#define <span class="identifier">MAPLIST_FLAG_CLEARARRAY</span>		(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)		<span class="comment">/**&lt; If an input array is specified, clear it before adding. */</span>
+<a name="477"></a></span><span class="preprocessor">#define <span class="identifier">MAPLIST_FLAG_NO_DEFAULT</span>		(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)		<span class="comment">/**&lt; Do not read "default" or "mapcyclefile" on failure. */</span>
+<a name="478"></a></span>
+<a name="479"></a><span class="comment">/**
+<a name="480"></a> * Loads a map list to an ADT Array.
+<a name="481"></a> *
+<a name="482"></a> * A map list is a list of maps from a file.  SourceMod allows easy configuration of 
+<a name="483"></a> * maplists through addons/sourcemod/configs/maplists.cfg.  Each entry is given a 
+<a name="484"></a> * name and a file (for example, "rtv" =&gt; "rtv.cfg"), or a name and a redirection 
+<a name="485"></a> * (for example, "rtv" =&gt; "default").  This native will read a map list entry, 
+<a name="486"></a> * cache the file, and return the list of maps it holds.  
+<a name="487"></a> *
+<a name="488"></a> * Serial change numbers are used to identify if a map list has changed.  Thus, if 
+<a name="489"></a> * you pass a serial change number and it's equal to what SourceMod currently knows 
+<a name="490"></a> * about the map list, then SourceMod won't reparse the file.
+<a name="491"></a> *
+<a name="492"></a> * If the maps end up being read from the maps folder (MAPLIST_FLAG_MAPSFOLDER), they 
+<a name="493"></a> * are automatically sorted in alphabetical, ascending order.
+<a name="494"></a> *
+<a name="495"></a> * Arrays created by this function are temporary and must be freed via CloseHandle().
+<a name="496"></a> * Modifying arrays created by this function will not affect future return values or 
+<a name="497"></a> * or the contents of arrays returned to other plugins.
+<a name="498"></a> *
+<a name="499"></a> * <span class="doctag">@param</span> array			Array to store the map list.  If INVALID_HANDLE, a new blank 
+<a name="500"></a> *						array will be created.  The blocksize should be at least 16; 
+<a name="501"></a> *						otherwise results may be truncated.  Items are added to the array 
+<a name="502"></a> *						as strings.  The array is never checked for duplicates, and it is 
+<a name="503"></a> *						not read beforehand.  Only the serial number is used to detect 
+<a name="504"></a> *						changes.
+<a name="505"></a> * <span class="doctag">@param</span> serial		Serial number to identify last known map list change.  If -1, the 
+<a name="506"></a> *						the value will not be checked.  If the map list has since changed, 
+<a name="507"></a> *						the serial is updated (even if -1 was passed).  If there is an error 
+<a name="508"></a> *						finding a valid maplist, then the serial is set to -1.
+<a name="509"></a> * <span class="doctag">@param</span> str			Config name, or "default" for the default map list.  Config names 
+<a name="510"></a> *						should be somewhat descriptive.  For example, the admin menu uses 
+<a name="511"></a> *						a config name of "admin menu".  The list names can be configured 
+<a name="512"></a> *						by users in addons/sourcemod/configs/maplists.cfg.
+<a name="513"></a> * <span class="doctag">@param</span> flags			MAPLIST_FLAG flags.
+<a name="514"></a> * <span class="doctag">@return</span>				On failure:
+<a name="515"></a> *						 INVALID_HANDLE is returned, the serial is set to -1, and the input 
+<a name="516"></a> *						 array (if any) is left unchanged.
+<a name="517"></a> *						On no change:
+<a name="518"></a> 						 INVALID_HANDLE is returned, the serial is unchanged, and the input 
+<a name="519"></a> 						 array (if any) is left unchanged.
+<a name="520"></a> *						On success:
+<a name="521"></a> *						 A valid array Handle is returned, containing at least one map string.  
+<a name="522"></a> *						 If an array was passed, the return value is equal to the passed Array 
+<a name="523"></a> *						 Handle.  If the passed array was not cleared, it will have grown by at 
+<a name="524"></a> *						 least one item.  The serial number is updated to a positive number.
+<a name="525"></a> * <span class="doctag">@error</span>				Invalid array Handle that is not INVALID_HANDLE.
+<a name="526"></a> */</span>
+<a name="527"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">ReadMapList</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>=<span class="keyword core">INVALID_HANDLE</span>,
+<a name="528"></a>						  &amp;<span class="identifier">serial</span>=-<span class="number">1</span>,
+<a name="529"></a>						  <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[]=<span class="string">"default"</span>,
+<a name="530"></a>						  <span class="identifier">flags</span>=<span class="identifier">MAPLIST_FLAG_CLEARARRAY</span>);
+<a name="531"></a>						  
+<a name="532"></a><span class="comment">/**
+<a name="533"></a> * Makes a compatibility binding for map lists.  For example, if a function previously used 
+<a name="534"></a> * "clam.cfg" for map lists, this function will insert a "fake" binding to "clam.cfg" that 
+<a name="535"></a> * will be overridden if it's in the maplists.cfg file.
+<a name="536"></a> *
+<a name="537"></a> * <span class="doctag">@param</span> name			Configuration name that would be used with ReadMapList().
+<a name="538"></a> * <span class="doctag">@param</span> file			Default file to use.
+<a name="539"></a> * <span class="doctag">@noreturn</span>
+<a name="540"></a> */</span>
+<a name="541"></a><span class="keyword">native</span> <span class="identifier">SetMapListCompatBind</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">file</span>[]);
+<a name="542"></a>
+<a name="543"></a><span class="comment">/**
+<a name="544"></a> * Called when a client has sent chat text.  This must return either true or 
+<a name="545"></a> * false to indicate that a client is or is not spamming the server.
+<a name="546"></a> *
+<a name="547"></a> * The return value is a hint only.  Core or another plugin may decide 
+<a name="548"></a> * otherwise.
+<a name="549"></a> *
+<a name="550"></a> * <span class="doctag">@param</span> client		Client index.  The server (0) will never be passed.
+<a name="551"></a> * <span class="doctag">@return</span>				True if client is spamming the server, false otherwise.
+<a name="552"></a> */</span>
+<a name="553"></a><span class="keyword">forward</span> <span class="keyword type">bool</span>:<span class="identifier">OnClientFloodCheck</span>(<span class="identifier">client</span>);
+<a name="554"></a>
+<a name="555"></a><span class="comment">/**
+<a name="556"></a> * Called after a client's flood check has been computed.  This can be used 
+<a name="557"></a> * by antiflood algorithms to decay/increase flooding weights.
+<a name="558"></a> *
+<a name="559"></a> * Since the result from "OnClientFloodCheck" isn't guaranteed to be the 
+<a name="560"></a> * final result, it is generally a good idea to use this to play with other 
+<a name="561"></a> * algorithms nicely.
+<a name="562"></a> *
+<a name="563"></a> * <span class="doctag">@param</span> client		Client index.  The server (0) will never be passed.
+<a name="564"></a> * <span class="doctag">@param</span> blocked		True if client flooded last "say", false otherwise.
+<a name="565"></a> * <span class="doctag">@noreturn</span>
+<a name="566"></a> */</span>
+<a name="567"></a><span class="keyword">forward</span> <span class="identifier">OnClientFloodResult</span>(<span class="identifier">client</span>, <span class="keyword type">bool</span>:<span class="identifier">blocked</span>);
+<a name="568"></a>
+<a name="569"></a><span class="comment">/**
+<a name="570"></a> * Feature types.
+<a name="571"></a> */</span>
+<a name="572"></a><span class="keyword">enum</span> <span class="identifier">FeatureType</span>
+<a name="573"></a>{
+<a name="574"></a>	<span class="comment">/**
+<a name="575"></a>	 * A native function call.
+<a name="576"></a>	 */</span>
+<a name="577"></a>	<span class="identifier">FeatureType_Native</span>,
+<a name="578"></a>	
+<a name="579"></a>	<span class="comment">/**
+<a name="580"></a>	 * A named capability. This is distinctly different from checking for a
+<a name="581"></a>	 * native, because the underlying functionality could be enabled on-demand
+<a name="582"></a>	 * to improve loading time. Thus a native may appear to exist, but it might
+<a name="583"></a>	 * be part of a set of features that are not compatible with the current game
+<a name="584"></a>	 * or version of SourceMod.
+<a name="585"></a>	 */</span>
+<a name="586"></a>	<span class="identifier">FeatureType_Capability</span>
+<a name="587"></a>};
+<a name="588"></a>
+<a name="589"></a><span class="comment">/**
+<a name="590"></a> * Feature statuses.
+<a name="591"></a> */</span>
+<a name="592"></a><span class="keyword">enum</span> <span class="identifier">FeatureStatus</span>
+<a name="593"></a>{
+<a name="594"></a>	<span class="comment">/**
+<a name="595"></a>	 * Feature is available for use.
+<a name="596"></a>	 */</span>
+<a name="597"></a>	<span class="identifier">FeatureStatus_Available</span>,
+<a name="598"></a>	
+<a name="599"></a>	<span class="comment">/**
+<a name="600"></a>	 * Feature is not available.
+<a name="601"></a>	 */</span>
+<a name="602"></a>	<span class="identifier">FeatureStatus_Unavailable</span>,
+<a name="603"></a>	
+<a name="604"></a>	<span class="comment">/**
+<a name="605"></a>	 * Feature is not known at all.
+<a name="606"></a>	 */</span>
+<a name="607"></a>	<span class="identifier">FeatureStatus_Unknown</span>
+<a name="608"></a>};
+<a name="609"></a>
+<a name="610"></a><span class="comment">/**
+<a name="611"></a> * Returns whether "GetFeatureStatus" will work. Using this native
+<a name="612"></a> * or this function will not cause SourceMod to fail loading on older versions,
+<a name="613"></a> * however, GetFeatureStatus will only work if this function returns true.
+<a name="614"></a> *
+<a name="615"></a> * <span class="doctag">@return</span>              True if GetFeatureStatus will work, false otherwise.
+<a name="616"></a> */</span>
+<a name="617"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">CanTestFeatures</span>()
+<a name="618"></a>{
+<a name="619"></a>	<span class="keyword statement">return</span> <span class="identifier">LibraryExists</span>(<span class="string">"__CanTestFeatures__"</span>);
+<a name="620"></a>}
+<a name="621"></a>
+<a name="622"></a><span class="comment">/**
+<a name="623"></a> * Returns whether a feature exists, and if so, whether it is usable.
+<a name="624"></a> *
+<a name="625"></a> * <span class="doctag">@param</span> type          Feature type.
+<a name="626"></a> * <span class="doctag">@param</span> name          Feature name.
+<a name="627"></a> * <span class="doctag">@return</span>              Feature status.
+<a name="628"></a> */</span>
+<a name="629"></a><span class="keyword">native</span> <span class="identifier">FeatureStatus</span>:<span class="identifier">GetFeatureStatus</span>(<span class="identifier">FeatureType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="630"></a>
+<a name="631"></a><span class="comment">/**
+<a name="632"></a> * Requires that a given feature is available. If it is not, SetFailState()
+<a name="633"></a> * is called with the given message.
+<a name="634"></a> *
+<a name="635"></a> * <span class="doctag">@param</span> type          Feature type.
+<a name="636"></a> * <span class="doctag">@param</span> name          Feature name.
+<a name="637"></a> * <span class="doctag">@param</span> fmt           Message format string, or empty to use default.
+<a name="638"></a> * <span class="doctag">@param</span> ...           Message format parameters, if any.
+<a name="639"></a> * <span class="doctag">@noreturn</span>
+<a name="640"></a> */</span>
+<a name="641"></a><span class="keyword">native</span> <span class="identifier">RequireFeature</span>(<span class="identifier">FeatureType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[],
+<a name="642"></a>                      <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[]=<span class="string">""</span>, <span class="keyword type">any</span>:...);
+<a name="643"></a>
+<a name="644"></a><span class="comment">/**
+<a name="645"></a> * Represents how many bytes we can read from an address with one load
+<a name="646"></a> */</span>
+<a name="647"></a><span class="keyword">enum</span> <span class="identifier">NumberType</span>
+<a name="648"></a>{
+<a name="649"></a>    <span class="identifier">NumberType_Int8</span>,
+<a name="650"></a>    <span class="identifier">NumberType_Int16</span>,
+<a name="651"></a>    <span class="identifier">NumberType_Int32</span>
+<a name="652"></a>};
+<a name="653"></a>
+<a name="654"></a><span class="keyword">enum</span> <span class="identifier">Address</span>
+<a name="655"></a>{
+<a name="656"></a>    <span class="identifier">Address_Null</span> = <span class="number">0</span>,              <span class="commentline">//a typical invalid result when an address lookup fails
+<a name="657"></a></span>    <span class="identifier">Address_MinimumValid</span> = <span class="number">0x10000</span> <span class="commentline">//addresses below this value are considered invalid to use for Load/Store
+<a name="658"></a></span>};
+<a name="659"></a>
+<a name="660"></a><span class="comment">/**
+<a name="661"></a> * Load up to 4 bytes from a memory address.
+<a name="662"></a> *
+<a name="663"></a> * <span class="doctag">@param</span> addr          Address to a memory location.
+<a name="664"></a> * <span class="doctag">@param</span> size          How many bytes should be read.
+<a name="665"></a> * <span class="doctag">@return</span>              The value that is stored at that address.
+<a name="666"></a> */</span>
+<a name="667"></a><span class="keyword">native</span> <span class="identifier">LoadFromAddress</span>(<span class="identifier">Address</span>:<span class="identifier">addr</span>, <span class="identifier">NumberType</span>:<span class="identifier">size</span>);
+<a name="668"></a>
+<a name="669"></a><span class="comment">/**
+<a name="670"></a> * Store up to 4 bytes to a memory address.
+<a name="671"></a> *
+<a name="672"></a> * <span class="doctag">@param</span> addr          Address to a memory location.
+<a name="673"></a> * <span class="doctag">@param</span> data          Value to store at the address.
+<a name="674"></a> * <span class="doctag">@param</span> size          How many bytes should be written.
+<a name="675"></a> * <span class="doctag">@noreturn</span>
+<a name="676"></a> */</span>
+<a name="677"></a><span class="keyword">native</span> <span class="identifier">StoreToAddress</span>(<span class="identifier">Address</span>:<span class="identifier">addr</span>, <span class="identifier">data</span>, <span class="identifier">NumberType</span>:<span class="identifier">size</span>); 
+<a name="678"></a>
+<a name="679"></a><span class="preprocessor">#include <span class="tag">&lt;helpers&gt;</span>
+<a name="680"></a></span><span class="preprocessor">#include <span class="tag">&lt;entity&gt;</span>
+<a name="681"></a></span><span class="preprocessor">#include <span class="tag">&lt;entity_prop_stocks&gt;</span>
+<a name="682"></a></span>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

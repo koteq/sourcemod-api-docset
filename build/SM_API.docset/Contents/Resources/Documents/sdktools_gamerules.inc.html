@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<title>sdktools_gamerules.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2011 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_sdktools_gamerules_included</span>
+<a name="34"></a></span>  <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_sdktools_gamerules_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="keyword">enum</span> <span class="identifier">RoundState</span> {
+<a name="39"></a>	<span class="commentline">// initialize the game, create teams
+<a name="40"></a></span>	<span class="identifier">RoundState_Init</span>,
+<a name="41"></a>	
+<a name="42"></a>	<span class="commentline">//Before players have joined the game. Periodically checks to see if enough players are ready
+<a name="43"></a></span>	<span class="commentline">//to start a game. Also reverts to this when there are no active players
+<a name="44"></a></span>	<span class="identifier">RoundState_Pregame</span>,
+<a name="45"></a>	
+<a name="46"></a>	<span class="commentline">//The game is about to start, wait a bit and spawn everyone
+<a name="47"></a></span>	<span class="identifier">RoundState_StartGame</span>,
+<a name="48"></a>	
+<a name="49"></a>	<span class="commentline">//All players are respawned, frozen in place
+<a name="50"></a></span>	<span class="identifier">RoundState_Preround</span>,
+<a name="51"></a>	
+<a name="52"></a>	<span class="commentline">//Round is on, playing normally
+<a name="53"></a></span>	<span class="identifier">RoundState_RoundRunning</span>,
+<a name="54"></a>	
+<a name="55"></a>	<span class="commentline">//Someone has won the round
+<a name="56"></a></span>	<span class="identifier">RoundState_TeamWin</span>,
+<a name="57"></a>	
+<a name="58"></a>	<span class="commentline">//Noone has won, manually restart the game, reset scores
+<a name="59"></a></span>	<span class="identifier">RoundState_Restart</span>,
+<a name="60"></a>	
+<a name="61"></a>	<span class="commentline">//Noone has won, restart the game
+<a name="62"></a></span>	<span class="identifier">RoundState_Stalemate</span>,
+<a name="63"></a>	
+<a name="64"></a>	<span class="commentline">//Game is over, showing the scoreboard etc
+<a name="65"></a></span>	<span class="identifier">RoundState_GameOver</span>,
+<a name="66"></a>	
+<a name="67"></a>	<span class="commentline">//Game is over, doing bonus round stuff
+<a name="68"></a></span>	<span class="identifier">RoundState_Bonus</span>,
+<a name="69"></a>	
+<a name="70"></a>	<span class="commentline">//Between rounds
+<a name="71"></a></span>	<span class="identifier">RoundState_BetweenRounds</span>,
+<a name="72"></a>};
+<a name="73"></a>
+<a name="74"></a><span class="comment">/**
+<a name="75"></a> * Retrieves an integer value from a property of the gamerules entity.
+<a name="76"></a> * 
+<a name="77"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="78"></a> * <span class="doctag">@param</span> size			Number of bytes to read (valid values are 1, 2, or 4).
+<a name="79"></a> *						This value is auto-detected, and the size parameter is 
+<a name="80"></a> *						only used as a fallback in case detection fails.
+<a name="81"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="82"></a> * <span class="doctag">@return</span>				Value at the given property offset.
+<a name="83"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="84"></a> */</span>
+<a name="85"></a><span class="keyword">native</span> <span class="identifier">GameRules_GetProp</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">size</span>=<span class="number">4</span>, <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="86"></a>
+<a name="87"></a><span class="comment">/**
+<a name="88"></a> * Sets an integer value for a property of the gamerules entity.
+<a name="89"></a> *
+<a name="90"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="91"></a> * <span class="doctag">@param</span> value			Value to set.
+<a name="92"></a> * <span class="doctag">@param</span> size			Number of bytes to write (valid values are 1, 2, or 4).
+<a name="93"></a> *						This value is auto-detected, and the size parameter is 
+<a name="94"></a> *						only used as a fallback in case detection fails.
+<a name="95"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="96"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="97"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="98"></a> * <span class="doctag">@noreturn</span>
+<a name="99"></a> */</span>
+<a name="100"></a><span class="keyword">native</span> <span class="identifier">GameRules_SetProp</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">any</span>:<span class="identifier">value</span>, <span class="identifier">size</span>=<span class="number">4</span>, <span class="identifier">element</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="101"></a>
+<a name="102"></a><span class="comment">/**
+<a name="103"></a> * Retrieves a float value from a property of the gamerules entity.
+<a name="104"></a> * 
+<a name="105"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="106"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="107"></a> * <span class="doctag">@return</span>				Value at the given property offset.
+<a name="108"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="109"></a> */</span>
+<a name="110"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GameRules_GetPropFloat</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="111"></a>
+<a name="112"></a><span class="comment">/**
+<a name="113"></a> * Sets a float value for a property of the gamerules entity.
+<a name="114"></a> * 
+<a name="115"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="116"></a> * <span class="doctag">@param</span> value			Value to set.
+<a name="117"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="118"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="119"></a> * <span class="doctag">@noreturn</span>
+<a name="120"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="121"></a> */</span>
+<a name="122"></a><span class="keyword">native</span> <span class="identifier">GameRules_SetPropFloat</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">Float</span>:<span class="identifier">value</span>, <span class="identifier">element</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="123"></a>
+<a name="124"></a><span class="comment">/**
+<a name="125"></a> * Retrieves a entity index from a property of the gamerules entity.
+<a name="126"></a> * 
+<a name="127"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="128"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="129"></a> * <span class="doctag">@return</span>				Entity index at the given property.
+<a name="130"></a> *						If there is no entity, or the entity is not valid, 
+<a name="131"></a> *						then -1 is returned.
+<a name="132"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="133"></a> */</span>
+<a name="134"></a><span class="keyword">native</span> <span class="identifier">GameRules_GetPropEnt</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="135"></a>
+<a name="136"></a><span class="comment">/**
+<a name="137"></a> * Sets an entity index for a property of the gamerules entity.
+<a name="138"></a> * 
+<a name="139"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="140"></a> * <span class="doctag">@param</span> other			Entity index to set, or -1 to unset.
+<a name="141"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="142"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="143"></a> * <span class="doctag">@noreturn</span>
+<a name="144"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="145"></a> */</span>
+<a name="146"></a><span class="keyword">native</span> <span class="identifier">GameRules_SetPropEnt</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">other</span>, <span class="identifier">element</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="147"></a>
+<a name="148"></a><span class="comment">/**
+<a name="149"></a> * Retrieves a vector of floats from the gamerules entity, given a named network property.
+<a name="150"></a> * 
+<a name="151"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="152"></a> * <span class="doctag">@param</span> vec			Vector buffer to store data in.
+<a name="153"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="154"></a> * <span class="doctag">@noreturn</span>
+<a name="155"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="156"></a> */</span>
+<a name="157"></a><span class="keyword">native</span> <span class="identifier">GameRules_GetPropVector</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="158"></a>
+<a name="159"></a><span class="comment">/**
+<a name="160"></a> * Sets a vector of floats in the gamerules entity, given a named network property.
+<a name="161"></a> *
+<a name="162"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="163"></a> * <span class="doctag">@param</span> vec			Vector to set.
+<a name="164"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="165"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="166"></a> * <span class="doctag">@noreturn</span>
+<a name="167"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="168"></a> */</span>
+<a name="169"></a><span class="keyword">native</span> <span class="identifier">GameRules_SetPropVector</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="identifier">element</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="170"></a>
+<a name="171"></a><span class="comment">/**
+<a name="172"></a> * Gets a gamerules property as a string.
+<a name="173"></a> * 
+<a name="174"></a> * <span class="doctag">@param</span> prop			Property to use.
+<a name="175"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="176"></a> * <span class="doctag">@param</span> maxlen		Maximum length of output string buffer.
+<a name="177"></a> * <span class="doctag">@return</span>				Number of non-null bytes written.
+<a name="178"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="179"></a> */</span>
+<a name="180"></a><span class="keyword">native</span> <span class="identifier">GameRules_GetPropString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>);
+<a name="181"></a>
+<a name="182"></a><span class="comment">/**
+<a name="183"></a> * Sets a gamerules property as a string.
+<a name="184"></a> *
+<a name="185"></a> * <span class="doctag">@param</span> prop			Property to use.
+<a name="186"></a> * <span class="doctag">@param</span> buffer		String to set.		
+<a name="187"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="188"></a> * <span class="doctag">@return</span>				Number of non-null bytes written.
+<a name="189"></a> * <span class="doctag">@error</span>				Not supported.
+<a name="190"></a> */</span>
+<a name="191"></a><span class="keyword">native</span> <span class="identifier">GameRules_SetPropString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="192"></a>
+<a name="193"></a><span class="comment">/**
+<a name="194"></a> * Gets the current round state.
+<a name="195"></a> *
+<a name="196"></a> * <span class="doctag">@return</span>				Round state.
+<a name="197"></a> * <span class="doctag">@error</span>				Game doesn't support round state.
+<a name="198"></a> */</span>
+<a name="199"></a><span class="keyword">stock</span> <span class="identifier">RoundState</span>:<span class="identifier">GameRules_GetRoundState</span>()
+<a name="200"></a>{
+<a name="201"></a>	<span class="keyword statement">return</span> <span class="identifier">RoundState</span>:<span class="identifier">GameRules_GetProp</span>(<span class="string">"m_iRoundState"</span>);
+<a name="202"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

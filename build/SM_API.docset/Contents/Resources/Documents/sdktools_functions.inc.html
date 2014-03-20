@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<title>sdktools_functions.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_sdktools_functions_included</span>
+<a name="34"></a></span>  <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_sdktools_functions_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Removes a player's item.
+<a name="40"></a> *
+<a name="41"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="42"></a> * <span class="doctag">@param</span> item			CBaseCombatWeapon entity index.
+<a name="43"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="44"></a> * <span class="doctag">@error</span>				Invalid client or entity, lack of mod support, or client not in 
+<a name="45"></a> *						game.
+<a name="46"></a> */</span>
+<a name="47"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RemovePlayerItem</span>(<span class="identifier">client</span>, <span class="identifier">item</span>);
+<a name="48"></a>
+<a name="49"></a><span class="comment">/**
+<a name="50"></a> * Gives a named item to a player.
+<a name="51"></a> *
+<a name="52"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="53"></a> * <span class="doctag">@param</span> item			Item classname (such as weapon_ak47).
+<a name="54"></a> * <span class="doctag">@param</span> iSubType		Unknown.
+<a name="55"></a> * <span class="doctag">@return</span>				Entity index on success, or -1 on failure.
+<a name="56"></a> * <span class="doctag">@error</span>				Invalid client or client not in game, or lack of mod support.
+<a name="57"></a> */</span>
+<a name="58"></a><span class="keyword">native</span> <span class="identifier">GivePlayerItem</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">item</span>[], <span class="identifier">iSubType</span>=<span class="number">0</span>);
+<a name="59"></a>
+<a name="60"></a><span class="comment">/**
+<a name="61"></a> * Returns the weapon in a player's slot.  
+<a name="62"></a> *
+<a name="63"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="64"></a> * <span class="doctag">@param</span> slot			Slot index (mod specific).
+<a name="65"></a> * <span class="doctag">@return</span>				Entity index on success, -1 if no weapon existed.
+<a name="66"></a> * <span class="doctag">@error</span>				Invalid client or client not in game, or lack of mod support.
+<a name="67"></a> */</span>
+<a name="68"></a><span class="keyword">native</span> <span class="identifier">GetPlayerWeaponSlot</span>(<span class="identifier">client</span>, <span class="identifier">slot</span>);
+<a name="69"></a>
+<a name="70"></a><span class="comment">/**
+<a name="71"></a> * Ignites an entity on fire.
+<a name="72"></a> *
+<a name="73"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="74"></a> * <span class="doctag">@param</span> time			Number of seconds to set on fire.
+<a name="75"></a> * <span class="doctag">@param</span> npc			True to only affect NPCs.
+<a name="76"></a> * <span class="doctag">@param</span> size			Unknown.
+<a name="77"></a> * <span class="doctag">@param</span> level			Unknown.
+<a name="78"></a> * <span class="doctag">@noreturn</span>
+<a name="79"></a> * <span class="doctag">@error</span>				Invalid entity or client not in game, or lack of mod support.
+<a name="80"></a> */</span>
+<a name="81"></a><span class="keyword">native</span> <span class="identifier">IgniteEntity</span>(<span class="identifier">entity</span>, <span class="keyword type">Float</span>:<span class="identifier">time</span>, <span class="keyword type">bool</span>:<span class="identifier">npc</span>=<span class="keyword literal">false</span>, <span class="keyword type">Float</span>:<span class="identifier">size</span>=<span class="number">0.0</span>, <span class="keyword type">bool</span>:<span class="identifier">level</span>=<span class="keyword literal">false</span>);
+<a name="82"></a>
+<a name="83"></a><span class="comment">/**
+<a name="84"></a> * Extinguishes an entity that is on fire.
+<a name="85"></a> *
+<a name="86"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="87"></a> * <span class="doctag">@noreturn</span>
+<a name="88"></a> * <span class="doctag">@error</span>				Invalid entity or client not in game, or lack of mod support.
+<a name="89"></a> */</span>
+<a name="90"></a><span class="keyword">native</span> <span class="identifier">ExtinguishEntity</span>(<span class="identifier">entity</span>);
+<a name="91"></a>
+<a name="92"></a><span class="comment">/**
+<a name="93"></a> * Teleports an entity.
+<a name="94"></a> *
+<a name="95"></a> * <span class="doctag">@param</span> entity		Client index.
+<a name="96"></a> * <span class="doctag">@param</span> origin		New origin, or NULL_VECTOR for no change.
+<a name="97"></a> * <span class="doctag">@param</span> angles		New angles, or NULL_VECTOR for no change.
+<a name="98"></a> * <span class="doctag">@param</span> velocity		New velocity, or NULL_VECTOR for no change.
+<a name="99"></a> * <span class="doctag">@noreturn</span>
+<a name="100"></a> * <span class="doctag">@error</span>				Invalid entity or client not in game, or lack of mod support.
+<a name="101"></a> */</span>
+<a name="102"></a><span class="keyword">native</span> <span class="identifier">TeleportEntity</span>(<span class="identifier">entity</span>, <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">origin</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">angles</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">velocity</span>[<span class="number">3</span>]);
+<a name="103"></a>
+<a name="104"></a><span class="comment">/**
+<a name="105"></a> * Forces a player to commit suicide.
+<a name="106"></a> *
+<a name="107"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="108"></a> * <span class="doctag">@noreturn</span>
+<a name="109"></a> * <span class="doctag">@error</span>				Invalid client or client not in game, or lack of mod support.
+<a name="110"></a> */</span>
+<a name="111"></a><span class="keyword">native</span> <span class="identifier">ForcePlayerSuicide</span>(<span class="identifier">client</span>);
+<a name="112"></a>
+<a name="113"></a><span class="comment">/**
+<a name="114"></a> * Slaps a player in a random direction.
+<a name="115"></a> *
+<a name="116"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="117"></a> * <span class="doctag">@param</span> health		Health to subtract.
+<a name="118"></a> * <span class="doctag">@param</span> sound			False to disable the sound effects.
+<a name="119"></a> * <span class="doctag">@noreturn</span>
+<a name="120"></a> * <span class="doctag">@error</span>				Invalid client or client not in game, or lack of mod support.
+<a name="121"></a> */</span>
+<a name="122"></a><span class="keyword">native</span> <span class="identifier">SlapPlayer</span>(<span class="identifier">client</span>, <span class="identifier">health</span>=<span class="number">5</span>, <span class="keyword type">bool</span>:<span class="identifier">sound</span>=<span class="keyword literal">true</span>);
+<a name="123"></a>
+<a name="124"></a><span class="comment">/**
+<a name="125"></a> * Searches for an entity by classname.
+<a name="126"></a> *
+<a name="127"></a> * <span class="doctag">@param</span> startEnt		The entity index after which to begin searching from.
+<a name="128"></a> *						Use -1 to start from the first entity.
+<a name="129"></a> * <span class="doctag">@param</span> classname		Classname of the entity to find.
+<a name="130"></a> * <span class="doctag">@return</span>				Entity index &gt;= 0 if found, -1 otherwise.
+<a name="131"></a> * <span class="doctag">@error</span>				Lack of mod support.
+<a name="132"></a> */</span>
+<a name="133"></a><span class="keyword">native</span> <span class="identifier">FindEntityByClassname</span>(<span class="identifier">startEnt</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">classname</span>[]);
+<a name="134"></a>
+<a name="135"></a><span class="comment">/**
+<a name="136"></a> * Returns the client's eye angles.
+<a name="137"></a> *
+<a name="138"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="139"></a> * <span class="doctag">@param</span> ang			Destination vector to store the client's eye angles.
+<a name="140"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="141"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="142"></a> */</span>
+<a name="143"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetClientEyeAngles</span>(<span class="identifier">client</span>, <span class="keyword type">Float</span>:<span class="identifier">ang</span>[<span class="number">3</span>]);
+<a name="144"></a>
+<a name="145"></a><span class="comment">/**
+<a name="146"></a> * Creates an entity by string name, but does not spawn it (see DispatchSpawn).
+<a name="147"></a> * If ForceEdictIndex is not -1, then it will use the edict by that index. If the index is 
+<a name="148"></a> *  invalid or there is already an edict using that index, it will error out.
+<a name="149"></a> *
+<a name="150"></a> * <span class="doctag">@param</span> classname			Entity classname.
+<a name="151"></a> * <span class="doctag">@param</span> ForceEdictIndex	Edict index used by the created entity (ignored on Orangebox and above).
+<a name="152"></a> * <span class="doctag">@return</span>					Entity index on success, or -1 on failure.
+<a name="153"></a> * <span class="doctag">@error</span>					Invalid edict index, or no mod support.
+<a name="154"></a> */</span>
+<a name="155"></a><span class="keyword">native</span> <span class="identifier">CreateEntityByName</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">classname</span>[], <span class="identifier">ForceEdictIndex</span>=-<span class="number">1</span>);
+<a name="156"></a>
+<a name="157"></a><span class="comment">/**
+<a name="158"></a> * Spawns an entity into the game.
+<a name="159"></a> *
+<a name="160"></a> * <span class="doctag">@param</span> entity		Entity index of the created entity.
+<a name="161"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="162"></a> * <span class="doctag">@error</span>				Invalid entity index, or no mod support.
+<a name="163"></a> */</span>
+<a name="164"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DispatchSpawn</span>(<span class="identifier">entity</span>);
+<a name="165"></a>
+<a name="166"></a><span class="comment">/**
+<a name="167"></a> * Dispatches a KeyValue into given entity using a string value.
+<a name="168"></a> *
+<a name="169"></a> * <span class="doctag">@param</span> entity		Destination entity index.
+<a name="170"></a> * <span class="doctag">@param</span> keyName		Name of the key.
+<a name="171"></a> * <span class="doctag">@param</span> value			String value.
+<a name="172"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="173"></a> * <span class="doctag">@error</span>				Invalid entity index, or no mod support.
+<a name="174"></a> */</span>
+<a name="175"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DispatchKeyValue</span>(<span class="identifier">entity</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">keyName</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="176"></a>
+<a name="177"></a><span class="comment">/**
+<a name="178"></a> * Dispatches a KeyValue into given entity using a floating point value.
+<a name="179"></a> *
+<a name="180"></a> * <span class="doctag">@param</span> entity		Destination entity index.
+<a name="181"></a> * <span class="doctag">@param</span> keyName		Name of the key.
+<a name="182"></a> * <span class="doctag">@param</span> value			Floating point value.
+<a name="183"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="184"></a> * <span class="doctag">@error</span>				Invalid entity index, or no mod support.
+<a name="185"></a> */</span>
+<a name="186"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DispatchKeyValueFloat</span>(<span class="identifier">entity</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">keyName</span>[], <span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="187"></a>
+<a name="188"></a><span class="comment">/**
+<a name="189"></a> * Dispatches a KeyValue into given entity using a vector value.
+<a name="190"></a> *
+<a name="191"></a> * <span class="doctag">@param</span> entity		Destination entity index.
+<a name="192"></a> * <span class="doctag">@param</span> keyName		Name of the key.
+<a name="193"></a> * <span class="doctag">@param</span> vec			Vector value.
+<a name="194"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="195"></a> * <span class="doctag">@error</span>				Invalid entity index, or no mod support.
+<a name="196"></a> */</span>
+<a name="197"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DispatchKeyValueVector</span>(<span class="identifier">entity</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">keyName</span>[], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>]);
+<a name="198"></a>
+<a name="199"></a><span class="comment">/**
+<a name="200"></a> * Returns the entity a client is aiming at.
+<a name="201"></a> *
+<a name="202"></a> * <span class="doctag">@param</span> client		Client performing the aiming.
+<a name="203"></a> * <span class="doctag">@param</span> only_clients	True to exclude all entities but clients.
+<a name="204"></a> * <span class="doctag">@return</span>				Entity index being aimed at.
+<a name="205"></a> *						-1 if no entity is being aimed at.
+<a name="206"></a> * 						-2 if the function is not supported.
+<a name="207"></a> * <span class="doctag">@error</span>				Invalid client index or client not in game.
+<a name="208"></a> */</span>
+<a name="209"></a><span class="keyword">native</span> <span class="identifier">GetClientAimTarget</span>(<span class="identifier">client</span>, <span class="keyword type">bool</span>:<span class="identifier">only_clients</span>=<span class="keyword literal">true</span>);
+<a name="210"></a>
+<a name="211"></a><span class="comment">/**
+<a name="212"></a> * Returns the total number of teams in a game.
+<a name="213"></a> * Note: This native should not be called before OnMapStart.
+<a name="214"></a> *
+<a name="215"></a> * <span class="doctag">@return</span>				Total number of teams.
+<a name="216"></a> */</span>
+<a name="217"></a><span class="keyword">native</span> <span class="identifier">GetTeamCount</span>();
+<a name="218"></a>
+<a name="219"></a><span class="comment">/**
+<a name="220"></a> * Retrieves the team name based on a team index.
+<a name="221"></a> * Note: This native should not be called before OnMapStart.
+<a name="222"></a> *
+<a name="223"></a> * <span class="doctag">@param</span> index				Team index.
+<a name="224"></a> * <span class="doctag">@param</span> name				Buffer to store string in.
+<a name="225"></a> * <span class="doctag">@param</span> maxlength			Maximum length of string buffer.
+<a name="226"></a> * <span class="doctag">@noreturn</span>
+<a name="227"></a> * <span class="doctag">@error</span>				Invalid team index.
+<a name="228"></a> */</span>
+<a name="229"></a><span class="keyword">native</span> <span class="identifier">GetTeamName</span>(<span class="identifier">index</span>, <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlength</span>);
+<a name="230"></a>
+<a name="231"></a><span class="comment">/**
+<a name="232"></a> * Returns the score of a team based on a team index.
+<a name="233"></a> * Note: This native should not be called before OnMapStart.
+<a name="234"></a> *
+<a name="235"></a> * <span class="doctag">@param</span> index				Team index.
+<a name="236"></a> * <span class="doctag">@return</span>				Score.
+<a name="237"></a> * <span class="doctag">@error</span>				Invalid team index.
+<a name="238"></a> */</span>
+<a name="239"></a><span class="keyword">native</span> <span class="identifier">GetTeamScore</span>(<span class="identifier">index</span>);
+<a name="240"></a>
+<a name="241"></a><span class="comment">/**
+<a name="242"></a> * Sets the score of a team based on a team index.
+<a name="243"></a> * Note: This native should not be called before OnMapStart.
+<a name="244"></a> *
+<a name="245"></a> * <span class="doctag">@param</span> index				Team index.
+<a name="246"></a> * <span class="doctag">@param</span> value				New score value.
+<a name="247"></a> * <span class="doctag">@return</span>				Score.
+<a name="248"></a> * <span class="doctag">@error</span>				Invalid team index.
+<a name="249"></a> */</span>
+<a name="250"></a><span class="keyword">native</span> <span class="identifier">SetTeamScore</span>(<span class="identifier">index</span>, <span class="identifier">value</span>);
+<a name="251"></a>
+<a name="252"></a><span class="comment">/**
+<a name="253"></a> * Retrieves the number of players in a certain team.
+<a name="254"></a> * Note: This native should not be called before OnMapStart.
+<a name="255"></a> *
+<a name="256"></a> * <span class="doctag">@param</span> index				Team index.
+<a name="257"></a> * <span class="doctag">@return</span>				Number of players in the team.
+<a name="258"></a> * <span class="doctag">@error</span>				Invalid team index.
+<a name="259"></a> */</span>
+<a name="260"></a><span class="keyword">native</span> <span class="identifier">GetTeamClientCount</span>(<span class="identifier">index</span>);
+<a name="261"></a>
+<a name="262"></a><span class="comment">/**
+<a name="263"></a> * Sets the model to a given entity.
+<a name="264"></a> *
+<a name="265"></a> * <span class="doctag">@param</span> entity			Entity index.
+<a name="266"></a> * <span class="doctag">@param</span> model				Model name.
+<a name="267"></a> * <span class="doctag">@noreturn</span>
+<a name="268"></a> * <span class="doctag">@error</span>				Invalid entity index, or no mod support.
+<a name="269"></a> */</span>
+<a name="270"></a><span class="keyword">native</span> <span class="identifier">SetEntityModel</span>(<span class="identifier">entity</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">model</span>[]);
+<a name="271"></a>
+<a name="272"></a><span class="comment">/**
+<a name="273"></a> * Retrieves the decal file name associated to a given client.
+<a name="274"></a> *
+<a name="275"></a> * <span class="doctag">@param</span> client			Player's index.
+<a name="276"></a> * <span class="doctag">@param</span> hex				Buffer to store the logo filename.
+<a name="277"></a> * <span class="doctag">@param</span> maxlength			Maximum length of string buffer.
+<a name="278"></a> * <span class="doctag">@return</span>				True on success, otherwise false.
+<a name="279"></a> * <span class="doctag">@error</span>				Invalid client or client not in game.
+<a name="280"></a> */</span>
+<a name="281"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetPlayerDecalFile</span>(<span class="identifier">client</span>, <span class="keyword type">String</span>:<span class="identifier">hex</span>[], <span class="identifier">maxlength</span>);
+<a name="282"></a>
+<a name="283"></a><span class="comment">/**
+<a name="284"></a> * Returns the average server network traffic in bytes/sec.
+<a name="285"></a> *
+<a name="286"></a> * <span class="doctag">@param</span> in				Buffer to store the input traffic velocity.
+<a name="287"></a> * <span class="doctag">@param</span> out				Buffer to store the output traffic velocity.
+<a name="288"></a> * <span class="doctag">@noreturn</span>
+<a name="289"></a> */</span>
+<a name="290"></a><span class="keyword">native</span> <span class="identifier">GetServerNetStats</span>(&amp;<span class="keyword type">Float</span>:<span class="identifier">in</span>, &amp;<span class="keyword type">Float</span>:<span class="identifier">out</span>);
+<a name="291"></a>
+<a name="292"></a><span class="comment">/**
+<a name="293"></a> * Equip's a player's weapon.
+<a name="294"></a> *
+<a name="295"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="296"></a> * <span class="doctag">@param</span> weapon			CBaseCombatWeapon entity index.
+<a name="297"></a> * <span class="doctag">@noreturn</span>
+<a name="298"></a> * <span class="doctag">@error</span>				Invalid client or entity, lack of mod support, or client not in 
+<a name="299"></a> *						game.
+<a name="300"></a> */</span>
+<a name="301"></a><span class="keyword">native</span> <span class="identifier">EquipPlayerWeapon</span>(<span class="identifier">client</span>, <span class="identifier">weapon</span>);
+<a name="302"></a>
+<a name="303"></a><span class="comment">/**
+<a name="304"></a> * Activates an entity (CBaseAnimating::Activate)
+<a name="305"></a> *
+<a name="306"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="307"></a> * <span class="doctag">@noreturn</span>
+<a name="308"></a> * <span class="doctag">@error</span>				Invalid entity or lack of mod support.
+<a name="309"></a> */</span>
+<a name="310"></a><span class="keyword">native</span> <span class="identifier">ActivateEntity</span>(<span class="identifier">entity</span>);
+<a name="311"></a>
+<a name="312"></a><span class="comment">/**
+<a name="313"></a> * Sets values to client info buffer keys and notifies the engine of the change.
+<a name="314"></a> * The change does not get propogated to mods until the next frame.
+<a name="315"></a> *
+<a name="316"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="317"></a> * <span class="doctag">@param</span> key			Key string.
+<a name="318"></a> * <span class="doctag">@param</span> value			Value string.
+<a name="319"></a> * <span class="doctag">@noreturn</span>
+<a name="320"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="321"></a> */</span>
+<a name="322"></a><span class="keyword">native</span> <span class="identifier">SetClientInfo</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="323"></a>
+<a name="324"></a><span class="comment">/**
+<a name="325"></a> * Gives ammo of a certain type to a player.
+<a name="326"></a> * This natives obeys the maximum amount of ammo a player can carry per ammo type.
+<a name="327"></a> *
+<a name="328"></a> * <span class="doctag">@param</span> client        The client index.
+<a name="329"></a> * <span class="doctag">@param</span> amount        Amount of ammo to give. Is capped at ammotype's limit.
+<a name="330"></a> * <span class="doctag">@param</span> ammotype      Type of ammo to give to player.
+<a name="331"></a> * <span class="doctag">@param</span> suppressSound If true, don't play the ammo pickup sound.
+<a name="332"></a> *
+<a name="333"></a> * <span class="doctag">@return</span> Amount of ammo actually given.
+<a name="334"></a> */</span>
+<a name="335"></a><span class="keyword">native</span> <span class="identifier">GivePlayerAmmo</span>(<span class="identifier">client</span>, <span class="identifier">amount</span>, <span class="identifier">ammotype</span>, <span class="keyword type">bool</span>:<span class="identifier">suppressSound</span>=<span class="keyword literal">false</span>);<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<title>console.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_console_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_console_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="preprocessor">#define <span class="identifier">INVALID_FCVAR_FLAGS</span>		(-<span class="number">1</span>)
+<a name="39"></a></span>
+<a name="40"></a><span class="comment">/**
+<a name="41"></a> * Console variable bound values used with Get/SetConVarBounds()
+<a name="42"></a> */</span>
+<a name="43"></a><span class="keyword">enum</span> <span class="identifier">ConVarBounds</span>
+<a name="44"></a>{
+<a name="45"></a>	<span class="identifier">ConVarBound_Upper</span> = <span class="number">0</span>,
+<a name="46"></a>	<span class="identifier">ConVarBound_Lower</span>
+<a name="47"></a>};
+<a name="48"></a>
+<a name="49"></a><span class="comment">/**
+<a name="50"></a> * Console variable query helper values.
+<a name="51"></a> */</span>
+<a name="52"></a><span class="keyword">enum</span> <span class="identifier">QueryCookie</span>
+<a name="53"></a>{
+<a name="54"></a>	<span class="identifier">QUERYCOOKIE_FAILED</span> = <span class="number">0</span>,
+<a name="55"></a>};
+<a name="56"></a>
+<a name="57"></a><span class="comment">/**
+<a name="58"></a> * Reply sources for commands.
+<a name="59"></a> */</span>
+<a name="60"></a><span class="keyword">enum</span> <span class="identifier">ReplySource</span>
+<a name="61"></a>{
+<a name="62"></a>	<span class="identifier">SM_REPLY_TO_CONSOLE</span> = <span class="number">0</span>,
+<a name="63"></a>	<span class="identifier">SM_REPLY_TO_CHAT</span> = <span class="number">1</span>,
+<a name="64"></a>};
+<a name="65"></a>
+<a name="66"></a><span class="comment">/**
+<a name="67"></a> * Console variable query result values.
+<a name="68"></a> */</span>
+<a name="69"></a><span class="keyword">enum</span> <span class="identifier">ConVarQueryResult</span>
+<a name="70"></a>{
+<a name="71"></a>	<span class="identifier">ConVarQuery_Okay</span> = <span class="number">0</span>,				<span class="comment">/**&lt; Retrieval of client convar value was successful. */</span>
+<a name="72"></a>	<span class="identifier">ConVarQuery_NotFound</span>,				<span class="comment">/**&lt; Client convar was not found. */</span>
+<a name="73"></a>	<span class="identifier">ConVarQuery_NotValid</span>,				<span class="comment">/**&lt; A console command with the same name was found, but there is no convar. */</span>
+<a name="74"></a>	<span class="identifier">ConVarQuery_Protected</span>				<span class="comment">/**&lt; Client convar was found, but it is protected. The server cannot retrieve its value. */</span>
+<a name="75"></a>};
+<a name="76"></a>
+<a name="77"></a><span class="comment">/**
+<a name="78"></a> * <span class="doctag">@section</span> Flags for console commands and console variables.  The descriptions 
+<a name="79"></a> * for each constant come directly from the Source SDK.
+<a name="80"></a> */</span>
+<a name="81"></a><span class="preprocessor">#define <span class="identifier">FCVAR_NONE</span>				<span class="number">0</span>		<span class="comment">/**&lt; The default, no flags at all */</span>
+<a name="82"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_UNREGISTERED</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)	<span class="comment">/**&lt; If this is set, don't add to linked list, etc. */</span>
+<a name="83"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_LAUNCHER</span>			(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)	<span class="comment">/**&lt; Defined by launcher. */</span>
+<a name="84"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_GAMEDLL</span>			(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)	<span class="comment">/**&lt; Defined by the game DLL. */</span>
+<a name="85"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_CLIENTDLL</span>			(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)	<span class="comment">/**&lt; Defined by the client DLL. */</span>
+<a name="86"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_MATERIAL_SYSTEM</span>	(<span class="number">1</span>&lt;&lt;<span class="number">4</span>)	<span class="comment">/**&lt; Defined by the material system. */</span>
+<a name="87"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_PROTECTED</span>			(<span class="number">1</span>&lt;&lt;<span class="number">5</span>)	<span class="comment">/**&lt; It's a server cvar, but we don't send the data since it's a password, etc. Sends 1 if it's not bland/zero, 0 otherwise as value. */</span>
+<a name="88"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_SPONLY</span>			(<span class="number">1</span>&lt;&lt;<span class="number">6</span>)	<span class="comment">/**&lt; This cvar cannot be changed by clients connected to a multiplayer server. */</span>
+<a name="89"></a></span><span class="preprocessor">#define	<span class="identifier">FCVAR_ARCHIVE</span>			(<span class="number">1</span>&lt;&lt;<span class="number">7</span>)	<span class="comment">/**&lt; Set to cause it to be saved to vars.rc */</span>
+<a name="90"></a></span><span class="preprocessor">#define	<span class="identifier">FCVAR_NOTIFY</span>			(<span class="number">1</span>&lt;&lt;<span class="number">8</span>)	<span class="comment">/**&lt; Notifies players when changed. */</span>
+<a name="91"></a></span><span class="preprocessor">#define	<span class="identifier">FCVAR_USERINFO</span>			(<span class="number">1</span>&lt;&lt;<span class="number">9</span>)	<span class="comment">/**&lt; Changes the client's info string. */</span>
+<a name="92"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_PRINTABLEONLY</span>		(<span class="number">1</span>&lt;&lt;<span class="number">10</span>)	<span class="comment">/**&lt; This cvar's string cannot contain unprintable characters (e.g., used for player name, etc.) */</span>
+<a name="93"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_UNLOGGED</span>			(<span class="number">1</span>&lt;&lt;<span class="number">11</span>)	<span class="comment">/**&lt; If this is a FCVAR_SERVER, don't log changes to the log file / console if we are creating a log */</span>
+<a name="94"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_NEVER_AS_STRING</span>	(<span class="number">1</span>&lt;&lt;<span class="number">12</span>)	<span class="comment">/**&lt; Never try to print that cvar. */</span>
+<a name="95"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_REPLICATED</span>		(<span class="number">1</span>&lt;&lt;<span class="number">13</span>)	<span class="comment">/**&lt; Server setting enforced on clients. */</span>
+<a name="96"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_CHEAT</span>				(<span class="number">1</span>&lt;&lt;<span class="number">14</span>)	<span class="comment">/**&lt; Only useable in singleplayer / debug / multiplayer &amp; sv_cheats */</span>
+<a name="97"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_STUDIORENDER</span>		(<span class="number">1</span>&lt;&lt;<span class="number">15</span>)	<span class="comment">/**&lt; Defined by the studiorender system. */</span>
+<a name="98"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_DEMO</span>				(<span class="number">1</span>&lt;&lt;<span class="number">16</span>)	<span class="comment">/**&lt; Record this cvar when starting a demo file. */</span>
+<a name="99"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_DONTRECORD</span>		(<span class="number">1</span>&lt;&lt;<span class="number">17</span>)	<span class="comment">/**&lt; Don't record these command in demo files. */</span>
+<a name="100"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_PLUGIN</span>			(<span class="number">1</span>&lt;&lt;<span class="number">18</span>)	<span class="comment">/**&lt; Defined by a 3rd party plugin. */</span>
+<a name="101"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_DATACACHE</span>			(<span class="number">1</span>&lt;&lt;<span class="number">19</span>)	<span class="comment">/**&lt; Defined by the datacache system. */</span>
+<a name="102"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_TOOLSYSTEM</span>		(<span class="number">1</span>&lt;&lt;<span class="number">20</span>)	<span class="comment">/**&lt; Defined by an IToolSystem library */</span>
+<a name="103"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_FILESYSTEM</span>		(<span class="number">1</span>&lt;&lt;<span class="number">21</span>)	<span class="comment">/**&lt; Defined by the file system. */</span>
+<a name="104"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_NOT_CONNECTED</span>		(<span class="number">1</span>&lt;&lt;<span class="number">22</span>)	<span class="comment">/**&lt; Cvar cannot be changed by a client that is connected to a server. */</span>
+<a name="105"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_SOUNDSYSTEM</span>		(<span class="number">1</span>&lt;&lt;<span class="number">23</span>)	<span class="comment">/**&lt; Defined by the soundsystem library. */</span>
+<a name="106"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_ARCHIVE_XBOX</span>		(<span class="number">1</span>&lt;&lt;<span class="number">24</span>)	<span class="comment">/**&lt; Cvar written to config.cfg on the Xbox. */</span>
+<a name="107"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_INPUTSYSTEM</span>		(<span class="number">1</span>&lt;&lt;<span class="number">25</span>)	<span class="comment">/**&lt; Defined by the inputsystem DLL. */</span>
+<a name="108"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_NETWORKSYSTEM</span>		(<span class="number">1</span>&lt;&lt;<span class="number">26</span>)	<span class="comment">/**&lt; Defined by the network system. */</span>
+<a name="109"></a></span><span class="preprocessor">#define <span class="identifier">FCVAR_VPHYSICS</span>			(<span class="number">1</span>&lt;&lt;<span class="number">27</span>)	<span class="comment">/**&lt; Defined by vphysics. */</span>
+<a name="110"></a></span>
+<a name="111"></a><span class="comment">/**
+<a name="112"></a> * <span class="doctag">@endsection</span>
+<a name="113"></a> */</span>
+<a name="114"></a>
+<a name="115"></a><span class="comment">/**
+<a name="116"></a> * Executes a server command as if it were on the server console (or RCON)
+<a name="117"></a> *
+<a name="118"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="119"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="120"></a> * <span class="doctag">@noreturn</span>
+<a name="121"></a> */</span>
+<a name="122"></a><span class="keyword">native</span> <span class="identifier">ServerCommand</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="123"></a>
+<a name="124"></a><span class="comment">/**
+<a name="125"></a> * Executes a server command as if it were on the server console (or RCON) 
+<a name="126"></a> * and stores the printed text into buffer.
+<a name="127"></a> *
+<a name="128"></a> * Warning: This calls ServerExecute internally and may have issues if
+<a name="129"></a> * certain commands are in the buffer, only use when you really need
+<a name="130"></a> * the response.
+<a name="131"></a> * Also, on L4D2 this will not print the command output to the server console.
+<a name="132"></a> *
+<a name="133"></a> * <span class="doctag">@param</span> buffer		String to store command result into.
+<a name="134"></a> * <span class="doctag">@param</span> maxlen		Length of buffer.
+<a name="135"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="136"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="137"></a> * <span class="doctag">@noreturn</span>
+<a name="138"></a> */</span>
+<a name="139"></a><span class="keyword">native</span> <span class="identifier">ServerCommandEx</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="140"></a>
+<a name="141"></a><span class="comment">/**
+<a name="142"></a> * Inserts a server command at the beginning of the server command buffer.
+<a name="143"></a> *
+<a name="144"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="145"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="146"></a> * <span class="doctag">@noreturn</span>
+<a name="147"></a> */</span>
+<a name="148"></a><span class="keyword">native</span> <span class="identifier">InsertServerCommand</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="149"></a>
+<a name="150"></a><span class="comment">/**
+<a name="151"></a> * Executes every command in the server's command buffer, rather than once per frame.
+<a name="152"></a> *
+<a name="153"></a> * <span class="doctag">@noreturn</span>
+<a name="154"></a> */</span>
+<a name="155"></a><span class="keyword">native</span> <span class="identifier">ServerExecute</span>();
+<a name="156"></a>
+<a name="157"></a><span class="comment">/**
+<a name="158"></a> * Executes a client command.  Note that this will not work on clients unless
+<a name="159"></a> * they have cl_restrict_server_commands set to 0.
+<a name="160"></a> *
+<a name="161"></a> * <span class="doctag">@param</span> client		Index of the client.
+<a name="162"></a> * <span class="doctag">@param</span> fmt			Format of the client command.
+<a name="163"></a> * <span class="doctag">@param</span> ...			Format parameters
+<a name="164"></a> * <span class="doctag">@noreturn</span>
+<a name="165"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="166"></a> */</span>
+<a name="167"></a><span class="keyword">native</span> <span class="identifier">ClientCommand</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[], <span class="keyword type">any</span>:...);
+<a name="168"></a>
+<a name="169"></a><span class="comment">/**
+<a name="170"></a> * Executes a client command on the server without being networked.
+<a name="171"></a> *
+<a name="172"></a> * FakeClientCommand() overwrites the command tokenization buffer.  This can 
+<a name="173"></a> * cause undesired effects because future calls to GetCmdArg* will return 
+<a name="174"></a> * data from the FakeClientCommand(), not the parent command.  If you are in 
+<a name="175"></a> * a hook where this matters (for example, a "say" hook), you should use 
+<a name="176"></a> * FakeClientCommandEx() instead.
+<a name="177"></a> *
+<a name="178"></a> * <span class="doctag">@param</span> client		Index of the client.
+<a name="179"></a> * <span class="doctag">@param</span> fmt			Format of the client command.
+<a name="180"></a> * <span class="doctag">@param</span> ...			Format parameters
+<a name="181"></a> * <span class="doctag">@noreturn</span>
+<a name="182"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="183"></a> */</span>
+<a name="184"></a><span class="keyword">native</span> <span class="identifier">FakeClientCommand</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[], <span class="keyword type">any</span>:...);
+<a name="185"></a>
+<a name="186"></a><span class="comment">/**
+<a name="187"></a> * Executes a client command on the server without being networked.  The 
+<a name="188"></a> * execution of the client command is delayed by one frame to prevent any 
+<a name="189"></a> * re-entrancy issues that might surface with FakeClientCommand().
+<a name="190"></a> *
+<a name="191"></a> * <span class="doctag">@param</span> client		Index of the client.
+<a name="192"></a> * <span class="doctag">@param</span> fmt			Format of the client command.
+<a name="193"></a> * <span class="doctag">@param</span> ...			Format parameters
+<a name="194"></a> * <span class="doctag">@noreturn</span>
+<a name="195"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="196"></a> */</span>
+<a name="197"></a><span class="keyword">native</span> <span class="identifier">FakeClientCommandEx</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[], <span class="keyword type">any</span>:...);
+<a name="198"></a>
+<a name="199"></a><span class="comment">/**
+<a name="200"></a> * Sends a message to the server console.
+<a name="201"></a> *
+<a name="202"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="203"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="204"></a> * <span class="doctag">@noreturn</span>
+<a name="205"></a> */</span>
+<a name="206"></a><span class="keyword">native</span> <span class="identifier">PrintToServer</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="207"></a>
+<a name="208"></a><span class="comment">/**
+<a name="209"></a> * Sends a message to a client's console.
+<a name="210"></a> *
+<a name="211"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="212"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="213"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="214"></a> * <span class="doctag">@noreturn</span>
+<a name="215"></a> * <span class="doctag">@error</span>				If the client is not connected an error will be thrown.
+<a name="216"></a> */</span>
+<a name="217"></a><span class="keyword">native</span> <span class="identifier">PrintToConsole</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="218"></a>
+<a name="219"></a><span class="comment">/**
+<a name="220"></a> * Reples to a message in a command.
+<a name="221"></a> *
+<a name="222"></a> * A client index of 0 will use PrintToServer().
+<a name="223"></a> * If the command was from the console, PrintToConsole() is used.
+<a name="224"></a> * If the command was from chat, PrintToChat() is used.
+<a name="225"></a> *
+<a name="226"></a> * <span class="doctag">@param</span> client		Client index, or 0 for server.
+<a name="227"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="228"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="229"></a> * <span class="doctag">@noreturn</span>
+<a name="230"></a> * <span class="doctag">@error</span>				If the client is not connected or invalid.
+<a name="231"></a> */</span>
+<a name="232"></a><span class="keyword">native</span> <span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="233"></a>
+<a name="234"></a><span class="comment">/**
+<a name="235"></a> * Returns the current reply source of a command.
+<a name="236"></a> *
+<a name="237"></a> * <span class="doctag">@return</span>				ReplySource value.
+<a name="238"></a> */</span>
+<a name="239"></a><span class="keyword">native</span> <span class="identifier">ReplySource</span>:<span class="identifier">GetCmdReplySource</span>();
+<a name="240"></a>
+<a name="241"></a><span class="comment">/**
+<a name="242"></a> * Sets the current reply source of a command.
+<a name="243"></a> *
+<a name="244"></a> * Only use this if you know what you are doing.  You should save the old value
+<a name="245"></a> * and restore it once you are done.
+<a name="246"></a> *
+<a name="247"></a> * <span class="doctag">@param</span> source		New ReplySource value.
+<a name="248"></a> * <span class="doctag">@return</span>				Old ReplySource value.
+<a name="249"></a> */</span>
+<a name="250"></a><span class="keyword">native</span> <span class="identifier">ReplySource</span>:<span class="identifier">SetCmdReplySource</span>(<span class="identifier">ReplySource</span>:<span class="identifier">source</span>);
+<a name="251"></a>
+<a name="252"></a><span class="comment">/**
+<a name="253"></a> * Returns whether the current say hook is a chat trigger.
+<a name="254"></a> *
+<a name="255"></a> * This function is only meaningful inside say or say_team hooks.
+<a name="256"></a> *
+<a name="257"></a> * <span class="doctag">@return</span>				True if a chat trigger, false otherwise.
+<a name="258"></a> */</span>
+<a name="259"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsChatTrigger</span>();
+<a name="260"></a>
+<a name="261"></a><span class="comment">/**
+<a name="262"></a> * Displays usage of an admin command to users depending on the 
+<a name="263"></a> * setting of the sm_show_activity cvar.  All users receive a message 
+<a name="264"></a> * in their chat text, except for the originating client, who receives 
+<a name="265"></a> * the message based on the current ReplySource.
+<a name="266"></a> *
+<a name="267"></a> * <span class="doctag">@param</span> client		Client index doing the action, or 0 for server.
+<a name="268"></a> * <span class="doctag">@param</span> tag			Tag to prepend to the message.
+<a name="269"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="270"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="271"></a> * <span class="doctag">@noreturn</span>
+<a name="272"></a> * <span class="doctag">@error</span>
+<a name="273"></a> */</span>
+<a name="274"></a><span class="keyword">native</span> <span class="identifier">ShowActivity2</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">tag</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="275"></a>
+<a name="276"></a><span class="comment">/**
+<a name="277"></a> * Displays usage of an admin command to users depending on the 
+<a name="278"></a> * setting of the sm_show_activity cvar.  
+<a name="279"></a> *
+<a name="280"></a> * This version does not display a message to the originating client 
+<a name="281"></a> * if used from chat triggers or menus.  If manual replies are used 
+<a name="282"></a> * for these cases, then this function will suffice.  Otherwise, 
+<a name="283"></a> * ShowActivity2() is slightly more useful.
+<a name="284"></a> *
+<a name="285"></a> * <span class="doctag">@param</span> client		Client index doing the action, or 0 for server.
+<a name="286"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="287"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="288"></a> * <span class="doctag">@noreturn</span>
+<a name="289"></a> * <span class="doctag">@error</span>
+<a name="290"></a> */</span>
+<a name="291"></a><span class="keyword">native</span> <span class="identifier">ShowActivity</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="292"></a>
+<a name="293"></a><span class="comment">/**
+<a name="294"></a> * Same as ShowActivity(), except the tag parameter is used instead of
+<a name="295"></a> * "[SM] " (note that you must supply any spacing).
+<a name="296"></a> *
+<a name="297"></a> * <span class="doctag">@param</span> client		Client index doing the action, or 0 for server.
+<a name="298"></a> * <span class="doctag">@param</span> tag			Tag to display with.
+<a name="299"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="300"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="301"></a> * <span class="doctag">@noreturn</span>
+<a name="302"></a> * <span class="doctag">@error</span>
+<a name="303"></a> */</span>
+<a name="304"></a><span class="keyword">native</span> <span class="identifier">ShowActivityEx</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">tag</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="305"></a>
+<a name="306"></a><span class="comment">/**
+<a name="307"></a> * Given an originating client and a target client, returns the string 
+<a name="308"></a> * that describes the originating client according to the sm_show_activity cvar.
+<a name="309"></a> *
+<a name="310"></a> * For example, "ADMIN", "PLAYER", or a player's name could be placed in this buffer.
+<a name="311"></a> *
+<a name="312"></a> * <span class="doctag">@param</span> client        Originating client; may be 0 for server console.
+<a name="313"></a> * <span class="doctag">@param</span> target        Targeted client.
+<a name="314"></a> * <span class="doctag">@param</span> namebuf       Name buffer.
+<a name="315"></a> * <span class="doctag">@param</span> maxlength     Maximum size of the name buffer.
+<a name="316"></a> * <span class="doctag">@return</span>              True if activity should be shown.  False otherwise.  In either 
+<a name="317"></a> *                      case, the name buffer is filled.  The return value can be used 
+<a name="318"></a> *                      to broadcast a "safe" name to all players regardless of the 
+<a name="319"></a> *                      sm_show_activity filters.
+<a name="320"></a> * <span class="doctag">@error</span>               Invalid client index or client not connected.
+<a name="321"></a> */</span>
+<a name="322"></a><span class="keyword">native</span> <span class="identifier">FormatActivitySource</span>(<span class="identifier">client</span>, <span class="identifier">target</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">namebuf</span>[], <span class="identifier">maxlength</span>);
+<a name="323"></a>
+<a name="324"></a><span class="comment">/**
+<a name="325"></a> * Called when a server-only command is invoked.  
+<a name="326"></a> *
+<a name="327"></a> * <span class="doctag">@param</span> args			Number of arguments that were in the argument string.
+<a name="328"></a> * <span class="doctag">@return</span>				An Action value.  Not handling the command
+<a name="329"></a> *						means that Source will report it as "not found."
+<a name="330"></a> */</span>
+<a name="331"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">Action</span>:<span class="identifier">SrvCmd</span>(<span class="identifier">args</span>);
+<a name="332"></a>
+<a name="333"></a><span class="comment">/**
+<a name="334"></a> * Creates a server-only console command, or hooks an already existing one.  
+<a name="335"></a> *
+<a name="336"></a> * Server commands are case sensitive.
+<a name="337"></a> *
+<a name="338"></a> * <span class="doctag">@param</span> cmd			Name of the command to hook or create.
+<a name="339"></a> * <span class="doctag">@param</span> callback		A function to use as a callback for when the command is invoked.
+<a name="340"></a> * <span class="doctag">@param</span> description	Optional description to use for command creation.
+<a name="341"></a> * <span class="doctag">@param</span> flags			Optional flags to use for command creation.
+<a name="342"></a> * <span class="doctag">@noreturn</span>
+<a name="343"></a> * <span class="doctag">@error</span>				Command name is the same as an existing convar.
+<a name="344"></a> */</span>
+<a name="345"></a><span class="keyword">native</span> <span class="identifier">RegServerCmd</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cmd</span>[], <span class="identifier">SrvCmd</span>:<span class="identifier">callback</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">description</span>[]=<span class="string">""</span>, <span class="identifier">flags</span>=<span class="number">0</span>);
+<a name="346"></a>
+<a name="347"></a><span class="comment">/**
+<a name="348"></a> * Called when a generic console command is invoked.
+<a name="349"></a> *
+<a name="350"></a> * <span class="doctag">@param</span> client		Index of the client, or 0 from the server.
+<a name="351"></a> * <span class="doctag">@param</span> args			Number of arguments that were in the argument string.
+<a name="352"></a> * <span class="doctag">@return</span>				An Action value.  Not handling the command
+<a name="353"></a> *						means that Source will report it as "not found."
+<a name="354"></a> */</span>
+<a name="355"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">Action</span>:<span class="identifier">ConCmd</span>(<span class="identifier">client</span>, <span class="identifier">args</span>);
+<a name="356"></a>
+<a name="357"></a><span class="comment">/**
+<a name="358"></a> * Creates a console command, or hooks an already existing one.
+<a name="359"></a> *
+<a name="360"></a> * Console commands are case sensitive.  However, if the command already exists in the game, 
+<a name="361"></a> * a client may enter the command in any case.  SourceMod corrects for this automatically, 
+<a name="362"></a> * and you should only hook the "real" version of the command.
+<a name="363"></a> *
+<a name="364"></a> * <span class="doctag">@param</span> cmd			Name of the command to hook or create.
+<a name="365"></a> * <span class="doctag">@param</span> callback		A function to use as a callback for when the command is invoked.
+<a name="366"></a> * <span class="doctag">@param</span> description	Optional description to use for command creation.
+<a name="367"></a> * <span class="doctag">@param</span> flags			Optional flags to use for command creation.
+<a name="368"></a> * <span class="doctag">@noreturn</span>
+<a name="369"></a> * <span class="doctag">@error</span>				Command name is the same as an existing convar.
+<a name="370"></a> */</span>
+<a name="371"></a><span class="keyword">native</span> <span class="identifier">RegConsoleCmd</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cmd</span>[], <span class="identifier">ConCmd</span>:<span class="identifier">callback</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">description</span>[]=<span class="string">""</span>, <span class="identifier">flags</span>=<span class="number">0</span>);
+<a name="372"></a>
+<a name="373"></a><span class="comment">/**
+<a name="374"></a> * Creates a console command as an administrative command.  If the command does not exist,
+<a name="375"></a> * it is created.  When this command is invoked, the access rights of the player are 
+<a name="376"></a> * automatically checked before allowing it to continue.
+<a name="377"></a> *
+<a name="378"></a> * Admin commands are case sensitive from both the client and server.
+<a name="379"></a> *
+<a name="380"></a> * <span class="doctag">@param</span> cmd			String containing command to register.
+<a name="381"></a> * <span class="doctag">@param</span> callback		A function to use as a callback for when the command is invoked.
+<a name="382"></a> * <span class="doctag">@param</span> adminflags	Administrative flags (bitstring) to use for permissions.
+<a name="383"></a> * <span class="doctag">@param</span> description	Optional description to use for help.
+<a name="384"></a> * <span class="doctag">@param</span> group			String containing the command group to use.  If empty,
+<a name="385"></a> * 						the plugin's filename will be used instead.
+<a name="386"></a> * <span class="doctag">@param</span> flags			Optional console flags.
+<a name="387"></a> * <span class="doctag">@noreturn</span>
+<a name="388"></a> * <span class="doctag">@error</span>				Command name is the same as an existing convar.
+<a name="389"></a> */</span>
+<a name="390"></a><span class="keyword">native</span> <span class="identifier">RegAdminCmd</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cmd</span>[],
+<a name="391"></a>					<span class="identifier">ConCmd</span>:<span class="identifier">callback</span>,
+<a name="392"></a>					<span class="identifier">adminflags</span>,
+<a name="393"></a>					<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">description</span>[]=<span class="string">""</span>,
+<a name="394"></a>					<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">group</span>[]=<span class="string">""</span>,
+<a name="395"></a>					<span class="identifier">flags</span>=<span class="number">0</span>);
+<a name="396"></a>					
+<a name="397"></a><span class="comment">/**
+<a name="398"></a> * Returns the number of arguments from the current console or server command.
+<a name="399"></a> * <span class="doctag">@note</span> Unlike the HL2 engine call, this does not include the command itself.
+<a name="400"></a> *
+<a name="401"></a> * <span class="doctag">@return</span>				Number of arguments to the current command.
+<a name="402"></a> */</span>
+<a name="403"></a><span class="keyword">native</span> <span class="identifier">GetCmdArgs</span>();
+<a name="404"></a>
+<a name="405"></a><span class="comment">/**
+<a name="406"></a> * Retrieves a command argument given its index, from the current console or 
+<a name="407"></a> * server command.
+<a name="408"></a> * <span class="doctag">@note</span> Argument indexes start at 1; 0 retrieves the command name.
+<a name="409"></a> *
+<a name="410"></a> * <span class="doctag">@param</span> argnum		Argument number to retrieve.
+<a name="411"></a> * <span class="doctag">@param</span> buffer		Buffer to use for storing the string.
+<a name="412"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="413"></a> * <span class="doctag">@return</span>				Length of string written to buffer.
+<a name="414"></a> */</span>
+<a name="415"></a><span class="keyword">native</span> <span class="identifier">GetCmdArg</span>(<span class="identifier">argnum</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="416"></a>
+<a name="417"></a><span class="comment">/**
+<a name="418"></a> * Retrieves the entire command argument string in one lump from the current 
+<a name="419"></a> * console or server command.
+<a name="420"></a> *
+<a name="421"></a> * <span class="doctag">@param</span> buffer		Buffer to use for storing the string.
+<a name="422"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="423"></a> * <span class="doctag">@return</span>				Length of string written to buffer.
+<a name="424"></a> */</span>
+<a name="425"></a><span class="keyword">native</span> <span class="identifier">GetCmdArgString</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="426"></a>
+<a name="427"></a><span class="comment">/**
+<a name="428"></a> * Creates a new console variable.
+<a name="429"></a> *
+<a name="430"></a> * <span class="doctag">@param</span> name			Name of new convar.
+<a name="431"></a> * <span class="doctag">@param</span> defaultValue	String containing the default value of new convar.
+<a name="432"></a> * <span class="doctag">@param</span> description	Optional description of the convar.
+<a name="433"></a> * <span class="doctag">@param</span> flags			Optional bitstring of flags determining how the convar should be handled. See FCVAR_* constants for more details.
+<a name="434"></a> * <span class="doctag">@param</span> hasMin		Optional boolean that determines if the convar has a minimum value.
+<a name="435"></a> * <span class="doctag">@param</span> min			Minimum floating point value that the convar can have if hasMin is true.
+<a name="436"></a> * <span class="doctag">@param</span> hasMax		Optional boolean that determines if the convar has a maximum value.
+<a name="437"></a> * <span class="doctag">@param</span> max			Maximum floating point value that the convar can have if hasMax is true.
+<a name="438"></a> * <span class="doctag">@return</span>				A handle to the newly created convar. If the convar already exists, a handle to it will still be returned.
+<a name="439"></a> * <span class="doctag">@error</span>				Convar name is blank or is the same as an existing console command.
+<a name="440"></a> */</span>
+<a name="441"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateConVar</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">defaultValue</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">description</span>[]=<span class="string">""</span>, <span class="identifier">flags</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">hasMin</span>=<span class="keyword literal">false</span>, <span class="keyword type">Float</span>:<span class="identifier">min</span>=<span class="number">0.0</span>, <span class="keyword type">bool</span>:<span class="identifier">hasMax</span>=<span class="keyword literal">false</span>, <span class="keyword type">Float</span>:<span class="identifier">max</span>=<span class="number">0.0</span>);
+<a name="442"></a>
+<a name="443"></a><span class="comment">/**
+<a name="444"></a> * Searches for a console variable.
+<a name="445"></a> *
+<a name="446"></a> * <span class="doctag">@param</span> name			Name of convar to find.
+<a name="447"></a> * <span class="doctag">@return</span>				A handle to the convar if it is found. INVALID_HANDLE otherwise.
+<a name="448"></a> */</span>
+<a name="449"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">FindConVar</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="450"></a>
+<a name="451"></a><span class="comment">/**
+<a name="452"></a> * Called when a console variable's value is changed.
+<a name="453"></a> *
+<a name="454"></a> * <span class="doctag">@param</span> convar		Handle to the convar that was changed.
+<a name="455"></a> * <span class="doctag">@param</span> oldValue		String containing the value of the convar before it was changed.
+<a name="456"></a> * <span class="doctag">@param</span> newValue		String containing the new value of the convar.
+<a name="457"></a> * <span class="doctag">@noreturn</span>
+<a name="458"></a> */</span>
+<a name="459"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">ConVarChanged</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">oldValue</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">newValue</span>[]);
+<a name="460"></a>
+<a name="461"></a><span class="comment">/**
+<a name="462"></a> * Creates a hook for when a console variable's value is changed.
+<a name="463"></a> *
+<a name="464"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="465"></a> * <span class="doctag">@param</span> callback		An OnConVarChanged function pointer.
+<a name="466"></a> * <span class="doctag">@noreturn</span>
+<a name="467"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle or invalid callback function.
+<a name="468"></a> */</span>
+<a name="469"></a><span class="keyword">native</span> <span class="identifier">HookConVarChange</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="identifier">ConVarChanged</span>:<span class="identifier">callback</span>);
+<a name="470"></a>
+<a name="471"></a><span class="comment">/**
+<a name="472"></a> * Removes a hook for when a console variable's value is changed.
+<a name="473"></a> *
+<a name="474"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="475"></a> * <span class="doctag">@param</span> callback		An OnConVarChanged function pointer.
+<a name="476"></a> * <span class="doctag">@noreturn</span>
+<a name="477"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle, invalid callback function, or no active hook on convar.
+<a name="478"></a> */</span>
+<a name="479"></a><span class="keyword">native</span> <span class="identifier">UnhookConVarChange</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="identifier">ConVarChanged</span>:<span class="identifier">callback</span>);
+<a name="480"></a>
+<a name="481"></a><span class="comment">/**
+<a name="482"></a> * Returns the boolean value of a console variable.
+<a name="483"></a> *
+<a name="484"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="485"></a> * <span class="doctag">@return</span>				The boolean value of the convar.
+<a name="486"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="487"></a> */</span>
+<a name="488"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetConVarBool</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>);
+<a name="489"></a>
+<a name="490"></a><span class="comment">/**
+<a name="491"></a> * Sets the boolean value of a console variable.
+<a name="492"></a> *
+<a name="493"></a> * Note: The replicate and notify params are only relevant for the original, Dark Messiah, and
+<a name="494"></a> * Episode 1 engines. Newer engines automatically do these things when the convar value is changed.
+<a name="495"></a> *
+<a name="496"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="497"></a> * <span class="doctag">@param</span> value			New boolean value.
+<a name="498"></a> * <span class="doctag">@param</span> replicate		If set to true, the new convar value will be set on all clients.
+<a name="499"></a> *						This will only work if the convar has the FCVAR_REPLICATED flag
+<a name="500"></a> *						and actually exists on clients.
+<a name="501"></a> * <span class="doctag">@param</span> notify		If set to true, clients will be notified that the convar has changed.
+<a name="502"></a> *						This will only work if the convar has the FCVAR_NOTIFY flag.
+<a name="503"></a> * <span class="doctag">@noreturn</span>
+<a name="504"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="505"></a> */</span>
+<a name="506"></a><span class="keyword">native</span> <span class="identifier">SetConVarBool</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword type">bool</span>:<span class="identifier">value</span>, <span class="keyword type">bool</span>:<span class="identifier">replicate</span>=<span class="keyword literal">false</span>, <span class="keyword type">bool</span>:<span class="identifier">notify</span>=<span class="keyword literal">false</span>);
+<a name="507"></a>
+<a name="508"></a><span class="comment">/**
+<a name="509"></a> * Returns the integer value of a console variable.
+<a name="510"></a> *
+<a name="511"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="512"></a> * <span class="doctag">@return</span>				The integer value of the convar.
+<a name="513"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="514"></a> */</span>
+<a name="515"></a><span class="keyword">native</span> <span class="identifier">GetConVarInt</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>);
+<a name="516"></a>
+<a name="517"></a><span class="comment">/**
+<a name="518"></a> * Sets the integer value of a console variable.
+<a name="519"></a> *
+<a name="520"></a> * Note: The replicate and notify params are only relevant for the original, Dark Messiah, and
+<a name="521"></a> * Episode 1 engines. Newer engines automatically do these things when the convar value is changed.
+<a name="522"></a> *
+<a name="523"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="524"></a> * <span class="doctag">@param</span> value			New integer value.
+<a name="525"></a> * <span class="doctag">@param</span> replicate		If set to true, the new convar value will be set on all clients.
+<a name="526"></a> *						This will only work if the convar has the FCVAR_REPLICATED flag
+<a name="527"></a> *						and actually exists on clients.
+<a name="528"></a> * <span class="doctag">@param</span> notify		If set to true, clients will be notified that the convar has changed.
+<a name="529"></a> *						This will only work if the convar has the FCVAR_NOTIFY flag.
+<a name="530"></a> * <span class="doctag">@noreturn</span>
+<a name="531"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="532"></a> */</span>
+<a name="533"></a><span class="keyword">native</span> <span class="identifier">SetConVarInt</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="identifier">value</span>, <span class="keyword type">bool</span>:<span class="identifier">replicate</span>=<span class="keyword literal">false</span>, <span class="keyword type">bool</span>:<span class="identifier">notify</span>=<span class="keyword literal">false</span>);
+<a name="534"></a>
+<a name="535"></a><span class="comment">/**
+<a name="536"></a> * Returns the floating point value of a console variable.
+<a name="537"></a> *
+<a name="538"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="539"></a> * <span class="doctag">@return</span>				The floating point value of the convar.
+<a name="540"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="541"></a> */</span>
+<a name="542"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetConVarFloat</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>);
+<a name="543"></a>
+<a name="544"></a><span class="comment">/**
+<a name="545"></a> * Sets the floating point value of a console variable.
+<a name="546"></a> *
+<a name="547"></a> * Note: The replicate and notify params are only relevant for the original, Dark Messiah, and
+<a name="548"></a> * Episode 1 engines. Newer engines automatically do these things when the convar value is changed.
+<a name="549"></a> *
+<a name="550"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="551"></a> * <span class="doctag">@param</span> value			New floating point value.
+<a name="552"></a> * <span class="doctag">@param</span> replicate		If set to true, the new convar value will be set on all clients.
+<a name="553"></a> *						This will only work if the convar has the FCVAR_REPLICATED flag
+<a name="554"></a> *						and actually exists on clients.
+<a name="555"></a> * <span class="doctag">@param</span> notify		If set to true, clients will be notified that the convar has changed.
+<a name="556"></a> *						This will only work if the convar has the FCVAR_NOTIFY flag.
+<a name="557"></a> * <span class="doctag">@noreturn</span>
+<a name="558"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="559"></a> */</span>
+<a name="560"></a><span class="keyword">native</span> <span class="identifier">SetConVarFloat</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword type">Float</span>:<span class="identifier">value</span>, <span class="keyword type">bool</span>:<span class="identifier">replicate</span>=<span class="keyword literal">false</span>, <span class="keyword type">bool</span>:<span class="identifier">notify</span>=<span class="keyword literal">false</span>);
+<a name="561"></a>
+<a name="562"></a><span class="comment">/**
+<a name="563"></a> * Retrieves the string value of a console variable.
+<a name="564"></a> *
+<a name="565"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="566"></a> * <span class="doctag">@param</span> value			Buffer to store the value of the convar.
+<a name="567"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="568"></a> * <span class="doctag">@noreturn</span>
+<a name="569"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.     
+<a name="570"></a> */</span>
+<a name="571"></a><span class="keyword">native</span> <span class="identifier">GetConVarString</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword type">String</span>:<span class="identifier">value</span>[], <span class="identifier">maxlength</span>);
+<a name="572"></a>
+<a name="573"></a><span class="comment">/**
+<a name="574"></a> * Sets the string value of a console variable.
+<a name="575"></a> *
+<a name="576"></a> * Note: The replicate and notify params are only relevant for the original, Dark Messiah, and
+<a name="577"></a> * Episode 1 engines. Newer engines automatically do these things when the convar value is changed.
+<a name="578"></a> *
+<a name="579"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="580"></a> * <span class="doctag">@param</span> value			New string value.
+<a name="581"></a> * <span class="doctag">@param</span> replicate		If set to true, the new convar value will be set on all clients.
+<a name="582"></a> *						This will only work if the convar has the FCVAR_REPLICATED flag
+<a name="583"></a> *						and actually exists on clients.
+<a name="584"></a> * <span class="doctag">@param</span> notify		If set to true, clients will be notified that the convar has changed.
+<a name="585"></a> *						This will only work if the convar has the FCVAR_NOTIFY flag.
+<a name="586"></a> * <span class="doctag">@noreturn</span>
+<a name="587"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="588"></a> */</span>
+<a name="589"></a><span class="keyword">native</span> <span class="identifier">SetConVarString</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[], <span class="keyword type">bool</span>:<span class="identifier">replicate</span>=<span class="keyword literal">false</span>, <span class="keyword type">bool</span>:<span class="identifier">notify</span>=<span class="keyword literal">false</span>);
+<a name="590"></a>
+<a name="591"></a><span class="comment">/**
+<a name="592"></a> * Resets the console variable to its default value.
+<a name="593"></a> *
+<a name="594"></a> * Note: The replicate and notify params are only relevant for the original, Dark Messiah, and
+<a name="595"></a> * Episode 1 engines. Newer engines automatically do these things when the convar value is changed.
+<a name="596"></a> *
+<a name="597"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="598"></a> * <span class="doctag">@param</span> replicate		If set to true, the new convar value will be set on all clients.
+<a name="599"></a> *						This will only work if the convar has the FCVAR_REPLICATED flag
+<a name="600"></a> *						and actually exists on clients.
+<a name="601"></a> * <span class="doctag">@param</span> notify		If set to true, clients will be notified that the convar has changed.
+<a name="602"></a> *						This will only work if the convar has the FCVAR_NOTIFY flag.
+<a name="603"></a> * <span class="doctag">@noreturn</span>
+<a name="604"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="605"></a> */</span>
+<a name="606"></a><span class="keyword">native</span> <span class="identifier">ResetConVar</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword type">bool</span>:<span class="identifier">replicate</span>=<span class="keyword literal">false</span>, <span class="keyword type">bool</span>:<span class="identifier">notify</span>=<span class="keyword literal">false</span>);
+<a name="607"></a>
+<a name="608"></a><span class="comment">/**
+<a name="609"></a> * Retrieves the default string value of a console variable.
+<a name="610"></a> *
+<a name="611"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="612"></a> * <span class="doctag">@param</span> value			Buffer to store the default value of the convar.
+<a name="613"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="614"></a> * <span class="doctag">@return</span>				Number of bytes written to the buffer (UTF-8 safe).
+<a name="615"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="616"></a> */</span>
+<a name="617"></a><span class="keyword">native</span> <span class="identifier">GetConVarDefault</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword type">String</span>:<span class="identifier">value</span>[], <span class="identifier">maxlength</span>);
+<a name="618"></a>
+<a name="619"></a><span class="comment">/**
+<a name="620"></a> * Returns the bitstring of flags on a console variable.
+<a name="621"></a> *
+<a name="622"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="623"></a> * <span class="doctag">@return</span>				A bitstring containing the FCVAR_* flags that are enabled.
+<a name="624"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="625"></a> */</span>
+<a name="626"></a><span class="keyword">native</span> <span class="identifier">GetConVarFlags</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>);
+<a name="627"></a>
+<a name="628"></a><span class="comment">/**
+<a name="629"></a> * Sets the bitstring of flags on a console variable.
+<a name="630"></a> *
+<a name="631"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="632"></a> * <span class="doctag">@param</span> flags			A bitstring containing the FCVAR_* flags to enable.
+<a name="633"></a> * <span class="doctag">@noreturn</span>
+<a name="634"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="635"></a> */</span>
+<a name="636"></a><span class="keyword">native</span> <span class="identifier">SetConVarFlags</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="identifier">flags</span>);
+<a name="637"></a>
+<a name="638"></a><span class="comment">/**
+<a name="639"></a> * Retrieves the specified bound of a console variable.
+<a name="640"></a> *
+<a name="641"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="642"></a> * <span class="doctag">@param</span> type			Type of bound to retrieve, ConVarBound_Lower or ConVarBound_Upper.
+<a name="643"></a> * <span class="doctag">@param</span> value			By-reference cell to store the specified floating point bound value.
+<a name="644"></a> * <span class="doctag">@return</span>				True if the convar has the specified bound set, false otherwise.
+<a name="645"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="646"></a> */</span>
+<a name="647"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetConVarBounds</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="identifier">ConVarBounds</span>:<span class="identifier">type</span>, &amp;<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="648"></a>
+<a name="649"></a><span class="comment">/**
+<a name="650"></a> * Sets the specified bound of a console variable.
+<a name="651"></a> *
+<a name="652"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="653"></a> * <span class="doctag">@param</span> type			Type of bound to set, ConVarBound_Lower or ConVarBound_Upper
+<a name="654"></a> * <span class="doctag">@param</span> set			If set to true, convar will use specified bound. If false, bound will be removed.
+<a name="655"></a> * <span class="doctag">@param</span> value			Floating point value to use as the specified bound.
+<a name="656"></a> * <span class="doctag">@noreturn</span>
+<a name="657"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.
+<a name="658"></a> */</span>
+<a name="659"></a><span class="keyword">native</span> <span class="identifier">SetConVarBounds</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="identifier">ConVarBounds</span>:<span class="identifier">type</span>, <span class="keyword type">bool</span>:<span class="identifier">set</span>, <span class="keyword type">Float</span>:<span class="identifier">value</span>=<span class="number">0.0</span>);
+<a name="660"></a>
+<a name="661"></a><span class="comment">/**
+<a name="662"></a> * Retrieves the name of a console variable.
+<a name="663"></a> *
+<a name="664"></a> * <span class="doctag">@param</span> convar		Handle to the convar.
+<a name="665"></a> * <span class="doctag">@param</span> name			Buffer to store the name of the convar.
+<a name="666"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="667"></a> * <span class="doctag">@noreturn</span>
+<a name="668"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle.     
+<a name="669"></a> */</span>
+<a name="670"></a><span class="keyword">native</span> <span class="identifier">GetConVarName</span>(<span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlength</span>);
+<a name="671"></a>
+<a name="672"></a><span class="keyword">funcenum</span> <span class="identifier">ConVarQueryFinished</span>
+<a name="673"></a>{	
+<a name="674"></a>	<span class="comment">/**
+<a name="675"></a>	 * Called when a query to retrieve a client's console variable has finished.
+<a name="676"></a>	 *
+<a name="677"></a>	 * <span class="doctag">@param</span> cookie		Unique identifier of query.
+<a name="678"></a>	 * <span class="doctag">@param</span> client		Player index.
+<a name="679"></a>	 * <span class="doctag">@param</span> result		Result of query that tells one whether or not query was successful.
+<a name="680"></a>	 *						See ConVarQueryResult enum for more details.
+<a name="681"></a>	 * <span class="doctag">@param</span> convarName	Name of client convar that was queried.
+<a name="682"></a>	 * <span class="doctag">@param</span> convarValue	Value of client convar that was queried if successful. This will be "" if it was not.
+<a name="683"></a>	 * <span class="doctag">@param</span> value			Value that was passed when query was started.
+<a name="684"></a>	 * <span class="doctag">@noreturn</span>
+<a name="685"></a>	 */</span>
+<a name="686"></a>	<span class="keyword">public</span>(<span class="identifier">QueryCookie</span>:<span class="identifier">cookie</span>, <span class="identifier">client</span>, <span class="identifier">ConVarQueryResult</span>:<span class="identifier">result</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cvarName</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cvarValue</span>[], <span class="keyword type">any</span>:<span class="identifier">value</span>),
+<a name="687"></a>	
+<a name="688"></a>	<span class="comment">/**
+<a name="689"></a>	 * Called when a query to retrieve a client's console variable has finished.
+<a name="690"></a>	 *
+<a name="691"></a>	 * <span class="doctag">@param</span> cookie		Unique identifier of query.
+<a name="692"></a>	 * <span class="doctag">@param</span> client		Player index.
+<a name="693"></a>	 * <span class="doctag">@param</span> result		Result of query that tells one whether or not query was successful.
+<a name="694"></a>	 *						See ConVarQueryResult enum for more details.
+<a name="695"></a>	 * <span class="doctag">@param</span> convarName	Name of client convar that was queried.
+<a name="696"></a>	 * <span class="doctag">@param</span> convarValue	Value of client convar that was queried if successful. This will be "" if it was not.
+<a name="697"></a>	 * <span class="doctag">@noreturn</span>
+<a name="698"></a>	 */</span>
+<a name="699"></a>	<span class="keyword">public</span>(<span class="identifier">QueryCookie</span>:<span class="identifier">cookie</span>, <span class="identifier">client</span>, <span class="identifier">ConVarQueryResult</span>:<span class="identifier">result</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cvarName</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cvarValue</span>[])
+<a name="700"></a>};
+<a name="701"></a>
+<a name="702"></a><span class="comment">/**
+<a name="703"></a> * Starts a query to retrieve the value of a client's console variable.
+<a name="704"></a> *
+<a name="705"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="706"></a> * <span class="doctag">@param</span> cvarName			Name of client convar to query.
+<a name="707"></a> * <span class="doctag">@param</span> callback		A function to use as a callback when the query has finished.
+<a name="708"></a> * <span class="doctag">@param</span> value			Optional value to pass to the callback function.
+<a name="709"></a> * <span class="doctag">@return</span>				A cookie that uniquely identifies the query. 
+<a name="710"></a> *						Returns QUERYCOOKIE_FAILED on failure, such as when used on a bot.
+<a name="711"></a> */</span>
+<a name="712"></a><span class="keyword">native</span> <span class="identifier">QueryCookie</span>:<span class="identifier">QueryClientConVar</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cvarName</span>[], <span class="identifier">ConVarQueryFinished</span>:<span class="identifier">callback</span>, <span class="keyword type">any</span>:<span class="identifier">value</span>=<span class="number">0</span>);
+<a name="713"></a>
+<a name="714"></a><span class="comment">/**
+<a name="715"></a> * Gets a command iterator.  Must be freed with CloseHandle().
+<a name="716"></a> *
+<a name="717"></a> * <span class="doctag">@return</span>				A new command iterator.
+<a name="718"></a> */</span>
+<a name="719"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">GetCommandIterator</span>();
+<a name="720"></a>
+<a name="721"></a><span class="comment">/**
+<a name="722"></a> * Reads a command iterator, then advances to the next command if any.
+<a name="723"></a> * Only SourceMod specific commands are returned.
+<a name="724"></a> *
+<a name="725"></a> * <span class="doctag">@param</span> iter			Command iterator Handle.
+<a name="726"></a> * <span class="doctag">@param</span> name			Name buffer.
+<a name="727"></a> * <span class="doctag">@param</span> nameLen		Name buffer size.
+<a name="728"></a> * <span class="doctag">@param</span> eflags		Effective default flags of a command.
+<a name="729"></a> * <span class="doctag">@param</span> desc			Command description buffer.
+<a name="730"></a> * <span class="doctag">@param</span> descLen		Command description buffer size.
+<a name="731"></a> * <span class="doctag">@return</span>				True on success, false if there are no more commands.
+<a name="732"></a> */</span>
+<a name="733"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">ReadCommandIterator</span>(<span class="keyword type">Handle</span>:<span class="identifier">iter</span>, 
+<a name="734"></a>								<span class="keyword type">String</span>:<span class="identifier">name</span>[], 
+<a name="735"></a>								<span class="identifier">nameLen</span>, 
+<a name="736"></a>								&amp;<span class="identifier">eflags</span>=<span class="number">0</span>, 
+<a name="737"></a>								<span class="keyword type">String</span>:<span class="identifier">desc</span>[]=<span class="string">""</span>, 
+<a name="738"></a>								<span class="identifier">descLen</span>=<span class="number">0</span>);
+<a name="739"></a>
+<a name="740"></a><span class="comment">/**
+<a name="741"></a> * Returns whether a client has access to a given command string.  The string 
+<a name="742"></a> * can be any override string, as overrides can be independent of 
+<a name="743"></a> * commands.  This feature essentially allows you to create custom 
+<a name="744"></a> * flags using the override system.
+<a name="745"></a> *
+<a name="746"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="747"></a> * <span class="doctag">@param</span> command		Command name.  If the command is not found, the default 
+<a name="748"></a> *						flags are used.
+<a name="749"></a> * <span class="doctag">@param</span> flags			Flag string to use as a default, if the command or override 
+<a name="750"></a> *						is not found.
+<a name="751"></a> * <span class="doctag">@param</span> override_only	If true, SourceMod will not attempt to find a matching 
+<a name="752"></a> *						command, and it will only use the default flags specified.
+<a name="753"></a> *						Otherwise, SourceMod will ignore the default flags if 
+<a name="754"></a> *						there is a matching admin command.
+<a name="755"></a> * <span class="doctag">@return</span>				True if the client has access, false otherwise.
+<a name="756"></a> */</span>
+<a name="757"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">CheckCommandAccess</span>(<span class="identifier">client</span>, 
+<a name="758"></a>							   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">command</span>[],
+<a name="759"></a>							   <span class="identifier">flags</span>,
+<a name="760"></a>							   <span class="keyword type">bool</span>:<span class="identifier">override_only</span>=<span class="keyword literal">false</span>);
+<a name="761"></a>
+<a name="762"></a><span class="comment">/**
+<a name="763"></a> * Returns whether an admin has access to a given command string.  The string 
+<a name="764"></a> * can be any override string, as overrides can be independent of 
+<a name="765"></a> * commands.  This feature essentially allows you to create custom flags
+<a name="766"></a> * using the override system.
+<a name="767"></a> *
+<a name="768"></a> * <span class="doctag">@param</span> id			AdminId of the admin.
+<a name="769"></a> * <span class="doctag">@param</span> command		Command name.  If the command is not found, the default 
+<a name="770"></a> *						flags are used.
+<a name="771"></a> * <span class="doctag">@param</span> flags			Flag string to use as a default, if the command or override 
+<a name="772"></a> *						is not found.
+<a name="773"></a> * <span class="doctag">@param</span> override_only	If true, SourceMod will not attempt to find a matching 
+<a name="774"></a> *						command, and it will only use the default flags specified.
+<a name="775"></a> *						Otherwise, SourceMod will ignore the default flags if 
+<a name="776"></a> *						there is a matching admin command.
+<a name="777"></a> * <span class="doctag">@return</span>				True if the admin has access, false otherwise.
+<a name="778"></a> */</span>
+<a name="779"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">CheckAccess</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, 
+<a name="780"></a>							   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">command</span>[],
+<a name="781"></a>							   <span class="identifier">flags</span>,
+<a name="782"></a>							   <span class="keyword type">bool</span>:<span class="identifier">override_only</span>=<span class="keyword literal">false</span>);
+<a name="783"></a>
+<a name="784"></a><span class="comment">/**
+<a name="785"></a> * Returns true if the supplied character is valid in a ConVar name.
+<a name="786"></a> *
+<a name="787"></a> * <span class="doctag">@param</span> c			Character to validate.
+<a name="788"></a> * <span class="doctag">@return</span>			True is valid for ConVars, false otherwise
+<a name="789"></a> */</span>
+<a name="790"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">IsValidConVarChar</span>(<span class="identifier">c</span>)
+<a name="791"></a>{
+<a name="792"></a>	<span class="keyword statement">return</span> (<span class="identifier">c</span> == <span class="char">'_'</span> || <span class="identifier">IsCharAlpha</span>(<span class="identifier">c</span>) || <span class="identifier">IsCharNumeric</span>(<span class="identifier">c</span>));
+<a name="793"></a>}
+<a name="794"></a>
+<a name="795"></a><span class="comment">/**
+<a name="796"></a> * Returns the bitstring of flags of a command.
+<a name="797"></a> *
+<a name="798"></a> * <span class="doctag">@param</span> name		Name of the command.
+<a name="799"></a> * <span class="doctag">@return</span>			A bitstring containing the FCVAR_* flags that are enabled 
+<a name="800"></a> *					or INVALID_FCVAR_FLAGS if command not found.
+<a name="801"></a> */</span>
+<a name="802"></a><span class="keyword">native</span> <span class="identifier">GetCommandFlags</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="803"></a>
+<a name="804"></a><span class="comment">/**
+<a name="805"></a> * Sets the bitstring of flags of a command.
+<a name="806"></a> *
+<a name="807"></a> * <span class="doctag">@param</span> name		Name of the command.
+<a name="808"></a> * <span class="doctag">@param</span> flags		A bitstring containing the FCVAR_* flags to enable.
+<a name="809"></a> * <span class="doctag">@return</span>			True on success, otherwise false.
+<a name="810"></a> */</span>
+<a name="811"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SetCommandFlags</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">flags</span>);
+<a name="812"></a>
+<a name="813"></a><span class="comment">/**
+<a name="814"></a> * Starts a ConCommandBase search, traversing the list of ConVars and 
+<a name="815"></a> * ConCommands.  If a Handle is returned, the next entry must be read 
+<a name="816"></a> * via FindNextConCommand().  The order of the list is undefined.
+<a name="817"></a> *
+<a name="818"></a> * <span class="doctag">@param</span> buffer		Buffer to store entry name.
+<a name="819"></a> * <span class="doctag">@param</span> max_size		Maximum size of the buffer.
+<a name="820"></a> * <span class="doctag">@param</span> isCommand		Variable to store whether the entry is a command. 
+<a name="821"></a> *						If it is not a command, it is a ConVar.
+<a name="822"></a> * <span class="doctag">@param</span> flags			Variable to store entry flags.
+<a name="823"></a> * <span class="doctag">@param</span> description		Buffer to store the description, empty if no description present.
+<a name="824"></a> * <span class="doctag">@param</span> descrmax_size		Maximum size of the description buffer.
+<a name="825"></a> * <span class="doctag">@return</span>				On success, a ConCmdIter Handle is returned, which 
+<a name="826"></a> *						can be read via FindNextConCommand(), and must be 
+<a name="827"></a> *						closed via CloseHandle().  Additionally, the output 
+<a name="828"></a> *						parameters will be filled with information of the 
+<a name="829"></a> *						first ConCommandBase entry.
+<a name="830"></a> *						On failure, INVALID_HANDLE is returned, and the 
+<a name="831"></a> *						contents of outputs is undefined.
+<a name="832"></a> */</span>
+<a name="833"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">FindFirstConCommand</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">max_size</span>, &amp;<span class="keyword type">bool</span>:<span class="identifier">isCommand</span>, &amp;<span class="identifier">flags</span>=<span class="number">0</span>, <span class="keyword type">String</span>:<span class="identifier">description</span>[]=<span class="string">""</span>, <span class="identifier">descrmax_size</span>=<span class="number">0</span>);
+<a name="834"></a>
+<a name="835"></a><span class="comment">/**
+<a name="836"></a> * Reads the next entry in a ConCommandBase iterator.
+<a name="837"></a> *
+<a name="838"></a> * <span class="doctag">@param</span> search		ConCmdIter Handle to search.
+<a name="839"></a> * <span class="doctag">@param</span> buffer		Buffer to store entry name.
+<a name="840"></a> * <span class="doctag">@param</span> max_size		Maximum size of the buffer.
+<a name="841"></a> * <span class="doctag">@param</span> isCommand		Variable to store whether the entry is a command.
+<a name="842"></a> *						If it is not a command, it is a ConVar.
+<a name="843"></a> * <span class="doctag">@param</span> flags			Variable to store entry flags.
+<a name="844"></a> * <span class="doctag">@param</span> description		Buffer to store the description, empty if no description present.
+<a name="845"></a> * <span class="doctag">@param</span> descrmax_size		Maximum size of the description buffer.
+<a name="846"></a> * <span class="doctag">@return</span>				On success, the outputs are filled, the iterator is 
+<a name="847"></a> *						advanced to the next entry, and true is returned.  
+<a name="848"></a> *						If no more entries exist, false is returned, and the 
+<a name="849"></a> *						contents of outputs is undefined.
+<a name="850"></a> */</span>
+<a name="851"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">FindNextConCommand</span>(<span class="keyword type">Handle</span>:<span class="identifier">search</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">max_size</span>, &amp;<span class="keyword type">bool</span>:<span class="identifier">isCommand</span>, &amp;<span class="identifier">flags</span>=<span class="number">0</span>, <span class="keyword type">String</span>:<span class="identifier">description</span>[]=<span class="string">""</span>, <span class="identifier">descrmax_size</span>=<span class="number">0</span>);
+<a name="852"></a>
+<a name="853"></a><span class="comment">/**
+<a name="854"></a> * Replicates a convar value to a specific client. This does not change the actual convar value.
+<a name="855"></a> *
+<a name="856"></a> * <span class="doctag">@param</span> client		Client index
+<a name="857"></a> * <span class="doctag">@param</span> convar		ConVar handle
+<a name="858"></a> * <span class="doctag">@param</span> value			String value to send
+<a name="859"></a> * <span class="doctag">@return</span>				True on success, false on failure
+<a name="860"></a> * <span class="doctag">@error</span> 				Invalid client index, client not in game, or client is fake
+<a name="861"></a> */</span>
+<a name="862"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SendConVarValue</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">convar</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="863"></a>
+<a name="864"></a><span class="comment">/**
+<a name="865"></a> * Adds an informational string to the server's public "tags".
+<a name="866"></a> * This string should be a short, unique identifier.
+<a name="867"></a> *
+<a name="868"></a> * Note: Tags are automatically removed when a plugin unloads.
+<a name="869"></a> * Note: Currently, this function does nothing because of bugs in the Valve master.
+<a name="870"></a> *
+<a name="871"></a> * <span class="doctag">@param</span> tag			Tag string to append.
+<a name="872"></a> * <span class="doctag">@noreturn</span>
+<a name="873"></a> */</span>
+<a name="874"></a><span class="keyword">native</span> <span class="identifier">AddServerTag</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">tag</span>[]);
+<a name="875"></a>
+<a name="876"></a><span class="comment">/**
+<a name="877"></a> * Removes a tag previously added by the calling plugin.
+<a name="878"></a> *
+<a name="879"></a> * <span class="doctag">@param</span> tag			Tag string to remove.
+<a name="880"></a> * <span class="doctag">@noreturn</span>
+<a name="881"></a> */</span>
+<a name="882"></a><span class="keyword">native</span> <span class="identifier">RemoveServerTag</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">tag</span>[]);
+<a name="883"></a>
+<a name="884"></a><span class="comment">/**
+<a name="885"></a> * Callback for command listeners. This is invoked whenever any command
+<a name="886"></a> * reaches the server, from the server console itself or a player.
+<a name="887"></a> *
+<a name="888"></a> * Clients may be in the process of connecting when they are executing commands
+<a name="889"></a> * IsClientConnected(client) is not guaranteed to return true.  Other functions
+<a name="890"></a> * such as GetClientIP() may not work at this point either.
+<a name="891"></a> *
+<a name="892"></a> * Returning Plugin_Handled or Plugin_Stop will prevent the original,
+<a name="893"></a> * baseline code from running.
+<a name="894"></a> *
+<a name="895"></a> * -- TEXT BELOW IS IMPLEMENTATION, AND NOT GUARANTEED --
+<a name="896"></a> * Even if returning Plugin_Handled or Plugin_Stop, some callbacks will still
+<a name="897"></a> * trigger. These are:
+<a name="898"></a> *  * C++ command dispatch hooks from Metamod:Source plugins
+<a name="899"></a> *  * Reg*Cmd() hooks that did not create new commands.
+<a name="900"></a> *
+<a name="901"></a> * <span class="doctag">@param</span> client        Client, or 0 for server.
+<a name="902"></a> *                      Client may not be connected or in game.
+<a name="903"></a> * <span class="doctag">@param</span> command       Command name, lower case. To get name as typed, use
+<a name="904"></a> *                      GetCmdArg() and specify argument 0.
+<a name="905"></a> * <span class="doctag">@param</span> argc          Argument count.
+<a name="906"></a> * <span class="doctag">@return</span>				Action to take (see extended notes above).
+<a name="907"></a> */</span>
+<a name="908"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">Action</span>:<span class="identifier">CommandListener</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">command</span>[], <span class="identifier">argc</span>);
+<a name="909"></a>
+<a name="910"></a><span class="preprocessor">#define <span class="identifier">FEATURECAP_COMMANDLISTENER</span>  <span class="string">"command listener"</span>
+<a name="911"></a></span>
+<a name="912"></a><span class="comment">/**
+<a name="913"></a> * Adds a callback that will fire when a command is sent to the server.
+<a name="914"></a> *
+<a name="915"></a> * Registering commands is designed to create a new command as part of the UI,
+<a name="916"></a> * whereas this is a lightweight hook on a command string, existing or not.
+<a name="917"></a> * Using Reg*Cmd to intercept is in poor practice, as it physically creates a
+<a name="918"></a> * new command and can slow down dispatch in general.
+<a name="919"></a> *
+<a name="920"></a> * To see if this feature is available, use FeatureType_Capability and 
+<a name="921"></a> * FEATURECAP_COMMANDLISTENER.
+<a name="922"></a> *
+<a name="923"></a> * <span class="doctag">@param</span> callback      Callback.
+<a name="924"></a> * <span class="doctag">@param</span> command		Command, or if not specified, a global listener.
+<a name="925"></a> *                      The command is case insensitive.
+<a name="926"></a> * <span class="doctag">@return</span>              True if this feature is available on the current game,
+<a name="927"></a> *                      false otherwise.
+<a name="928"></a> */</span>
+<a name="929"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">AddCommandListener</span>(<span class="identifier">CommandListener</span>:<span class="identifier">callback</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">command</span>[]=<span class="string">""</span>);
+<a name="930"></a>
+<a name="931"></a><span class="comment">/**
+<a name="932"></a> * Removes a previously added command listener, in reverse order of being added.
+<a name="933"></a> *
+<a name="934"></a> * <span class="doctag">@param</span> callback		Callback.
+<a name="935"></a> * <span class="doctag">@param</span> command		Command, or if not specified, a global listener.
+<a name="936"></a> *                      The command is case insensitive.
+<a name="937"></a> * <span class="doctag">@error</span>				Callback has no active listeners.
+<a name="938"></a> */</span>
+<a name="939"></a><span class="keyword">native</span> <span class="identifier">RemoveCommandListener</span>(<span class="identifier">CommandListener</span>:<span class="identifier">callback</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">command</span>[]=<span class="string">""</span>);
+<a name="940"></a>
+<a name="941"></a><span class="comment">/**
+<a name="942"></a> * Global listener for the chat commands.
+<a name="943"></a> *
+<a name="944"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="945"></a> * <span class="doctag">@param</span> command		Command name.
+<a name="946"></a> * <span class="doctag">@param</span> sArgs			Chat argument string.
+<a name="947"></a> * 
+<a name="948"></a> * <span class="doctag">@return</span>				An Action value. Returning Plugin_Handled bypasses the game function call.
+<a name="949"></a>							Returning Plugin_Stop bypasses the post hook as well as the game function.
+<a name="950"></a> */</span>
+<a name="951"></a><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">OnClientSayCommand</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">command</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">sArgs</span>[]);
+<a name="952"></a>
+<a name="953"></a><span class="comment">/**
+<a name="954"></a> * Global post listener for the chat commands.
+<a name="955"></a> *
+<a name="956"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="957"></a> * <span class="doctag">@param</span> command		Command name.
+<a name="958"></a> * <span class="doctag">@param</span> sArgs			Chat argument string.
+<a name="959"></a> * 
+<a name="960"></a> */</span>
+<a name="961"></a><span class="keyword">forward</span> <span class="identifier">OnClientSayCommand_Post</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">command</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">sArgs</span>[]);
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

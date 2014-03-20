@@ -1,0 +1,15 @@
+pre {
+    tab-size: 4;
+    font: 12px/15px "Courier New", Courier, monospace;
+}
+pre .comment { color: #070 }
+pre .commentline { color: #070 }
+pre .comment .doctag { color: #474; text-decoration: underline; font-style: italic }
+pre .keyword  { color: #00f; font-weight: bold }
+pre .keyword.statement { color: #00f; font-weight: bold }
+pre .keyword.operator { color: #00f; font-weight: bold }
+pre .keyword.type  { color: #70f; font-weight: normal }
+pre .preprocessor { color: #840 }
+pre .number  { color: #f70 }
+pre .string { color: #777 }
+pre .tag { color: #027; font-weight: bold }

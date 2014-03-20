@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<title>nextmap.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_nextmap_included_</span>
+<a name="34"></a></span>  <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_nextmap_included_</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Sets SourceMod's internal nextmap. 
+<a name="40"></a> * Equivalent to changing sm_nextmap but with an added validity check.
+<a name="41"></a> *
+<a name="42"></a> * <span class="doctag">@param</span> map		Next map to set.
+<a name="43"></a> * <span class="doctag">@return</span>			True if the nextmap was set, false if map was invalid.
+<a name="44"></a> */</span>
+<a name="45"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SetNextMap</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">map</span>[]);
+<a name="46"></a>
+<a name="47"></a><span class="comment">/**
+<a name="48"></a> * Returns SourceMod's internal nextmap.
+<a name="49"></a> *
+<a name="50"></a> * <span class="doctag">@param</span> map		Buffer to store the nextmap name.
+<a name="51"></a> * <span class="doctag">@param</span> maxlen	Maximum length of the map buffer.
+<a name="52"></a> * <span class="doctag">@return</span>			True if a Map was found and copied, false if no nextmap is set (map will be unchanged).
+<a name="53"></a> */</span>
+<a name="54"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetNextMap</span>(<span class="keyword type">String</span>:<span class="identifier">map</span>[], <span class="identifier">maxlen</span>);
+<a name="55"></a>
+<a name="56"></a><span class="comment">/**
+<a name="57"></a> * Changes the current map and records the reason for the change with maphistory
+<a name="58"></a> *
+<a name="59"></a> * <span class="doctag">@param</span> map		Map to change to.
+<a name="60"></a> * <span class="doctag">@param</span> reason	Reason for change.
+<a name="61"></a> * <span class="doctag">@noreturn</span>
+<a name="62"></a> */</span>
+<a name="63"></a><span class="keyword">native</span> <span class="identifier">ForceChangeLevel</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">map</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">reason</span>[]);
+<a name="64"></a>
+<a name="65"></a><span class="comment">/**
+<a name="66"></a> * Gets the current number of maps in the map history
+<a name="67"></a> *
+<a name="68"></a> * <span class="doctag">@return</span>			Number of maps.
+<a name="69"></a> */</span>
+<a name="70"></a><span class="keyword">native</span> <span class="identifier">GetMapHistorySize</span>();
+<a name="71"></a>
+<a name="72"></a><span class="comment">/**
+<a name="73"></a> * Retrieves a map from the map history list.
+<a name="74"></a> * 
+<a name="75"></a> * <span class="doctag">@param</span> item			Item number. Must be 0 or greater and less than GetMapHistorySize().
+<a name="76"></a> * <span class="doctag">@param</span> map			Buffer to store the map name.
+<a name="77"></a> * <span class="doctag">@param</span> mapLen		Length of map buffer.
+<a name="78"></a> * <span class="doctag">@param</span> reason		Buffer to store the change reason.
+<a name="79"></a> * <span class="doctag">@param</span> reasonLen		Length of the reason buffer.
+<a name="80"></a> * <span class="doctag">@param</span> startTime		Time the map started.
+<a name="81"></a> * <span class="doctag">@noreturn</span>
+<a name="82"></a> * <span class="doctag">@error</span>				Invalid item number.	
+<a name="83"></a> */</span>
+<a name="84"></a><span class="keyword">native</span> <span class="identifier">GetMapHistory</span>(<span class="identifier">item</span>, <span class="keyword type">String</span>:<span class="identifier">map</span>[], <span class="identifier">mapLen</span>, <span class="keyword type">String</span>:<span class="identifier">reason</span>[], <span class="identifier">reasonLen</span>, &amp;<span class="identifier">startTime</span>);<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

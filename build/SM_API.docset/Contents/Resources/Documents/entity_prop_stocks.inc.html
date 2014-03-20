@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<title>entity_prop_stocks.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_entity_prop_stocks_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_entity_prop_stocks_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="keyword">enum</span> <span class="identifier">MoveType</span>
+<a name="39"></a>{
+<a name="40"></a>	<span class="identifier">MOVETYPE_NONE</span> = <span class="number">0</span>,			<span class="comment">/**&lt; never moves */</span>
+<a name="41"></a>	<span class="identifier">MOVETYPE_ISOMETRIC</span>,			<span class="comment">/**&lt; For players */</span>
+<a name="42"></a>	<span class="identifier">MOVETYPE_WALK</span>,				<span class="comment">/**&lt; Player only - moving on the ground */</span>
+<a name="43"></a>	<span class="identifier">MOVETYPE_STEP</span>,				<span class="comment">/**&lt; gravity, special edge handling -- monsters use this */</span>
+<a name="44"></a>	<span class="identifier">MOVETYPE_FLY</span>,				<span class="comment">/**&lt; No gravity, but still collides with stuff */</span>
+<a name="45"></a>	<span class="identifier">MOVETYPE_FLYGRAVITY</span>,		<span class="comment">/**&lt; flies through the air + is affected by gravity */</span>
+<a name="46"></a>	<span class="identifier">MOVETYPE_VPHYSICS</span>,			<span class="comment">/**&lt; uses VPHYSICS for simulation */</span>
+<a name="47"></a>	<span class="identifier">MOVETYPE_PUSH</span>,				<span class="comment">/**&lt; no clip to world, push and crush */</span>
+<a name="48"></a>	<span class="identifier">MOVETYPE_NOCLIP</span>,			<span class="comment">/**&lt; No gravity, no collisions, still do velocity/avelocity */</span>
+<a name="49"></a>	<span class="identifier">MOVETYPE_LADDER</span>,			<span class="comment">/**&lt; Used by players only when going onto a ladder */</span>
+<a name="50"></a>	<span class="identifier">MOVETYPE_OBSERVER</span>,			<span class="comment">/**&lt; Observer movement, depends on player's observer mode */</span>
+<a name="51"></a>	<span class="identifier">MOVETYPE_CUSTOM</span>,			<span class="comment">/**&lt; Allows the entity to describe its own physics */</span>
+<a name="52"></a>};
+<a name="53"></a>
+<a name="54"></a><span class="keyword">enum</span> <span class="identifier">RenderMode</span>
+<a name="55"></a>{	
+<a name="56"></a>	<span class="identifier">RENDER_NORMAL</span>,			<span class="comment">/**&lt; src */</span>
+<a name="57"></a>	<span class="identifier">RENDER_TRANSCOLOR</span>,		<span class="comment">/**&lt; c*a+dest*(1-a) */</span>
+<a name="58"></a>	<span class="identifier">RENDER_TRANSTEXTURE</span>,	<span class="comment">/**&lt; src*a+dest*(1-a) */</span>
+<a name="59"></a>	<span class="identifier">RENDER_GLOW</span>,			<span class="comment">/**&lt; src*a+dest -- No Z buffer checks -- Fixed size in screen space */</span>
+<a name="60"></a>	<span class="identifier">RENDER_TRANSALPHA</span>,		<span class="comment">/**&lt; src*srca+dest*(1-srca) */</span>
+<a name="61"></a>	<span class="identifier">RENDER_TRANSADD</span>,		<span class="comment">/**&lt; src*a+dest */</span>
+<a name="62"></a>	<span class="identifier">RENDER_ENVIRONMENTAL</span>,	<span class="comment">/**&lt; not drawn, used for environmental effects */</span>
+<a name="63"></a>	<span class="identifier">RENDER_TRANSADDFRAMEBLEND</span>, <span class="comment">/**&lt; use a fractional frame value to blend between animation frames */</span>
+<a name="64"></a>	<span class="identifier">RENDER_TRANSALPHAADD</span>,	<span class="comment">/**&lt; src + dest*(1-a) */</span>
+<a name="65"></a>	<span class="identifier">RENDER_WORLDGLOW</span>,		<span class="comment">/**&lt; Same as kRenderGlow but not fixed size in screen space */</span>
+<a name="66"></a>	<span class="identifier">RENDER_NONE</span>,			<span class="comment">/**&lt; Don't render. */</span>
+<a name="67"></a>};
+<a name="68"></a>
+<a name="69"></a><span class="keyword">enum</span> <span class="identifier">RenderFx</span>
+<a name="70"></a>{	
+<a name="71"></a>	<span class="identifier">RENDERFX_NONE</span> = <span class="number">0</span>, 
+<a name="72"></a>	<span class="identifier">RENDERFX_PULSE_SLOW</span>, 
+<a name="73"></a>	<span class="identifier">RENDERFX_PULSE_FAST</span>, 
+<a name="74"></a>	<span class="identifier">RENDERFX_PULSE_SLOW_WIDE</span>, 
+<a name="75"></a>	<span class="identifier">RENDERFX_PULSE_FAST_WIDE</span>, 
+<a name="76"></a>	<span class="identifier">RENDERFX_FADE_SLOW</span>, 
+<a name="77"></a>	<span class="identifier">RENDERFX_FADE_FAST</span>, 
+<a name="78"></a>	<span class="identifier">RENDERFX_SOLID_SLOW</span>, 
+<a name="79"></a>	<span class="identifier">RENDERFX_SOLID_FAST</span>, 	   
+<a name="80"></a>	<span class="identifier">RENDERFX_STROBE_SLOW</span>, 
+<a name="81"></a>	<span class="identifier">RENDERFX_STROBE_FAST</span>, 
+<a name="82"></a>	<span class="identifier">RENDERFX_STROBE_FASTER</span>, 
+<a name="83"></a>	<span class="identifier">RENDERFX_FLICKER_SLOW</span>, 
+<a name="84"></a>	<span class="identifier">RENDERFX_FLICKER_FAST</span>,
+<a name="85"></a>	<span class="identifier">RENDERFX_NO_DISSIPATION</span>,
+<a name="86"></a>	<span class="identifier">RENDERFX_DISTORT</span>,			<span class="comment">/**&lt; Distort/scale/translate flicker */</span>
+<a name="87"></a>	<span class="identifier">RENDERFX_HOLOGRAM</span>,			<span class="comment">/**&lt; kRenderFxDistort + distance fade */</span>
+<a name="88"></a>	<span class="identifier">RENDERFX_EXPLODE</span>,			<span class="comment">/**&lt; Scale up really big! */</span>
+<a name="89"></a>	<span class="identifier">RENDERFX_GLOWSHELL</span>,			<span class="comment">/**&lt; Glowing Shell */</span>
+<a name="90"></a>	<span class="identifier">RENDERFX_CLAMP_MIN_SCALE</span>,	<span class="comment">/**&lt; Keep this sprite from getting very small (SPRITES only!) */</span>
+<a name="91"></a>	<span class="identifier">RENDERFX_ENV_RAIN</span>,			<span class="comment">/**&lt; for environmental rendermode, make rain */</span>
+<a name="92"></a>	<span class="identifier">RENDERFX_ENV_SNOW</span>,			<span class="comment">/**&lt;  "        "            "    , make snow */</span>
+<a name="93"></a>	<span class="identifier">RENDERFX_SPOTLIGHT</span>,			<span class="comment">/**&lt; TEST CODE for experimental spotlight */</span>
+<a name="94"></a>	<span class="identifier">RENDERFX_RAGDOLL</span>,			<span class="comment">/**&lt; HACKHACK: TEST CODE for signalling death of a ragdoll character */</span>
+<a name="95"></a>	<span class="identifier">RENDERFX_PULSE_FAST_WIDER</span>,
+<a name="96"></a>	<span class="identifier">RENDERFX_MAX</span>
+<a name="97"></a>};
+<a name="98"></a>
+<a name="99"></a><span class="commentline">// These defines are for client button presses.
+<a name="100"></a></span><span class="preprocessor">#define <span class="identifier">IN_ATTACK</span>		(<span class="number">1</span> &lt;&lt; <span class="number">0</span>)
+<a name="101"></a></span><span class="preprocessor">#define <span class="identifier">IN_JUMP</span>			(<span class="number">1</span> &lt;&lt; <span class="number">1</span>)
+<a name="102"></a></span><span class="preprocessor">#define <span class="identifier">IN_DUCK</span>			(<span class="number">1</span> &lt;&lt; <span class="number">2</span>)
+<a name="103"></a></span><span class="preprocessor">#define <span class="identifier">IN_FORWARD</span>		(<span class="number">1</span> &lt;&lt; <span class="number">3</span>)
+<a name="104"></a></span><span class="preprocessor">#define <span class="identifier">IN_BACK</span>			(<span class="number">1</span> &lt;&lt; <span class="number">4</span>)
+<a name="105"></a></span><span class="preprocessor">#define <span class="identifier">IN_USE</span>			(<span class="number">1</span> &lt;&lt; <span class="number">5</span>)
+<a name="106"></a></span><span class="preprocessor">#define <span class="identifier">IN_CANCEL</span>		(<span class="number">1</span> &lt;&lt; <span class="number">6</span>)
+<a name="107"></a></span><span class="preprocessor">#define <span class="identifier">IN_LEFT</span>			(<span class="number">1</span> &lt;&lt; <span class="number">7</span>)
+<a name="108"></a></span><span class="preprocessor">#define <span class="identifier">IN_RIGHT</span>		(<span class="number">1</span> &lt;&lt; <span class="number">8</span>)
+<a name="109"></a></span><span class="preprocessor">#define <span class="identifier">IN_MOVELEFT</span>		(<span class="number">1</span> &lt;&lt; <span class="number">9</span>)
+<a name="110"></a></span><span class="preprocessor">#define <span class="identifier">IN_MOVERIGHT</span>		(<span class="number">1</span> &lt;&lt; <span class="number">10</span>)
+<a name="111"></a></span><span class="preprocessor">#define <span class="identifier">IN_ATTACK2</span>		(<span class="number">1</span> &lt;&lt; <span class="number">11</span>)
+<a name="112"></a></span><span class="preprocessor">#define <span class="identifier">IN_RUN</span>			(<span class="number">1</span> &lt;&lt; <span class="number">12</span>)
+<a name="113"></a></span><span class="preprocessor">#define <span class="identifier">IN_RELOAD</span>		(<span class="number">1</span> &lt;&lt; <span class="number">13</span>)
+<a name="114"></a></span><span class="preprocessor">#define <span class="identifier">IN_ALT1</span>			(<span class="number">1</span> &lt;&lt; <span class="number">14</span>)
+<a name="115"></a></span><span class="preprocessor">#define <span class="identifier">IN_ALT2</span>			(<span class="number">1</span> &lt;&lt; <span class="number">15</span>)
+<a name="116"></a></span><span class="preprocessor">#define <span class="identifier">IN_SCORE</span>		(<span class="number">1</span> &lt;&lt; <span class="number">16</span>)   	<span class="comment">/**&lt; Used by client.dll for when scoreboard is held down */</span>
+<a name="117"></a></span><span class="preprocessor">#define <span class="identifier">IN_SPEED</span>		(<span class="number">1</span> &lt;&lt; <span class="number">17</span>)	<span class="comment">/**&lt; Player is holding the speed key */</span>
+<a name="118"></a></span><span class="preprocessor">#define <span class="identifier">IN_WALK</span>			(<span class="number">1</span> &lt;&lt; <span class="number">18</span>)	<span class="comment">/**&lt; Player holding walk key */</span>
+<a name="119"></a></span><span class="preprocessor">#define <span class="identifier">IN_ZOOM</span>			(<span class="number">1</span> &lt;&lt; <span class="number">19</span>)	<span class="comment">/**&lt; Zoom key for HUD zoom */</span>
+<a name="120"></a></span><span class="preprocessor">#define <span class="identifier">IN_WEAPON1</span>		(<span class="number">1</span> &lt;&lt; <span class="number">20</span>)	<span class="comment">/**&lt; weapon defines these bits */</span>
+<a name="121"></a></span><span class="preprocessor">#define <span class="identifier">IN_WEAPON2</span>		(<span class="number">1</span> &lt;&lt; <span class="number">21</span>)	<span class="comment">/**&lt; weapon defines these bits */</span>
+<a name="122"></a></span><span class="preprocessor">#define <span class="identifier">IN_BULLRUSH</span>		(<span class="number">1</span> &lt;&lt; <span class="number">22</span>)
+<a name="123"></a></span><span class="preprocessor">#define <span class="identifier">IN_GRENADE1</span>		(<span class="number">1</span> &lt;&lt; <span class="number">23</span>)	<span class="comment">/**&lt; grenade 1 */</span>
+<a name="124"></a></span><span class="preprocessor">#define <span class="identifier">IN_GRENADE2</span>		(<span class="number">1</span> &lt;&lt; <span class="number">24</span>)	<span class="comment">/**&lt; grenade 2 */</span>
+<a name="125"></a></span><span class="preprocessor">#define <span class="identifier">IN_ATTACK3</span>		(<span class="number">1</span> &lt;&lt; <span class="number">25</span>)
+<a name="126"></a></span>
+<a name="127"></a><span class="commentline">// Note: these are only for use with GetEntityFlags and SetEntityFlags
+<a name="128"></a></span><span class="commentline">//       and may not match the game's actual, internal m_fFlags values.
+<a name="129"></a></span><span class="commentline">// PLAYER SPECIFIC FLAGS FIRST BECAUSE WE USE ONLY A FEW BITS OF NETWORK PRECISION
+<a name="130"></a></span><span class="preprocessor">#define	<span class="identifier">FL_ONGROUND</span>			(<span class="number">1</span> &lt;&lt; <span class="number">0</span>)	<span class="comment">/**&lt; At rest / on the ground */</span>
+<a name="131"></a></span><span class="preprocessor">#define <span class="identifier">FL_DUCKING</span>			(<span class="number">1</span> &lt;&lt; <span class="number">1</span>)	<span class="comment">/**&lt; Player flag -- Player is fully crouched */</span>
+<a name="132"></a></span><span class="preprocessor">#define	<span class="identifier">FL_WATERJUMP</span>			(<span class="number">1</span> &lt;&lt; <span class="number">2</span>)	<span class="comment">/**&lt; player jumping out of water */</span>
+<a name="133"></a></span><span class="preprocessor">#define <span class="identifier">FL_ONTRAIN</span>			(<span class="number">1</span> &lt;&lt; <span class="number">3</span>)	<span class="comment">/**&lt; Player is _controlling_ a train, so movement commands should be ignored on client during prediction. */</span>
+<a name="134"></a></span><span class="preprocessor">#define <span class="identifier">FL_INRAIN</span>			(<span class="number">1</span> &lt;&lt; <span class="number">4</span>)	<span class="comment">/**&lt; Indicates the entity is standing in rain */</span>
+<a name="135"></a></span><span class="preprocessor">#define <span class="identifier">FL_FROZEN</span>			(<span class="number">1</span> &lt;&lt; <span class="number">5</span>)	<span class="comment">/**&lt; Player is frozen for 3rd person camera */</span>
+<a name="136"></a></span><span class="preprocessor">#define <span class="identifier">FL_ATCONTROLS</span>			(<span class="number">1</span> &lt;&lt; <span class="number">6</span>)	<span class="comment">/**&lt; Player can't move, but keeps key inputs for controlling another entity */</span>
+<a name="137"></a></span><span class="preprocessor">#define	<span class="identifier">FL_CLIENT</span>			(<span class="number">1</span> &lt;&lt; <span class="number">7</span>)	<span class="comment">/**&lt; Is a player */</span>
+<a name="138"></a></span><span class="preprocessor">#define <span class="identifier">FL_FAKECLIENT</span>			(<span class="number">1</span> &lt;&lt; <span class="number">8</span>)	<span class="comment">/**&lt; Fake client, simulated server side; don't send network messages to them */</span>
+<a name="139"></a></span><span class="commentline">// NOTE if you move things up, make sure to change this value
+<a name="140"></a></span><span class="preprocessor">#define <span class="identifier">PLAYER_FLAG_BITS</span>		<span class="number">9</span>
+<a name="141"></a></span><span class="commentline">// NON-PLAYER SPECIFIC (i.e., not used by GameMovement or the client .dll ) -- Can still be applied to players, though
+<a name="142"></a></span><span class="preprocessor">#define	<span class="identifier">FL_INWATER</span>			(<span class="number">1</span> &lt;&lt; <span class="number">9</span>)	<span class="comment">/**&lt; In water */</span>
+<a name="143"></a></span><span class="preprocessor">#define	<span class="identifier">FL_FLY</span>				(<span class="number">1</span> &lt;&lt; <span class="number">10</span>)	<span class="comment">/**&lt; Changes the SV_Movestep() behavior to not need to be on ground */</span>
+<a name="144"></a></span><span class="preprocessor">#define	<span class="identifier">FL_SWIM</span>				(<span class="number">1</span> &lt;&lt; <span class="number">11</span>)	<span class="comment">/**&lt; Changes the SV_Movestep() behavior to not need to be on ground (but stay in water) */</span>
+<a name="145"></a></span><span class="preprocessor">#define	<span class="identifier">FL_CONVEYOR</span>			(<span class="number">1</span> &lt;&lt; <span class="number">12</span>)
+<a name="146"></a></span><span class="preprocessor">#define	<span class="identifier">FL_NPC</span>				(<span class="number">1</span> &lt;&lt; <span class="number">13</span>)
+<a name="147"></a></span><span class="preprocessor">#define	<span class="identifier">FL_GODMODE</span>			(<span class="number">1</span> &lt;&lt; <span class="number">14</span>)
+<a name="148"></a></span><span class="preprocessor">#define	<span class="identifier">FL_NOTARGET</span>			(<span class="number">1</span> &lt;&lt; <span class="number">15</span>)
+<a name="149"></a></span><span class="preprocessor">#define	<span class="identifier">FL_AIMTARGET</span>			(<span class="number">1</span> &lt;&lt; <span class="number">16</span>)	<span class="comment">/**&lt; set if the crosshair needs to aim onto the entity */</span>
+<a name="150"></a></span><span class="preprocessor">#define	<span class="identifier">FL_PARTIALGROUND</span>		(<span class="number">1</span> &lt;&lt; <span class="number">17</span>)	<span class="comment">/**&lt; not all corners are valid */</span>
+<a name="151"></a></span><span class="preprocessor">#define <span class="identifier">FL_STATICPROP</span>			(<span class="number">1</span> &lt;&lt; <span class="number">18</span>)	<span class="comment">/**&lt; Eetsa static prop!		 */</span>
+<a name="152"></a></span><span class="preprocessor">#define <span class="identifier">FL_GRAPHED</span>			(<span class="number">1</span> &lt;&lt; <span class="number">19</span>)	<span class="comment">/**&lt; worldgraph has this ent listed as something that blocks a connection */</span>
+<a name="153"></a></span><span class="preprocessor">#define <span class="identifier">FL_GRENADE</span>			(<span class="number">1</span> &lt;&lt; <span class="number">20</span>)
+<a name="154"></a></span><span class="preprocessor">#define <span class="identifier">FL_STEPMOVEMENT</span>			(<span class="number">1</span> &lt;&lt; <span class="number">21</span>)	<span class="comment">/**&lt; Changes the SV_Movestep() behavior to not do any processing */</span>
+<a name="155"></a></span><span class="preprocessor">#define <span class="identifier">FL_DONTTOUCH</span>			(<span class="number">1</span> &lt;&lt; <span class="number">22</span>)	<span class="comment">/**&lt; Doesn't generate touch functions, generates Untouch() for anything it was touching when this flag was set */</span>
+<a name="156"></a></span><span class="preprocessor">#define <span class="identifier">FL_BASEVELOCITY</span>			(<span class="number">1</span> &lt;&lt; <span class="number">23</span>)	<span class="comment">/**&lt; Base velocity has been applied this frame (used to convert base velocity into momentum) */</span>
+<a name="157"></a></span><span class="preprocessor">#define <span class="identifier">FL_WORLDBRUSH</span>			(<span class="number">1</span> &lt;&lt; <span class="number">24</span>)	<span class="comment">/**&lt; Not moveable/removeable brush entity (really part of the world, but represented as an entity for transparency or something) */</span>
+<a name="158"></a></span><span class="preprocessor">#define <span class="identifier">FL_OBJECT</span>			(<span class="number">1</span> &lt;&lt; <span class="number">25</span>)	<span class="comment">/**&lt; Terrible name. This is an object that NPCs should see. Missiles, for example. */</span>
+<a name="159"></a></span><span class="preprocessor">#define <span class="identifier">FL_KILLME</span>			(<span class="number">1</span> &lt;&lt; <span class="number">26</span>)	<span class="comment">/**&lt; This entity is marked for death -- will be freed by game DLL */</span>
+<a name="160"></a></span><span class="preprocessor">#define <span class="identifier">FL_ONFIRE</span>			(<span class="number">1</span> &lt;&lt; <span class="number">27</span>)	<span class="comment">/**&lt; You know... */</span>
+<a name="161"></a></span><span class="preprocessor">#define <span class="identifier">FL_DISSOLVING</span>			(<span class="number">1</span> &lt;&lt; <span class="number">28</span>)	<span class="comment">/**&lt; We're dissolving! */</span>
+<a name="162"></a></span><span class="preprocessor">#define <span class="identifier">FL_TRANSRAGDOLL</span>			(<span class="number">1</span> &lt;&lt; <span class="number">29</span>)	<span class="comment">/**&lt; In the process of turning into a client side ragdoll. */</span>
+<a name="163"></a></span><span class="preprocessor">#define <span class="identifier">FL_UNBLOCKABLE_BY_PLAYER</span>	(<span class="number">1</span> &lt;&lt; <span class="number">30</span>)	<span class="comment">/**&lt; pusher that can't be blocked by the player */</span>
+<a name="164"></a></span><span class="preprocessor">#define <span class="identifier">FL_FREEZING</span>				(<span class="number">1</span> &lt;&lt; <span class="number">31</span>)	<span class="comment">/**&lt; We're becoming frozen! */</span>
+<a name="165"></a></span><span class="preprocessor">#define <span class="identifier">FL_EP2V_UNKNOWN1</span>		(<span class="number">1</span> &lt;&lt; <span class="number">31</span>)	<span class="comment">/**&lt; Unknown */</span>
+<a name="166"></a></span><span class="commentline">// END entity flag #defines
+<a name="167"></a></span>
+<a name="168"></a><span class="comment">/**
+<a name="169"></a> * Get an entity's flags.
+<a name="170"></a> *
+<a name="171"></a> * <span class="doctag">@note</span> The game's actual flags are internally translated by SM
+<a name="172"></a> *       to match the entity flags defined above as the actual values
+<a name="173"></a> *       can differ per engine.
+<a name="174"></a> *
+<a name="175"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="176"></a> * <span class="doctag">@return</span>			Entity's flags, see entity flag defines above.
+<a name="177"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="178"></a> */</span>
+<a name="179"></a><span class="keyword">native</span> <span class="identifier">GetEntityFlags</span>(<span class="identifier">entity</span>);
+<a name="180"></a>
+<a name="181"></a><span class="comment">/**
+<a name="182"></a> * Sets an entity's flags.
+<a name="183"></a> *
+<a name="184"></a> * <span class="doctag">@note</span> The entity flags as defined above are internally translated by SM
+<a name="185"></a> *       to match the current game's expected value for the flags as
+<a name="186"></a> *       the actual values can differ per engine.
+<a name="187"></a> *
+<a name="188"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="189"></a> * <span class="doctag">@param</span> flags		Entity flags, see entity flag defines above.
+<a name="190"></a> * <span class="doctag">@noreturn</span>
+<a name="191"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="192"></a> */</span>
+<a name="193"></a><span class="keyword">native</span> <span class="identifier">SetEntityFlags</span>(<span class="identifier">entity</span>, <span class="identifier">flags</span>);
+<a name="194"></a>
+<a name="195"></a>
+<a name="196"></a><span class="comment">/**
+<a name="197"></a> * Gets an entity's movetype.
+<a name="198"></a> *
+<a name="199"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="200"></a> * <span class="doctag">@return</span>			Movetype, see enum above.
+<a name="201"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="202"></a> */</span>
+<a name="203"></a><span class="keyword">stock</span> <span class="identifier">MoveType</span>:<span class="identifier">GetEntityMoveType</span>(<span class="identifier">entity</span>)
+<a name="204"></a>{
+<a name="205"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="206"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">datamap</span>[<span class="number">32</span>];
+<a name="207"></a>	
+<a name="208"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="209"></a>	{
+<a name="210"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="211"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_MoveType"</span>, <span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>));
+<a name="212"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="213"></a>		
+<a name="214"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="215"></a>		{
+<a name="216"></a>			<span class="identifier">strcopy</span>(<span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>), <span class="string">"m_MoveType"</span>);
+<a name="217"></a>		}
+<a name="218"></a>		
+<a name="219"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="220"></a>	}
+<a name="221"></a>	
+<a name="222"></a>	<span class="keyword statement">return</span> <span class="identifier">MoveType</span>:<span class="identifier">GetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Data</span>, <span class="identifier">datamap</span>);
+<a name="223"></a>}
+<a name="224"></a>
+<a name="225"></a><span class="comment">/**
+<a name="226"></a> * Sets an entity's movetype.
+<a name="227"></a> *
+<a name="228"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="229"></a> * <span class="doctag">@param</span> mt		Movetype, see enum above.
+<a name="230"></a> * <span class="doctag">@noreturn</span>
+<a name="231"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="232"></a> */</span>
+<a name="233"></a><span class="keyword">stock</span> <span class="identifier">SetEntityMoveType</span>(<span class="identifier">entity</span>, <span class="identifier">MoveType</span>:<span class="identifier">mt</span>)
+<a name="234"></a>{
+<a name="235"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="236"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">datamap</span>[<span class="number">32</span>];
+<a name="237"></a>	
+<a name="238"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="239"></a>	{
+<a name="240"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="241"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_MoveType"</span>, <span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>));
+<a name="242"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="243"></a>		
+<a name="244"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="245"></a>		{
+<a name="246"></a>			<span class="identifier">strcopy</span>(<span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>), <span class="string">"m_MoveType"</span>);
+<a name="247"></a>		}
+<a name="248"></a>		
+<a name="249"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="250"></a>	}
+<a name="251"></a>	
+<a name="252"></a>	<span class="identifier">SetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Data</span>, <span class="identifier">datamap</span>, <span class="identifier">mt</span>);
+<a name="253"></a>}
+<a name="254"></a>
+<a name="255"></a><span class="comment">/**
+<a name="256"></a> * Gets an entity's render mode.
+<a name="257"></a> *
+<a name="258"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="259"></a> * <span class="doctag">@return</span>			RenderMode value.
+<a name="260"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="261"></a> */</span>
+<a name="262"></a><span class="keyword">stock</span> <span class="identifier">RenderMode</span>:<span class="identifier">GetEntityRenderMode</span>(<span class="identifier">entity</span>)
+<a name="263"></a>{
+<a name="264"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="265"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[<span class="number">32</span>];
+<a name="266"></a>	
+<a name="267"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="268"></a>	{
+<a name="269"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="270"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_nRenderMode"</span>, <span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>));
+<a name="271"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="272"></a>		
+<a name="273"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="274"></a>		{
+<a name="275"></a>			<span class="identifier">strcopy</span>(<span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>), <span class="string">"m_nRenderMode"</span>);
+<a name="276"></a>		}
+<a name="277"></a>		
+<a name="278"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="279"></a>	}
+<a name="280"></a>	
+<a name="281"></a>	<span class="keyword statement">return</span> <span class="identifier">RenderMode</span>:<span class="identifier">GetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Send</span>, <span class="identifier">prop</span>, <span class="number">1</span>);
+<a name="282"></a>}
+<a name="283"></a>
+<a name="284"></a><span class="comment">/**
+<a name="285"></a> * Sets an entity's render mode.
+<a name="286"></a> *
+<a name="287"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="288"></a> * <span class="doctag">@param</span> mode		RenderMode value.
+<a name="289"></a> * <span class="doctag">@noreturn</span>
+<a name="290"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="291"></a> */</span>
+<a name="292"></a><span class="keyword">stock</span> <span class="identifier">SetEntityRenderMode</span>(<span class="identifier">entity</span>, <span class="identifier">RenderMode</span>:<span class="identifier">mode</span>)
+<a name="293"></a>{
+<a name="294"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="295"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[<span class="number">32</span>];
+<a name="296"></a>	
+<a name="297"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="298"></a>	{
+<a name="299"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="300"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_nRenderMode"</span>, <span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>));
+<a name="301"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="302"></a>		
+<a name="303"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="304"></a>		{
+<a name="305"></a>			<span class="identifier">strcopy</span>(<span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>), <span class="string">"m_nRenderMode"</span>);
+<a name="306"></a>		}
+<a name="307"></a>		
+<a name="308"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="309"></a>	}
+<a name="310"></a>	
+<a name="311"></a>	<span class="identifier">SetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Send</span>, <span class="identifier">prop</span>, <span class="identifier">mode</span>, <span class="number">1</span>);
+<a name="312"></a>}
+<a name="313"></a>
+<a name="314"></a><span class="comment">/**
+<a name="315"></a> * Gets an entity's render Fx.
+<a name="316"></a> *
+<a name="317"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="318"></a> * <span class="doctag">@return</span>			RenderFx value.
+<a name="319"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="320"></a> */</span>
+<a name="321"></a><span class="keyword">stock</span> <span class="identifier">RenderFx</span>:<span class="identifier">GetEntityRenderFx</span>(<span class="identifier">entity</span>)
+<a name="322"></a>{
+<a name="323"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="324"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[<span class="number">32</span>];
+<a name="325"></a>	
+<a name="326"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="327"></a>	{
+<a name="328"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="329"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_nRenderFX"</span>, <span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>));
+<a name="330"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="331"></a>		
+<a name="332"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="333"></a>		{
+<a name="334"></a>			<span class="identifier">strcopy</span>(<span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>), <span class="string">"m_nRenderFX"</span>);
+<a name="335"></a>		}
+<a name="336"></a>		
+<a name="337"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="338"></a>	}
+<a name="339"></a>	
+<a name="340"></a>	<span class="keyword statement">return</span> <span class="identifier">RenderFx</span>:<span class="identifier">GetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Send</span>, <span class="identifier">prop</span>, <span class="number">1</span>);
+<a name="341"></a>}
+<a name="342"></a>
+<a name="343"></a><span class="comment">/**
+<a name="344"></a> * Sets an entity's render Fx.
+<a name="345"></a> *
+<a name="346"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="347"></a> * <span class="doctag">@param</span> fx		RenderFx value.
+<a name="348"></a> * <span class="doctag">@noreturn</span>
+<a name="349"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="350"></a> */</span>
+<a name="351"></a><span class="keyword">stock</span> <span class="identifier">SetEntityRenderFx</span>(<span class="identifier">entity</span>, <span class="identifier">RenderFx</span>:<span class="identifier">fx</span>)
+<a name="352"></a>{
+<a name="353"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="354"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[<span class="number">32</span>];
+<a name="355"></a>	
+<a name="356"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="357"></a>	{
+<a name="358"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="359"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_nRenderFX"</span>, <span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>));
+<a name="360"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="361"></a>		
+<a name="362"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="363"></a>		{
+<a name="364"></a>			<span class="identifier">strcopy</span>(<span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>), <span class="string">"m_nRenderFX"</span>);
+<a name="365"></a>		}
+<a name="366"></a>		
+<a name="367"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="368"></a>	}
+<a name="369"></a>	
+<a name="370"></a>	<span class="identifier">SetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Send</span>, <span class="identifier">prop</span>, <span class="identifier">fx</span>, <span class="number">1</span>);
+<a name="371"></a>}
+<a name="372"></a>
+<a name="373"></a><span class="comment">/**
+<a name="374"></a> * Sets an entity's color.
+<a name="375"></a> *
+<a name="376"></a> * <span class="doctag">@param</span> entity	Entity index
+<a name="377"></a> * <span class="doctag">@param</span> r 		Amount of red (0-255)
+<a name="378"></a> * <span class="doctag">@param</span> g 		Amount of green (0-255)
+<a name="379"></a> * <span class="doctag">@param</span> b 		Amount of blue (0-255)
+<a name="380"></a> * <span class="doctag">@param</span> a 		Amount of alpha (0-255)
+<a name="381"></a> * <span class="doctag">@noreturn</span>
+<a name="382"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="383"></a> */</span>
+<a name="384"></a><span class="keyword">stock</span> <span class="identifier">SetEntityRenderColor</span>(<span class="identifier">entity</span>, <span class="identifier">r</span>=<span class="number">255</span>, <span class="identifier">g</span>=<span class="number">255</span>, <span class="identifier">b</span>=<span class="number">255</span>, <span class="identifier">a</span>=<span class="number">255</span>)
+<a name="385"></a>{
+<a name="386"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="387"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[<span class="number">32</span>];
+<a name="388"></a>	
+<a name="389"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="390"></a>	{
+<a name="391"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="392"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_clrRender"</span>, <span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>));
+<a name="393"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="394"></a>		
+<a name="395"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="396"></a>		{
+<a name="397"></a>			<span class="identifier">strcopy</span>(<span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>), <span class="string">"m_clrRender"</span>);
+<a name="398"></a>		}
+<a name="399"></a>		
+<a name="400"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="401"></a>	}
+<a name="402"></a>	
+<a name="403"></a>	<span class="keyword">new</span> <span class="identifier">offset</span> = <span class="identifier">GetEntSendPropOffs</span>(<span class="identifier">entity</span>, <span class="identifier">prop</span>);
+<a name="404"></a>	
+<a name="405"></a>	<span class="keyword statement">if</span> (<span class="identifier">offset</span> &lt;= <span class="number">0</span>)
+<a name="406"></a>	{
+<a name="407"></a>		<span class="identifier">ThrowError</span>(<span class="string">"SetEntityRenderColor not supported by this mod"</span>);
+<a name="408"></a>	}
+<a name="409"></a>	
+<a name="410"></a>	<span class="identifier">SetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="identifier">r</span>, <span class="number">1</span>, <span class="keyword literal">true</span>);
+<a name="411"></a>	<span class="identifier">SetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span> + <span class="number">1</span>, <span class="identifier">g</span>, <span class="number">1</span>, <span class="keyword literal">true</span>);
+<a name="412"></a>	<span class="identifier">SetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span> + <span class="number">2</span>, <span class="identifier">b</span>, <span class="number">1</span>, <span class="keyword literal">true</span>);
+<a name="413"></a>	<span class="identifier">SetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span> + <span class="number">3</span>, <span class="identifier">a</span>, <span class="number">1</span>, <span class="keyword literal">true</span>);
+<a name="414"></a>}
+<a name="415"></a>
+<a name="416"></a><span class="comment">/**
+<a name="417"></a> * Gets an entity's gravity.
+<a name="418"></a> *
+<a name="419"></a> * <span class="doctag">@param</span> entity 	Entity index.
+<a name="420"></a> * <span class="doctag">@return</span>			Entity's m_flGravity value.
+<a name="421"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="422"></a> */</span>
+<a name="423"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="identifier">GetEntityGravity</span>(<span class="identifier">entity</span>)
+<a name="424"></a>{
+<a name="425"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="426"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">datamap</span>[<span class="number">32</span>];
+<a name="427"></a>	
+<a name="428"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="429"></a>	{
+<a name="430"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="431"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_flGravity"</span>, <span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>));
+<a name="432"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="433"></a>		
+<a name="434"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="435"></a>		{
+<a name="436"></a>			<span class="identifier">strcopy</span>(<span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>), <span class="string">"m_flGravity"</span>);
+<a name="437"></a>		}
+<a name="438"></a>		
+<a name="439"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="440"></a>	}
+<a name="441"></a>	
+<a name="442"></a>	<span class="keyword statement">return</span> <span class="identifier">GetEntPropFloat</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Data</span>, <span class="identifier">datamap</span>);
+<a name="443"></a>}
+<a name="444"></a>
+<a name="445"></a><span class="comment">/**
+<a name="446"></a> * Sets an entity's gravity.
+<a name="447"></a> *
+<a name="448"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="449"></a> * <span class="doctag">@param</span> amount	Gravity to set (default = 1.0, half = 0.5, double = 2.0).
+<a name="450"></a> * <span class="doctag">@noreturn</span>
+<a name="451"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="452"></a> */</span>
+<a name="453"></a><span class="keyword">stock</span> <span class="identifier">SetEntityGravity</span>(<span class="identifier">entity</span>, <span class="keyword type">Float</span>:<span class="identifier">amount</span>)
+<a name="454"></a>{
+<a name="455"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="456"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">datamap</span>[<span class="number">32</span>];
+<a name="457"></a>	
+<a name="458"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="459"></a>	{
+<a name="460"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="461"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_flGravity"</span>, <span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>));
+<a name="462"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="463"></a>		
+<a name="464"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="465"></a>		{
+<a name="466"></a>			<span class="identifier">strcopy</span>(<span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>), <span class="string">"m_flGravity"</span>);
+<a name="467"></a>		}
+<a name="468"></a>		
+<a name="469"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="470"></a>	}
+<a name="471"></a>	
+<a name="472"></a>	<span class="identifier">SetEntPropFloat</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Data</span>, <span class="identifier">datamap</span>, <span class="identifier">amount</span>);
+<a name="473"></a>}
+<a name="474"></a>
+<a name="475"></a><span class="comment">/**
+<a name="476"></a> * Sets an entity's health
+<a name="477"></a> *
+<a name="478"></a> * <span class="doctag">@param</span> entity	Entity index.
+<a name="479"></a> * <span class="doctag">@param</span> amount	Health amount.
+<a name="480"></a> * <span class="doctag">@noreturn</span>
+<a name="481"></a> * <span class="doctag">@error</span>			Invalid entity index, or lack of mod compliance.
+<a name="482"></a> */</span>
+<a name="483"></a><span class="keyword">stock</span> <span class="identifier">SetEntityHealth</span>(<span class="identifier">entity</span>, <span class="identifier">amount</span>)
+<a name="484"></a>{
+<a name="485"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="486"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[<span class="number">32</span>];
+<a name="487"></a>	
+<a name="488"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="489"></a>	{
+<a name="490"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="491"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_iHealth"</span>, <span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>));
+<a name="492"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="493"></a>		
+<a name="494"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="495"></a>		{
+<a name="496"></a>			<span class="identifier">strcopy</span>(<span class="identifier">prop</span>, <span class="keyword ">sizeof</span>(<span class="identifier">prop</span>), <span class="string">"m_iHealth"</span>);
+<a name="497"></a>		}
+<a name="498"></a>		
+<a name="499"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="500"></a>	}
+<a name="501"></a>	
+<a name="502"></a>	<span class="identifier">decl</span> <span class="keyword type">String</span>:<span class="identifier">cls</span>[<span class="number">64</span>];
+<a name="503"></a>	<span class="keyword">new</span> <span class="identifier">PropFieldType</span>:<span class="identifier">type</span>;
+<a name="504"></a>	<span class="keyword">new</span> <span class="identifier">offset</span>;
+<a name="505"></a>	
+<a name="506"></a>	<span class="keyword statement">if</span> (!<span class="identifier">GetEntityNetClass</span>(<span class="identifier">entity</span>, <span class="identifier">cls</span>, <span class="keyword ">sizeof</span>(<span class="identifier">cls</span>)))
+<a name="507"></a>	{
+<a name="508"></a>		<span class="identifier">ThrowError</span>(<span class="string">"SetEntityHealth not supported by this mod: Could not get serverclass name"</span>);
+<a name="509"></a>		<span class="keyword statement">return</span>;
+<a name="510"></a>	}
+<a name="511"></a>	
+<a name="512"></a>	<span class="identifier">offset</span> = <span class="identifier">FindSendPropInfo</span>(<span class="identifier">cls</span>, <span class="identifier">prop</span>, <span class="identifier">type</span>);
+<a name="513"></a>	
+<a name="514"></a>	<span class="keyword statement">if</span> (<span class="identifier">offset</span> &lt;= <span class="number">0</span>)
+<a name="515"></a>	{
+<a name="516"></a>		<span class="identifier">ThrowError</span>(<span class="string">"SetEntityHealth not supported by this mod"</span>);
+<a name="517"></a>		<span class="keyword statement">return</span>;
+<a name="518"></a>	}
+<a name="519"></a>	
+<a name="520"></a>	<span class="comment">/* Dark Messiah uses a float for the health instead an integer */</span>
+<a name="521"></a>	<span class="keyword statement">if</span> (<span class="identifier">type</span> == <span class="identifier">PropField_Float</span>)
+<a name="522"></a>	{
+<a name="523"></a>		<span class="identifier">SetEntDataFloat</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="identifier">float</span>(<span class="identifier">amount</span>));
+<a name="524"></a>	}
+<a name="525"></a>	<span class="keyword statement">else</span>
+<a name="526"></a>	{
+<a name="527"></a>		<span class="identifier">SetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Send</span>, <span class="identifier">prop</span>, <span class="identifier">amount</span>);
+<a name="528"></a>	}
+<a name="529"></a>}
+<a name="530"></a>
+<a name="531"></a><span class="comment">/**
+<a name="532"></a> * Get's a users current pressed buttons
+<a name="533"></a> *
+<a name="534"></a> * <span class="doctag">@param</span> client	Client index
+<a name="535"></a> * <span class="doctag">@return</span>			Bitsum of buttons
+<a name="536"></a> * <span class="doctag">@error</span>			Invalid client index, client not in game, 
+<a name="537"></a> *					or lack of mod compliance.
+<a name="538"></a> */</span>
+<a name="539"></a><span class="keyword">stock</span> <span class="identifier">GetClientButtons</span>(<span class="identifier">client</span>)
+<a name="540"></a>{
+<a name="541"></a>	<span class="keyword">static</span> <span class="keyword type">bool</span>:<span class="identifier">gotconfig</span> = <span class="keyword literal">false</span>;
+<a name="542"></a>	<span class="keyword">static</span> <span class="keyword type">String</span>:<span class="identifier">datamap</span>[<span class="number">32</span>];
+<a name="543"></a>	
+<a name="544"></a>	<span class="keyword statement">if</span> (!<span class="identifier">gotconfig</span>)
+<a name="545"></a>	{
+<a name="546"></a>		<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">gc</span> = <span class="identifier">LoadGameConfigFile</span>(<span class="string">"core.games"</span>);
+<a name="547"></a>		<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">exists</span> = <span class="identifier">GameConfGetKeyValue</span>(<span class="identifier">gc</span>, <span class="string">"m_nButtons"</span>, <span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>));
+<a name="548"></a>		<span class="identifier">CloseHandle</span>(<span class="identifier">gc</span>);
+<a name="549"></a>		
+<a name="550"></a>		<span class="keyword statement">if</span> (!<span class="identifier">exists</span>)
+<a name="551"></a>		{
+<a name="552"></a>			<span class="identifier">strcopy</span>(<span class="identifier">datamap</span>, <span class="keyword ">sizeof</span>(<span class="identifier">datamap</span>), <span class="string">"m_nButtons"</span>);
+<a name="553"></a>		}
+<a name="554"></a>		
+<a name="555"></a>		<span class="identifier">gotconfig</span> = <span class="keyword literal">true</span>;
+<a name="556"></a>	}
+<a name="557"></a>	
+<a name="558"></a>	<span class="keyword statement">return</span> <span class="identifier">GetEntProp</span>(<span class="identifier">client</span>, <span class="identifier">Prop_Data</span>, <span class="identifier">datamap</span>);
+<a name="559"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

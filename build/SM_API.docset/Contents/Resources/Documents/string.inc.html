@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<title>string.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_string_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_string_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * <span class="doctag">@global</span> Unless otherwise noted, all string functions which take in a 
+<a name="40"></a> * writable buffer and maximum length should have the null terminator INCLUDED
+<a name="41"></a> * in the length.  This means that this is valid: 
+<a name="42"></a> * strcopy(string, sizeof(string), ...)
+<a name="43"></a> */</span>
+<a name="44"></a> 
+<a name="45"></a><span class="comment">/**
+<a name="46"></a> * Calculates the length of a string.
+<a name="47"></a> *
+<a name="48"></a> * <span class="doctag">@param</span> str			String to check.
+<a name="49"></a> * <span class="doctag">@return</span>				Number of valid character bytes in the string.
+<a name="50"></a> */</span>
+<a name="51"></a><span class="keyword">native</span> <span class="identifier">strlen</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[]);
+<a name="52"></a>
+<a name="53"></a><span class="comment">/**
+<a name="54"></a> * Tests whether a string is found inside another string.
+<a name="55"></a> *
+<a name="56"></a> * <span class="doctag">@param</span> str			String to search in.
+<a name="57"></a> * <span class="doctag">@param</span> substr		Substring to find inside the original string.
+<a name="58"></a> * <span class="doctag">@param</span> caseSensitive	If true (default), search is case sensitive.
+<a name="59"></a> *						If false, search is case insensitive.
+<a name="60"></a> * <span class="doctag">@return</span>				-1 on failure (no match found). Any other value
+<a name="61"></a> *						indicates a position in the string where the match starts.
+<a name="62"></a> */</span>
+<a name="63"></a><span class="keyword">native</span> <span class="identifier">StrContains</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">substr</span>[], <span class="keyword type">bool</span>:<span class="identifier">caseSensitive</span>=<span class="keyword literal">true</span>);
+<a name="64"></a>
+<a name="65"></a><span class="comment">/**
+<a name="66"></a> * Compares two strings lexographically.
+<a name="67"></a> *
+<a name="68"></a> * <span class="doctag">@param</span> str1			First string (left).
+<a name="69"></a> * <span class="doctag">@param</span> str2			Second string (right).
+<a name="70"></a> * <span class="doctag">@param</span> caseSensitive	If true (default), comparison is case sensitive.
+<a name="71"></a> *						If false, comparison is case insensitive.
+<a name="72"></a> * <span class="doctag">@return</span>				-1 if str1 &lt; str2
+<a name="73"></a> *						0 if str1 == str2
+<a name="74"></a> *						1 if str1 &gt; str2
+<a name="75"></a> */</span>
+<a name="76"></a><span class="keyword">native</span> <span class="identifier">strcmp</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str1</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str2</span>[], <span class="keyword type">bool</span>:<span class="identifier">caseSensitive</span>=<span class="keyword literal">true</span>);
+<a name="77"></a>
+<a name="78"></a><span class="comment">/**
+<a name="79"></a> * Compares two strings parts lexographically.
+<a name="80"></a> *
+<a name="81"></a> * <span class="doctag">@param</span> str1			First string (left).
+<a name="82"></a> * <span class="doctag">@param</span> str2			Second string (right).
+<a name="83"></a> * <span class="doctag">@param</span> num			Number of characters to compare.
+<a name="84"></a> * <span class="doctag">@param</span> caseSensitive	If true (default), comparison is case sensitive.
+<a name="85"></a> *						If false, comparison is case insensitive.
+<a name="86"></a> * <span class="doctag">@return</span>				-1 if str1 &lt; str2
+<a name="87"></a> *						0 if str1 == str2
+<a name="88"></a> *						1 if str1 &gt; str2
+<a name="89"></a> */</span>
+<a name="90"></a><span class="keyword">native</span> <span class="identifier">strncmp</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str1</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str2</span>[], <span class="identifier">num</span>, <span class="keyword type">bool</span>:<span class="identifier">caseSensitive</span>=<span class="keyword literal">true</span>);
+<a name="91"></a>
+<a name="92"></a><span class="comment">/**
+<a name="93"></a> * Backwards compatible stock - StrCompare is now strcmp
+<a name="94"></a> * <span class="doctag">@deprecated</span>		Renamed to strcmp
+<a name="95"></a> */</span>
+<a name="96"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">strcmp</span>() <span class="identifier">instead</span>
+<a name="97"></a></span><span class="keyword">stock</span> <span class="identifier">StrCompare</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str1</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str2</span>[], <span class="keyword type">bool</span>:<span class="identifier">caseSensitive</span>=<span class="keyword literal">true</span>)
+<a name="98"></a>{
+<a name="99"></a>	<span class="keyword statement">return</span> <span class="identifier">strcmp</span>(<span class="identifier">str1</span>, <span class="identifier">str2</span>, <span class="identifier">caseSensitive</span>);
+<a name="100"></a>}
+<a name="101"></a>
+<a name="102"></a><span class="comment">/**
+<a name="103"></a> * Returns whether two strings are equal.
+<a name="104"></a> *
+<a name="105"></a> * <span class="doctag">@param</span> str1			First string (left).
+<a name="106"></a> * <span class="doctag">@param</span> str2			Second string (right).
+<a name="107"></a> * <span class="doctag">@param</span> caseSensitive	If true (default), comparison is case sensitive.
+<a name="108"></a> * 						If false, comparison is case insensitive.
+<a name="109"></a> * <span class="doctag">@return</span>				True if equal, false otherwise.
+<a name="110"></a> */</span>
+<a name="111"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">StrEqual</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str1</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str2</span>[], <span class="keyword type">bool</span>:<span class="identifier">caseSensitive</span>=<span class="keyword literal">true</span>)
+<a name="112"></a>{
+<a name="113"></a>	<span class="keyword statement">return</span> (<span class="identifier">strcmp</span>(<span class="identifier">str1</span>, <span class="identifier">str2</span>, <span class="identifier">caseSensitive</span>) == <span class="number">0</span>);
+<a name="114"></a>}
+<a name="115"></a>
+<a name="116"></a><span class="comment">/**
+<a name="117"></a> * Copies one string to another string.
+<a name="118"></a> * <span class="doctag">@note</span> If the destination buffer is too small to hold the source string, the 
+<a name="119"></a> *       destination will be truncated.
+<a name="120"></a> *
+<a name="121"></a> * <span class="doctag">@param</span> dest			Destination string buffer to copy to.
+<a name="122"></a> * <span class="doctag">@param</span> destLen		Destination buffer length (includes null terminator).
+<a name="123"></a> * <span class="doctag">@param</span> source		Source string buffer to copy from.
+<a name="124"></a> * <span class="doctag">@return</span>				Number of cells written.
+<a name="125"></a> */</span>
+<a name="126"></a><span class="keyword">native</span> <span class="identifier">strcopy</span>(<span class="keyword type">String</span>:<span class="identifier">dest</span>[], <span class="identifier">destLen</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[]);
+<a name="127"></a>
+<a name="128"></a><span class="comment">/**
+<a name="129"></a> * Backwards compatibility stock - use strcopy
+<a name="130"></a> * <span class="doctag">@deprecated</span>			Renamed to strcopy
+<a name="131"></a> */</span>
+<a name="132"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">strcopy</span>() <span class="identifier">instead</span>
+<a name="133"></a></span><span class="keyword">stock</span> <span class="identifier">StrCopy</span>(<span class="keyword type">String</span>:<span class="identifier">dest</span>[], <span class="identifier">destLen</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[])
+<a name="134"></a>{
+<a name="135"></a>	<span class="keyword statement">return</span> <span class="identifier">strcopy</span>(<span class="identifier">dest</span>, <span class="identifier">destLen</span>, <span class="identifier">source</span>);
+<a name="136"></a>}
+<a name="137"></a>
+<a name="138"></a><span class="comment">/**
+<a name="139"></a> * Formats a string according to the SourceMod format rules (see documentation).
+<a name="140"></a> *
+<a name="141"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="142"></a> * <span class="doctag">@param</span> maxlength		Maximum length of output string buffer.
+<a name="143"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="144"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="145"></a> * <span class="doctag">@return</span>				Number of cells written.
+<a name="146"></a> */</span>
+<a name="147"></a><span class="keyword">native</span> <span class="identifier">Format</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="148"></a>
+<a name="149"></a><span class="comment">/**
+<a name="150"></a> * Formats a string according to the SourceMod format rules (see documentation).
+<a name="151"></a> * <span class="doctag">@note</span> This is the same as Format(), except none of the input buffers can 
+<a name="152"></a> *       overlap the same memory as the output buffer.  Since this security 
+<a name="153"></a> *       check is removed, it is slightly faster.
+<a name="154"></a> *
+<a name="155"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="156"></a> * <span class="doctag">@param</span> maxlength		Maximum length of output string buffer.
+<a name="157"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="158"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="159"></a> * <span class="doctag">@return</span>				Number of cells written.
+<a name="160"></a> */</span>
+<a name="161"></a><span class="keyword">native</span> <span class="identifier">FormatEx</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="162"></a>
+<a name="163"></a><span class="comment">/**
+<a name="164"></a> * Formats a string according to the SourceMod format rules (see documentation).
+<a name="165"></a> * <span class="doctag">@note</span> This is the same as Format(), except it grabs parameters from a 
+<a name="166"></a> *       parent parameter stack, rather than a local.  This is useful for 
+<a name="167"></a> *       implementing your own variable argument functions.
+<a name="168"></a> *
+<a name="169"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="170"></a> * <span class="doctag">@param</span> maxlength		Maximum length of output string buffer.
+<a name="171"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="172"></a> * <span class="doctag">@param</span> varpos		Argument number which contains the '...' symbol.
+<a name="173"></a> *						Note: Arguments start at 1.
+<a name="174"></a> * <span class="doctag">@return</span> 				Number of bytes written.
+<a name="175"></a> */</span>
+<a name="176"></a><span class="keyword">native</span> <span class="identifier">VFormat</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="identifier">varpos</span>);
+<a name="177"></a>
+<a name="178"></a><span class="comment">/**
+<a name="179"></a> * Converts a string to an integer.
+<a name="180"></a> *
+<a name="181"></a> * <span class="doctag">@param</span> str			String to convert.
+<a name="182"></a> * <span class="doctag">@param</span> nBase			Numerical base to use.  10 is default.
+<a name="183"></a> * <span class="doctag">@return</span>				Integer conversion of string, or 0 on failure.
+<a name="184"></a> */</span>
+<a name="185"></a><span class="keyword">native</span> <span class="identifier">StringToInt</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="identifier">nBase</span>=<span class="number">10</span>);
+<a name="186"></a>
+<a name="187"></a><span class="comment">/**
+<a name="188"></a> * Converts a string to an integer with some more options.
+<a name="189"></a> *
+<a name="190"></a> * <span class="doctag">@param</span> str			String to convert.
+<a name="191"></a> * <span class="doctag">@param</span> result		Variable to store the result in.
+<a name="192"></a> * <span class="doctag">@param</span> nBase			Numerical base to use.  10 is default.
+<a name="193"></a> * <span class="doctag">@return</span>				Number of characters consumed.
+<a name="194"></a> */</span>
+<a name="195"></a><span class="keyword">native</span> <span class="identifier">StringToIntEx</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[], &amp;<span class="identifier">result</span>, <span class="identifier">nBase</span>=<span class="number">10</span>);
+<a name="196"></a>
+<a name="197"></a><span class="comment">/**
+<a name="198"></a> * Converts an integer to a string.
+<a name="199"></a> *
+<a name="200"></a> * <span class="doctag">@param</span> num			Integer to convert.
+<a name="201"></a> * <span class="doctag">@param</span> str			Buffer to store string in.
+<a name="202"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="203"></a> * <span class="doctag">@return</span>				Number of cells written to buffer.
+<a name="204"></a> */</span>
+<a name="205"></a><span class="keyword">native</span> <span class="identifier">IntToString</span>(<span class="identifier">num</span>, <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="identifier">maxlength</span>);
+<a name="206"></a>
+<a name="207"></a><span class="comment">/** 
+<a name="208"></a> * Converts a string to a floating point number.
+<a name="209"></a> *
+<a name="210"></a> * <span class="doctag">@param</span> str			String to convert to a foat.
+<a name="211"></a> * <span class="doctag">@return</span>				Floating point result, or 0.0 on error.
+<a name="212"></a> */</span>
+<a name="213"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">StringToFloat</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[]);
+<a name="214"></a>
+<a name="215"></a><span class="comment">/** 
+<a name="216"></a> * Converts a string to a floating point number with some more options.
+<a name="217"></a> *
+<a name="218"></a> * <span class="doctag">@param</span> str			String to convert to a foat.
+<a name="219"></a> * <span class="doctag">@param</span> result		Variable to store result in.
+<a name="220"></a> * <span class="doctag">@return</span>				Number of characters consumed.
+<a name="221"></a> */</span>
+<a name="222"></a><span class="keyword">native</span> <span class="identifier">StringToFloatEx</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[], &amp;<span class="keyword type">Float</span>:<span class="identifier">result</span>);
+<a name="223"></a>
+<a name="224"></a><span class="comment">/**
+<a name="225"></a> * Converts a floating point number to a string.
+<a name="226"></a> *
+<a name="227"></a> * <span class="doctag">@param</span> num			Floating point number to convert.
+<a name="228"></a> * <span class="doctag">@param</span> str			Buffer to store string in.
+<a name="229"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="230"></a> * <span class="doctag">@return</span>				Number of cells written to buffer.
+<a name="231"></a> */</span>
+<a name="232"></a><span class="keyword">native</span> <span class="identifier">FloatToString</span>(<span class="keyword type">Float</span>:<span class="identifier">num</span>, <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="identifier">maxlength</span>);
+<a name="233"></a>
+<a name="234"></a><span class="comment">/**
+<a name="235"></a> * Finds the first "argument" in a string; either a set of space
+<a name="236"></a> * terminated characters, or a fully quoted string.  After the 
+<a name="237"></a> * argument is found, whitespace is read until the next portion
+<a name="238"></a> * of the string is reached.  If nothing remains, -1 is returned.
+<a name="239"></a> * Otherwise, the index to the first character is returned.
+<a name="240"></a> *
+<a name="241"></a> * <span class="doctag">@param</span> source		Source input string.
+<a name="242"></a> * <span class="doctag">@param</span> arg			Stores argument read from string.
+<a name="243"></a> * <span class="doctag">@param</span> argLen		Maximum length of argument buffer.
+<a name="244"></a> * <span class="doctag">@return</span>				Index to next piece of string, or -1 if none.
+<a name="245"></a> */</span>
+<a name="246"></a><span class="keyword">native</span> <span class="identifier">BreakString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[], <span class="keyword type">String</span>:<span class="identifier">arg</span>[], <span class="identifier">argLen</span>);
+<a name="247"></a>
+<a name="248"></a><span class="comment">/**
+<a name="249"></a> * Backwards compatibility stock - use BreakString
+<a name="250"></a> * <span class="doctag">@deprecated</span>			Renamed to BreakString.
+<a name="251"></a> */</span>
+<a name="252"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">BreakString</span>() <span class="identifier">instead</span>
+<a name="253"></a></span><span class="keyword">stock</span> <span class="identifier">StrBreak</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[], <span class="keyword type">String</span>:<span class="identifier">arg</span>[], <span class="identifier">argLen</span>)
+<a name="254"></a>{
+<a name="255"></a>	<span class="keyword statement">return</span> <span class="identifier">BreakString</span>(<span class="identifier">source</span>, <span class="identifier">arg</span>, <span class="identifier">argLen</span>);
+<a name="256"></a>}
+<a name="257"></a>
+<a name="258"></a><span class="comment">/**
+<a name="259"></a> * Removes whitespace characters from the beginning and end of a string.
+<a name="260"></a> *
+<a name="261"></a> * <span class="doctag">@param</span> str			The string to trim.
+<a name="262"></a> * <span class="doctag">@return</span>				Number of bytes written (UTF-8 safe).
+<a name="263"></a> */</span>
+<a name="264"></a><span class="keyword">native</span> <span class="identifier">TrimString</span>(<span class="keyword type">String</span>:<span class="identifier">str</span>[]);
+<a name="265"></a>
+<a name="266"></a><span class="comment">/**
+<a name="267"></a> * Returns text in a string up until a certain character sequence is reached.
+<a name="268"></a> *
+<a name="269"></a> * <span class="doctag">@param</span> source		Source input string.
+<a name="270"></a> * <span class="doctag">@param</span> split			A string which specifies a search point to break at.
+<a name="271"></a> * <span class="doctag">@param</span> part			Buffer to store string part.
+<a name="272"></a> * <span class="doctag">@param</span> partLen		Maximum length of the string part buffer.
+<a name="273"></a> * <span class="doctag">@return</span>				-1 if no match was found; otherwise, an index into source
+<a name="274"></a> *						marking the first index after the searched text.  The
+<a name="275"></a> *						index is always relative to the start of the input string.
+<a name="276"></a> */</span>
+<a name="277"></a><span class="keyword">native</span> <span class="identifier">SplitString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">split</span>[], <span class="keyword type">String</span>:<span class="identifier">part</span>[], <span class="identifier">partLen</span>);
+<a name="278"></a>
+<a name="279"></a><span class="comment">/**
+<a name="280"></a> * Given a string, replaces all occurrences of a search string with a 
+<a name="281"></a> * replacement string.
+<a name="282"></a> *
+<a name="283"></a> * <span class="doctag">@param</span> text			String to perform search and replacements on.
+<a name="284"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the string buffer.
+<a name="285"></a> * <span class="doctag">@param</span> search		String to search for.
+<a name="286"></a> * <span class="doctag">@param</span> replace		String to replace the search string with.
+<a name="287"></a> * <span class="doctag">@param</span> caseSensitive	If true (default), search is case sensitive.
+<a name="288"></a> * <span class="doctag">@return</span>				Number of replacements that were performed.
+<a name="289"></a> */</span>
+<a name="290"></a><span class="keyword">native</span> <span class="identifier">ReplaceString</span>(<span class="keyword type">String</span>:<span class="identifier">text</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">search</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">replace</span>[], <span class="keyword type">bool</span>:<span class="identifier">caseSensitive</span>=<span class="keyword literal">true</span>);
+<a name="291"></a>
+<a name="292"></a><span class="comment">/**
+<a name="293"></a> * Given a string, replaces the first occurrence of a search string with a 
+<a name="294"></a> * replacement string.
+<a name="295"></a> *
+<a name="296"></a> * <span class="doctag">@param</span> text			String to perform search and replacements on.
+<a name="297"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the string buffer.
+<a name="298"></a> * <span class="doctag">@param</span> search		String to search for.
+<a name="299"></a> * <span class="doctag">@param</span> replace		String to replace the search string with.
+<a name="300"></a> * <span class="doctag">@param</span> searchLen		If higher than -1, its value will be used instead of
+<a name="301"></a> *						a strlen() call on the search parameter.
+<a name="302"></a> * <span class="doctag">@param</span> replaceLen	If higher than -1, its value will be used instead of
+<a name="303"></a> *						a strlen() call on the replace parameter.
+<a name="304"></a> * <span class="doctag">@param</span> caseSensitive	If true (default), search is case sensitive.
+<a name="305"></a> * <span class="doctag">@return</span>				Index into the buffer (relative to the start) from where
+<a name="306"></a> *						the last replacement ended, or -1 if no replacements were
+<a name="307"></a> *						made.
+<a name="308"></a> */</span>
+<a name="309"></a><span class="keyword">native</span> <span class="identifier">ReplaceStringEx</span>(<span class="keyword type">String</span>:<span class="identifier">text</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">search</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">replace</span>[], <span class="identifier">searchLen</span>=-<span class="number">1</span>, <span class="identifier">replaceLen</span>=-<span class="number">1</span>, <span class="keyword type">bool</span>:<span class="identifier">caseSensitive</span>=<span class="keyword literal">true</span>);
+<a name="310"></a>
+<a name="311"></a><span class="comment">/** 
+<a name="312"></a> * Returns the number of bytes a character is using.  This is
+<a name="313"></a> * for multi-byte characters (UTF-8).  For normal ASCII characters,
+<a name="314"></a> * this will return 1.
+<a name="315"></a> *
+<a name="316"></a> * <span class="doctag">@param</span> source		Source input string.
+<a name="317"></a> * <span class="doctag">@return</span>				Number of bytes the current character uses.
+<a name="318"></a> */</span>
+<a name="319"></a><span class="keyword">native</span> <span class="identifier">GetCharBytes</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[]);
+<a name="320"></a>
+<a name="321"></a><span class="comment">/**
+<a name="322"></a> * Returns whether a character is an ASCII alphabet character.
+<a name="323"></a> *
+<a name="324"></a> * <span class="doctag">@note</span> Multi-byte characters will always return false.
+<a name="325"></a> *
+<a name="326"></a> * <span class="doctag">@param</span> chr			Character to test.
+<a name="327"></a> * <span class="doctag">@return</span>				True if character is alphabetical, otherwise false.
+<a name="328"></a> */</span>
+<a name="329"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsCharAlpha</span>(<span class="identifier">chr</span>);
+<a name="330"></a>
+<a name="331"></a><span class="comment">/**
+<a name="332"></a> * Returns whether a character is numeric.
+<a name="333"></a> *
+<a name="334"></a> * <span class="doctag">@note</span> Multi-byte characters will always return false.
+<a name="335"></a> *
+<a name="336"></a> * <span class="doctag">@param</span> chr			Character to test.
+<a name="337"></a> * <span class="doctag">@return</span>				True if character is numeric, otherwise false.
+<a name="338"></a> */</span>
+<a name="339"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsCharNumeric</span>(<span class="identifier">chr</span>);
+<a name="340"></a>
+<a name="341"></a><span class="comment">/**
+<a name="342"></a> * Returns whether a character is whitespace.
+<a name="343"></a> *
+<a name="344"></a> * <span class="doctag">@note</span> Multi-byte characters will always return false.
+<a name="345"></a> *
+<a name="346"></a> * <span class="doctag">@param</span> chr			Character to test.
+<a name="347"></a> * <span class="doctag">@return</span>				True if character is whitespace, otherwise false.
+<a name="348"></a> */</span>
+<a name="349"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsCharSpace</span>(<span class="identifier">chr</span>);
+<a name="350"></a>
+<a name="351"></a><span class="comment">/**
+<a name="352"></a> * Returns if a character is multi-byte or not.
+<a name="353"></a> *
+<a name="354"></a> * <span class="doctag">@param</span> chr			Character to test.
+<a name="355"></a> * <span class="doctag">@return</span>				0 for a normal 7-bit ASCII character,
+<a name="356"></a> *						otherwise number of bytes in multi-byte character.
+<a name="357"></a> */</span>
+<a name="358"></a><span class="keyword">native</span> <span class="identifier">IsCharMB</span>(<span class="identifier">chr</span>);
+<a name="359"></a>
+<a name="360"></a><span class="comment">/**
+<a name="361"></a> * Returns whether an alphabetic character is uppercase.
+<a name="362"></a> *
+<a name="363"></a> * <span class="doctag">@note</span> Multi-byte characters will always return false.
+<a name="364"></a> *
+<a name="365"></a> * <span class="doctag">@param</span> chr			Character to test.
+<a name="366"></a> * <span class="doctag">@return</span>				True if character is uppercase, otherwise false.
+<a name="367"></a> */</span>
+<a name="368"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsCharUpper</span>(<span class="identifier">chr</span>);
+<a name="369"></a>
+<a name="370"></a><span class="comment">/**
+<a name="371"></a> * Returns whether an alphabetic character is lowercase.
+<a name="372"></a> *
+<a name="373"></a> * <span class="doctag">@note</span> Multi-byte characters will always return false.
+<a name="374"></a> *
+<a name="375"></a> * <span class="doctag">@param</span> chr			Character to test.
+<a name="376"></a> * <span class="doctag">@return</span>				True if character is lowercase, otherwise false.
+<a name="377"></a> */</span>
+<a name="378"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsCharLower</span>(<span class="identifier">chr</span>);
+<a name="379"></a>
+<a name="380"></a><span class="comment">/**
+<a name="381"></a> * Strips a quote pair off a string if it exists.  That is, the following 
+<a name="382"></a> * replace rule is applied once:  ^"(.*)"$ -&gt; ^\1$
+<a name="383"></a> *
+<a name="384"></a> * Note that the leading and trailing quotes will only be removed if both 
+<a name="385"></a> * exist.  Otherwise, the string is left unmodified.  This function should 
+<a name="386"></a> * be considered O(k) (all characters get shifted down).
+<a name="387"></a> *
+<a name="388"></a> * <span class="doctag">@param</span> text			String to modify (in place).
+<a name="389"></a> * <span class="doctag">@return</span>				True if string was modified, false if there was no 
+<a name="390"></a> *						set of quotes.
+<a name="391"></a> */</span>
+<a name="392"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">StripQuotes</span>(<span class="keyword type">String</span>:<span class="identifier">text</span>[]);
+<a name="393"></a>
+<a name="394"></a><span class="comment">/**
+<a name="395"></a> * Returns an uppercase character to a lowercase character.
+<a name="396"></a> *
+<a name="397"></a> * <span class="doctag">@param</span> chr			Characer to convert.
+<a name="398"></a> * <span class="doctag">@return</span>				Lowercase character on success, 
+<a name="399"></a> *						no change on failure.
+<a name="400"></a> */</span>
+<a name="401"></a><span class="keyword">stock</span> <span class="identifier">CharToUpper</span>(<span class="identifier">chr</span>)
+<a name="402"></a>{
+<a name="403"></a>	<span class="keyword statement">if</span> (<span class="identifier">IsCharLower</span>(<span class="identifier">chr</span>))
+<a name="404"></a>	{
+<a name="405"></a>		<span class="keyword statement">return</span> (<span class="identifier">chr</span> &amp; ~(<span class="number">1</span>&lt;&lt;<span class="number">5</span>));
+<a name="406"></a>	}
+<a name="407"></a>	<span class="keyword statement">return</span> <span class="identifier">chr</span>;
+<a name="408"></a>}
+<a name="409"></a>
+<a name="410"></a><span class="comment">/**
+<a name="411"></a> * Returns a lowercase character to an uppercase character.
+<a name="412"></a> *
+<a name="413"></a> * <span class="doctag">@param</span> chr			Characer to convert.
+<a name="414"></a> * <span class="doctag">@return</span>				Uppercase character on success, 
+<a name="415"></a> *						no change on failure.
+<a name="416"></a> */</span>
+<a name="417"></a><span class="keyword">stock</span> <span class="identifier">CharToLower</span>(<span class="identifier">chr</span>)
+<a name="418"></a>{
+<a name="419"></a>	<span class="keyword statement">if</span> (<span class="identifier">IsCharUpper</span>(<span class="identifier">chr</span>))
+<a name="420"></a>	{
+<a name="421"></a>		<span class="keyword statement">return</span> (<span class="identifier">chr</span> | (<span class="number">1</span>&lt;&lt;<span class="number">5</span>));
+<a name="422"></a>	}
+<a name="423"></a>	<span class="keyword statement">return</span> <span class="identifier">chr</span>;
+<a name="424"></a>}
+<a name="425"></a>
+<a name="426"></a><span class="comment">/**
+<a name="427"></a> * Finds the first occurrence of a character in a string.
+<a name="428"></a> *
+<a name="429"></a> * <span class="doctag">@param</span> str			String.
+<a name="430"></a> * <span class="doctag">@param</span> c				Character to search for.
+<a name="431"></a> * <span class="doctag">@param</span> reverse		False (default) to search forward, true to search 
+<a name="432"></a> *						backward.
+<a name="433"></a> * <span class="doctag">@return</span>				The index of the first occurrence of the character 
+<a name="434"></a> * 						in the string, or -1 if the character was not found.
+<a name="435"></a> */</span>
+<a name="436"></a><span class="keyword">stock</span> <span class="identifier">FindCharInString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="identifier">c</span>, <span class="keyword type">bool</span>:<span class="identifier">reverse</span> = <span class="keyword literal">false</span>)
+<a name="437"></a>{
+<a name="438"></a>	<span class="keyword">new</span> <span class="identifier">i</span>, <span class="identifier">len</span>
+<a name="439"></a>
+<a name="440"></a>	<span class="identifier">len</span> = <span class="identifier">strlen</span>(<span class="identifier">str</span>);
+<a name="441"></a>	
+<a name="442"></a>	<span class="keyword statement">if</span> (!<span class="identifier">reverse</span>)
+<a name="443"></a>	{
+<a name="444"></a>		<span class="keyword statement">for</span> (<span class="identifier">i</span> = <span class="number">0</span>; <span class="identifier">i</span> &lt; <span class="identifier">len</span>; <span class="identifier">i</span>++)
+<a name="445"></a>		{
+<a name="446"></a>			<span class="keyword statement">if</span> (<span class="identifier">str</span>[<span class="identifier">i</span>] == <span class="identifier">c</span>)
+<a name="447"></a>			{
+<a name="448"></a>				<span class="keyword statement">return</span> <span class="identifier">i</span>;
+<a name="449"></a>			}
+<a name="450"></a>		}
+<a name="451"></a>	}
+<a name="452"></a>	<span class="keyword statement">else</span>
+<a name="453"></a>	{
+<a name="454"></a>		<span class="keyword statement">for</span> (<span class="identifier">i</span> = <span class="identifier">len</span> - <span class="number">1</span>; <span class="identifier">i</span> &gt;= <span class="number">0</span>; <span class="identifier">i</span>--)
+<a name="455"></a>		{
+<a name="456"></a>			<span class="keyword statement">if</span> (<span class="identifier">str</span>[<span class="identifier">i</span>] == <span class="identifier">c</span>)
+<a name="457"></a>			{
+<a name="458"></a>				<span class="keyword statement">return</span> <span class="identifier">i</span>;
+<a name="459"></a>			}
+<a name="460"></a>		}
+<a name="461"></a>	}
+<a name="462"></a>
+<a name="463"></a>	<span class="keyword statement">return</span> -<span class="number">1</span>;
+<a name="464"></a>}
+<a name="465"></a>
+<a name="466"></a><span class="comment">/**
+<a name="467"></a> * Concatenates one string onto another.
+<a name="468"></a> *
+<a name="469"></a> * <span class="doctag">@param</span> buffer		String to append to.
+<a name="470"></a> * <span class="doctag">@param</span> maxlength		Maximum length of entire buffer.
+<a name="471"></a> * <span class="doctag">@param</span> source		Source string to concatenate.
+<a name="472"></a> * <span class="doctag">@return</span>				Number of bytes written.
+<a name="473"></a> */</span>
+<a name="474"></a><span class="keyword">stock</span> <span class="identifier">StrCat</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[])
+<a name="475"></a>{
+<a name="476"></a>	<span class="keyword">new</span> <span class="identifier">len</span> = <span class="identifier">strlen</span>(<span class="identifier">buffer</span>);
+<a name="477"></a>	<span class="keyword statement">if</span> (<span class="identifier">len</span> &gt;= <span class="identifier">maxlength</span>)
+<a name="478"></a>	{
+<a name="479"></a>		<span class="keyword statement">return</span> <span class="number">0</span>;
+<a name="480"></a>	}
+<a name="481"></a>	
+<a name="482"></a>	<span class="keyword statement">return</span> <span class="identifier">Format</span>(<span class="identifier">buffer</span>[<span class="identifier">len</span>], <span class="identifier">maxlength</span>-<span class="identifier">len</span>, <span class="string">"%s"</span>, <span class="identifier">source</span>);
+<a name="483"></a>}
+<a name="484"></a>
+<a name="485"></a><span class="comment">/**
+<a name="486"></a> * Breaks a string into pieces and stores each piece into an array of buffers.
+<a name="487"></a> *
+<a name="488"></a> * <span class="doctag">@param</span> text				The string to split.
+<a name="489"></a> * <span class="doctag">@param</span> split				The string to use as a split delimiter.
+<a name="490"></a> * <span class="doctag">@param</span> buffers			An array of string buffers (2D array).
+<a name="491"></a> * <span class="doctag">@param</span> maxStrings		Number of string buffers (first dimension size).
+<a name="492"></a> * <span class="doctag">@param</span> maxStringLength	Maximum length of each string buffer.
+<a name="493"></a> * <span class="doctag">@param</span> copyRemainder		False (default) discard excess pieces, true to ignore
+<a name="494"></a> *							delimiters after last piece.
+<a name="495"></a> * <span class="doctag">@return</span>					Number of strings retrieved.
+<a name="496"></a> */</span>
+<a name="497"></a><span class="keyword">stock</span> <span class="identifier">ExplodeString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">text</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">split</span>[], <span class="keyword type">String</span>:<span class="identifier">buffers</span>[][], <span class="identifier">maxStrings</span>,
+<a name="498"></a>                    <span class="identifier">maxStringLength</span>, <span class="keyword type">bool</span>:<span class="identifier">copyRemainder</span> = <span class="keyword literal">false</span>)
+<a name="499"></a>{
+<a name="500"></a>	<span class="keyword">new</span> <span class="identifier">reloc_idx</span>, <span class="identifier">idx</span>, <span class="identifier">total</span>;
+<a name="501"></a>
+<a name="502"></a>	<span class="keyword statement">if</span> (<span class="identifier">maxStrings</span> &lt; <span class="number">1</span> || !<span class="identifier">split</span>[<span class="number">0</span>])
+<a name="503"></a>	{
+<a name="504"></a>		<span class="keyword statement">return</span> <span class="number">0</span>;
+<a name="505"></a>	}
+<a name="506"></a>
+<a name="507"></a>	<span class="keyword statement">while</span> ((<span class="identifier">idx</span> = <span class="identifier">SplitString</span>(<span class="identifier">text</span>[<span class="identifier">reloc_idx</span>], <span class="identifier">split</span>, <span class="identifier">buffers</span>[<span class="identifier">total</span>], <span class="identifier">maxStringLength</span>)) != -<span class="number">1</span>)
+<a name="508"></a>	{
+<a name="509"></a>		<span class="identifier">reloc_idx</span> += <span class="identifier">idx</span>;
+<a name="510"></a>		<span class="keyword statement">if</span> (++<span class="identifier">total</span> == <span class="identifier">maxStrings</span>)
+<a name="511"></a>		{
+<a name="512"></a>			<span class="keyword statement">if</span> (<span class="identifier">copyRemainder</span>)
+<a name="513"></a>			{
+<a name="514"></a>				<span class="identifier">strcopy</span>(<span class="identifier">buffers</span>[<span class="identifier">total</span>-<span class="number">1</span>], <span class="identifier">maxStringLength</span>, <span class="identifier">text</span>[<span class="identifier">reloc_idx</span>-<span class="identifier">idx</span>]);
+<a name="515"></a>			}
+<a name="516"></a>			<span class="keyword statement">return</span> <span class="identifier">total</span>;
+<a name="517"></a>		}
+<a name="518"></a>	}
+<a name="519"></a>
+<a name="520"></a>	<span class="identifier">strcopy</span>(<span class="identifier">buffers</span>[<span class="identifier">total</span>++], <span class="identifier">maxStringLength</span>, <span class="identifier">text</span>[<span class="identifier">reloc_idx</span>]);
+<a name="521"></a>
+<a name="522"></a>	<span class="keyword statement">return</span> <span class="identifier">total</span>;
+<a name="523"></a>}
+<a name="524"></a>
+<a name="525"></a><span class="comment">/**
+<a name="526"></a> * Joins an array of strings into one string, with a "join" string inserted in
+<a name="527"></a> * between each given string.  This function complements ExplodeString.
+<a name="528"></a> *
+<a name="529"></a> * <span class="doctag">@param</span> strings		An array of strings.
+<a name="530"></a> * <span class="doctag">@param</span> numStrings	Number of strings in the array.
+<a name="531"></a> * <span class="doctag">@param</span> join			The join string to insert between each string.
+<a name="532"></a> * <span class="doctag">@param</span> buffer		Output buffer to write the joined string to.
+<a name="533"></a> * <span class="doctag">@param</span> maxLength		Maximum length of the output buffer.
+<a name="534"></a> * <span class="doctag">@return</span>				Number of bytes written to the output buffer.
+<a name="535"></a> */</span>
+<a name="536"></a><span class="keyword">stock</span> <span class="identifier">ImplodeStrings</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">strings</span>[][], <span class="identifier">numStrings</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">join</span>[], <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxLength</span>)
+<a name="537"></a>{
+<a name="538"></a>	<span class="keyword">new</span> <span class="identifier">total</span>, <span class="identifier">length</span>, <span class="identifier">part_length</span>;
+<a name="539"></a>	<span class="keyword">new</span> <span class="identifier">join_length</span> = <span class="identifier">strlen</span>(<span class="identifier">join</span>);
+<a name="540"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span>=<span class="number">0</span>; <span class="identifier">i</span>&lt;<span class="identifier">numStrings</span>; <span class="identifier">i</span>++)
+<a name="541"></a>	{
+<a name="542"></a>		<span class="identifier">length</span> = <span class="identifier">strcopy</span>(<span class="identifier">buffer</span>[<span class="identifier">total</span>], <span class="identifier">maxLength</span>-<span class="identifier">total</span>, <span class="identifier">strings</span>[<span class="identifier">i</span>]);
+<a name="543"></a>		<span class="identifier">total</span> += <span class="identifier">length</span>;
+<a name="544"></a>		<span class="keyword statement">if</span> (<span class="identifier">length</span> &lt; <span class="identifier">part_length</span>)
+<a name="545"></a>		{
+<a name="546"></a>			<span class="keyword statement">break</span>;
+<a name="547"></a>		}
+<a name="548"></a>		<span class="keyword statement">if</span> (<span class="identifier">i</span> != <span class="identifier">numStrings</span> - <span class="number">1</span>)
+<a name="549"></a>		{
+<a name="550"></a>			<span class="identifier">length</span> = <span class="identifier">strcopy</span>(<span class="identifier">buffer</span>[<span class="identifier">total</span>], <span class="identifier">maxLength</span>-<span class="identifier">total</span>, <span class="identifier">join</span>);
+<a name="551"></a>			<span class="identifier">total</span> += <span class="identifier">length</span>;
+<a name="552"></a>			<span class="keyword statement">if</span> (<span class="identifier">length</span> &lt; <span class="identifier">join_length</span>)
+<a name="553"></a>			{
+<a name="554"></a>				<span class="keyword statement">break</span>;
+<a name="555"></a>			}
+<a name="556"></a>		}
+<a name="557"></a>	}
+<a name="558"></a>	<span class="keyword statement">return</span> <span class="identifier">total</span>;
+<a name="559"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

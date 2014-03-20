@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<title>menus.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_menus_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_menus_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Low-level drawing style of the menu.
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">enum</span> <span class="identifier">MenuStyle</span>
+<a name="42"></a>{
+<a name="43"></a>	<span class="identifier">MenuStyle_Default</span> = <span class="number">0</span>,		<span class="comment">/**&lt; The "default" menu style for the mod */</span>
+<a name="44"></a>	<span class="identifier">MenuStyle_Valve</span> = <span class="number">1</span>,		<span class="comment">/**&lt; The Valve provided menu style (Used on HL2DM) */</span>
+<a name="45"></a>	<span class="identifier">MenuStyle_Radio</span> = <span class="number">2</span>,		<span class="comment">/**&lt; The simpler menu style commonly used on CS:S */</span>
+<a name="46"></a>};
+<a name="47"></a>
+<a name="48"></a><span class="comment">/**
+<a name="49"></a> * Different actions for the menu "pump" callback
+<a name="50"></a> */</span>
+<a name="51"></a><span class="keyword">enum</span> <span class="identifier">MenuAction</span>
+<a name="52"></a>{
+<a name="53"></a>	<span class="identifier">MenuAction_Start</span> = (<span class="number">1</span>&lt;&lt;<span class="number">0</span>),		<span class="comment">/**&lt; A menu has been started (nothing passed) */</span>
+<a name="54"></a>	<span class="identifier">MenuAction_Display</span> = (<span class="number">1</span>&lt;&lt;<span class="number">1</span>),	<span class="comment">/**&lt; A menu is about to be displayed (param1=client, param2=MenuPanel Handle) */</span>
+<a name="55"></a>	<span class="identifier">MenuAction_Select</span> = (<span class="number">1</span>&lt;&lt;<span class="number">2</span>),		<span class="comment">/**&lt; An item was selected (param1=client, param2=item) */</span>
+<a name="56"></a>	<span class="identifier">MenuAction_Cancel</span> = (<span class="number">1</span>&lt;&lt;<span class="number">3</span>),		<span class="comment">/**&lt; The menu was cancelled (param1=client, param2=reason) */</span>
+<a name="57"></a>	<span class="identifier">MenuAction_End</span> = (<span class="number">1</span>&lt;&lt;<span class="number">4</span>),		<span class="comment">/**&lt; A menu display has fully ended.
+<a name="58"></a>										 param1 is the MenuEnd reason, and if it's MenuEnd_Cancelled, then 
+<a name="59"></a>										 param2 is the MenuCancel reason from MenuAction_Cancel.
+<a name="60"></a>										 */</span>
+<a name="61"></a>	<span class="identifier">MenuAction_VoteEnd</span> = (<span class="number">1</span>&lt;&lt;<span class="number">5</span>),	<span class="comment">/**&lt; (VOTE ONLY): A vote sequence has succeeded (param1=chosen item) 
+<a name="62"></a>										 This is not called if SetVoteResultCallback has been used on the menu. */</span>
+<a name="63"></a>	<span class="identifier">MenuAction_VoteStart</span> = (<span class="number">1</span>&lt;&lt;<span class="number">6</span>), 	<span class="comment">/**&lt; (VOTE ONLY): A vote sequence has started (nothing passed) */</span>
+<a name="64"></a>	<span class="identifier">MenuAction_VoteCancel</span> = (<span class="number">1</span>&lt;&lt;<span class="number">7</span>),	<span class="comment">/**&lt; (VOTE ONLY): A vote sequence has been cancelled (param1=reason) */</span>
+<a name="65"></a>	<span class="identifier">MenuAction_DrawItem</span> = (<span class="number">1</span>&lt;&lt;<span class="number">8</span>),	<span class="comment">/**&lt; An item is being drawn; return the new style (param1=client, param2=item) */</span>
+<a name="66"></a>	<span class="identifier">MenuAction_DisplayItem</span> = (<span class="number">1</span>&lt;&lt;<span class="number">9</span>),<span class="comment">/**&lt; Item text is being drawn to the display (param1=client, param2=item)
+<a name="67"></a>										  To change the text, use RedrawMenuItem().
+<a name="68"></a>										  If you do so, return its return value.  Otherwise, return 0.
+<a name="69"></a>										  */</span>
+<a name="70"></a>};
+<a name="71"></a>
+<a name="72"></a><span class="comment">/** Default menu actions */</span>
+<a name="73"></a><span class="preprocessor">#define <span class="identifier">MENU_ACTIONS_DEFAULT</span>	<span class="identifier">MenuAction_Select</span>|<span class="identifier">MenuAction_Cancel</span>|<span class="identifier">MenuAction_End</span>
+<a name="74"></a></span><span class="comment">/** All menu actions */</span>
+<a name="75"></a><span class="preprocessor">#define <span class="identifier">MENU_ACTIONS_ALL</span>		<span class="identifier">MenuAction</span>:<span class="number">0xFFFFFFFF</span>
+<a name="76"></a></span>
+<a name="77"></a><span class="preprocessor">#define <span class="identifier">MENU_NO_PAGINATION</span>		<span class="number">0</span>		<span class="comment">/**&lt; Menu should not be paginated (10 items max) */</span>
+<a name="78"></a></span><span class="preprocessor">#define <span class="identifier">MENU_TIME_FOREVER</span>		<span class="number">0</span>		<span class="comment">/**&lt; Menu should be displayed as long as possible */</span>
+<a name="79"></a></span>
+<a name="80"></a><span class="preprocessor">#define <span class="identifier">ITEMDRAW_DEFAULT</span>		(<span class="number">0</span>)		<span class="comment">/**&lt; Item should be drawn normally */</span>
+<a name="81"></a></span><span class="preprocessor">#define <span class="identifier">ITEMDRAW_DISABLED</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)	<span class="comment">/**&lt; Item is drawn but not selectable */</span>
+<a name="82"></a></span><span class="preprocessor">#define <span class="identifier">ITEMDRAW_RAWLINE</span>		(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)	<span class="comment">/**&lt; Item should be a raw line, without a slot */</span>
+<a name="83"></a></span><span class="preprocessor">#define <span class="identifier">ITEMDRAW_NOTEXT</span>			(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)	<span class="comment">/**&lt; No text should be drawn */</span>
+<a name="84"></a></span><span class="preprocessor">#define <span class="identifier">ITEMDRAW_SPACER</span>			(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)	<span class="comment">/**&lt; Item should be drawn as a spacer, if possible */</span>
+<a name="85"></a></span><span class="preprocessor">#define <span class="identifier">ITEMDRAW_IGNORE</span>	((<span class="number">1</span>&lt;&lt;<span class="number">1</span>)|(<span class="number">1</span>&lt;&lt;<span class="number">2</span>))	<span class="comment">/**&lt; Item should be completely ignored (rawline + notext) */</span>
+<a name="86"></a></span><span class="preprocessor">#define <span class="identifier">ITEMDRAW_CONTROL</span>		(<span class="number">1</span>&lt;&lt;<span class="number">4</span>)	<span class="comment">/**&lt; Item is control text (back/next/exit) */</span>
+<a name="87"></a></span>
+<a name="88"></a><span class="preprocessor">#define <span class="identifier">MENUFLAG_BUTTON_EXIT</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)	<span class="comment">/**&lt; Menu has an "exit" button (default if paginated) */</span>
+<a name="89"></a></span><span class="preprocessor">#define <span class="identifier">MENUFLAG_BUTTON_EXITBACK</span>	(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)	<span class="comment">/**&lt; Menu has an "exit back" button */</span>
+<a name="90"></a></span><span class="preprocessor">#define <span class="identifier">MENUFLAG_NO_SOUND</span>			(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)	<span class="comment">/**&lt; Menu will not have any select sounds */</span>
+<a name="91"></a></span><span class="preprocessor">#define <span class="identifier">MENUFLAG_BUTTON_NOVOTE</span>		(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)	<span class="comment">/**&lt; Menu has a "No Vote" button at slot 1 */</span>
+<a name="92"></a></span>
+<a name="93"></a><span class="preprocessor">#define <span class="identifier">VOTEINFO_CLIENT_INDEX</span>		<span class="number">0</span>		<span class="comment">/**&lt; Client index */</span>
+<a name="94"></a></span><span class="preprocessor">#define <span class="identifier">VOTEINFO_CLIENT_ITEM</span>		<span class="number">1</span>		<span class="comment">/**&lt; Item the client selected, or -1 for none */</span>
+<a name="95"></a></span><span class="preprocessor">#define <span class="identifier">VOTEINFO_ITEM_INDEX</span>			<span class="number">0</span>		<span class="comment">/**&lt; Item index */</span>
+<a name="96"></a></span><span class="preprocessor">#define <span class="identifier">VOTEINFO_ITEM_VOTES</span>			<span class="number">1</span>		<span class="comment">/**&lt; Number of votes for the item */</span>
+<a name="97"></a></span>
+<a name="98"></a><span class="preprocessor">#define <span class="identifier">VOTEFLAG_NO_REVOTES</span>			(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)	<span class="comment">/**&lt; Players cannot change their votes */</span>
+<a name="99"></a></span>
+<a name="100"></a><span class="comment">/**
+<a name="101"></a> * Reasons a menu can be cancelled (MenuAction_Cancel).
+<a name="102"></a> */</span>
+<a name="103"></a><span class="keyword">enum</span>
+<a name="104"></a>{
+<a name="105"></a>	<span class="identifier">MenuCancel_Disconnected</span> = -<span class="number">1</span>,	<span class="comment">/**&lt; Client dropped from the server */</span>
+<a name="106"></a>	<span class="identifier">MenuCancel_Interrupted</span> = -<span class="number">2</span>,	<span class="comment">/**&lt; Client was interrupted with another menu */</span>
+<a name="107"></a>	<span class="identifier">MenuCancel_Exit</span> = -<span class="number">3</span>,			<span class="comment">/**&lt; Client exited via "exit" */</span>
+<a name="108"></a>	<span class="identifier">MenuCancel_NoDisplay</span> = -<span class="number">4</span>,		<span class="comment">/**&lt; Menu could not be displayed to the client */</span>
+<a name="109"></a>	<span class="identifier">MenuCancel_Timeout</span> = -<span class="number">5</span>,		<span class="comment">/**&lt; Menu timed out */</span>
+<a name="110"></a>	<span class="identifier">MenuCancel_ExitBack</span> = -<span class="number">6</span>,		<span class="comment">/**&lt; Client selected "exit back" on a paginated menu */</span>
+<a name="111"></a>};
+<a name="112"></a>
+<a name="113"></a><span class="comment">/**
+<a name="114"></a> * Reasons a vote can be cancelled (MenuAction_VoteCancel).
+<a name="115"></a> */</span>
+<a name="116"></a><span class="keyword">enum</span>
+<a name="117"></a>{
+<a name="118"></a>	<span class="identifier">VoteCancel_Generic</span> = -<span class="number">1</span>,		<span class="comment">/**&lt; Vote was generically cancelled. */</span>
+<a name="119"></a>	<span class="identifier">VoteCancel_NoVotes</span> = -<span class="number">2</span>,		<span class="comment">/**&lt; Vote did not receive any votes. */</span>
+<a name="120"></a>};
+<a name="121"></a>
+<a name="122"></a><span class="comment">/**
+<a name="123"></a> * Reasons a menu ended (MenuAction_End).
+<a name="124"></a> */</span>
+<a name="125"></a><span class="keyword">enum</span>
+<a name="126"></a>{
+<a name="127"></a>	<span class="identifier">MenuEnd_Selected</span> = <span class="number">0</span>,			<span class="comment">/**&lt; Menu item was selected */</span>
+<a name="128"></a>	<span class="identifier">MenuEnd_VotingDone</span> = -<span class="number">1</span>,		<span class="comment">/**&lt; Voting finished */</span>
+<a name="129"></a>	<span class="identifier">MenuEnd_VotingCancelled</span> = -<span class="number">2</span>,	<span class="comment">/**&lt; Voting was cancelled */</span>
+<a name="130"></a>	<span class="identifier">MenuEnd_Cancelled</span> = -<span class="number">3</span>,			<span class="comment">/**&lt; Menu was cancelled (reason in param2) */</span>
+<a name="131"></a>	<span class="identifier">MenuEnd_Exit</span> = -<span class="number">4</span>,				<span class="comment">/**&lt; Menu was cleanly exited via "exit" */</span>
+<a name="132"></a>	<span class="identifier">MenuEnd_ExitBack</span> = -<span class="number">5</span>,			<span class="comment">/**&lt; Menu was cleanly exited via "back" */</span>
+<a name="133"></a>};
+<a name="134"></a>
+<a name="135"></a><span class="comment">/**
+<a name="136"></a> * Describes a menu's source
+<a name="137"></a> */</span>
+<a name="138"></a><span class="keyword">enum</span> <span class="identifier">MenuSource</span>
+<a name="139"></a>{
+<a name="140"></a>	<span class="identifier">MenuSource_None</span> = <span class="number">0</span>,			<span class="comment">/**&lt; No menu is being displayed */</span>	
+<a name="141"></a>	<span class="identifier">MenuSource_External</span> = <span class="number">1</span>,		<span class="comment">/**&lt; External menu */</span>
+<a name="142"></a>	<span class="identifier">MenuSource_Normal</span> = <span class="number">2</span>,			<span class="comment">/**&lt; A basic menu is being displayed */</span>
+<a name="143"></a>	<span class="identifier">MenuSource_RawPanel</span> = <span class="number">3</span>,		<span class="comment">/**&lt; A display is active, but it is not tied to a menu */</span>
+<a name="144"></a>};
+<a name="145"></a>
+<a name="146"></a><span class="comment">/**
+<a name="147"></a> * Called when a menu action is completed.
+<a name="148"></a> *
+<a name="149"></a> * <span class="doctag">@param</span> menu				The menu being acted upon.
+<a name="150"></a> * <span class="doctag">@param</span> action			The action of the menu.
+<a name="151"></a> * <span class="doctag">@param</span> param1			First action parameter (usually the client).
+<a name="152"></a> * <span class="doctag">@param</span> param2			Second action parameter (usually the item).
+<a name="153"></a> * <span class="doctag">@noreturn</span>
+<a name="154"></a> */</span>
+<a name="155"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">MenuHandler</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">MenuAction</span>:<span class="identifier">action</span>, <span class="identifier">param1</span>, <span class="identifier">param2</span>);
+<a name="156"></a>
+<a name="157"></a><span class="comment">/**
+<a name="158"></a> * Creates a new, empty menu using the default style.
+<a name="159"></a> * 
+<a name="160"></a> * <span class="doctag">@param</span> handler			Function which will receive menu actions.
+<a name="161"></a> * <span class="doctag">@param</span> actions			Optionally set which actions to receive.  Select, 
+<a name="162"></a> *							Cancel, and End will always be received regardless
+<a name="163"></a> *							of whether they are set or not.  They are also
+<a name="164"></a> *							the only default actions.
+<a name="165"></a> * <span class="doctag">@return</span>					A new menu Handle.
+<a name="166"></a> */</span>
+<a name="167"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateMenu</span>(<span class="identifier">MenuHandler</span>:<span class="identifier">handler</span>, <span class="identifier">MenuAction</span>:<span class="identifier">actions</span>=<span class="identifier">MENU_ACTIONS_DEFAULT</span>);
+<a name="168"></a>
+<a name="169"></a><span class="comment">/**
+<a name="170"></a> * Displays a menu to a client.
+<a name="171"></a> *
+<a name="172"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="173"></a> * <span class="doctag">@param</span> client			Client index.
+<a name="174"></a> * <span class="doctag">@param</span> time				Maximum time to leave menu on the screen.
+<a name="175"></a> * <span class="doctag">@return</span>					True on success, false on failure.
+<a name="176"></a> * <span class="doctag">@error</span>					Invalid Handle or client not in game.
+<a name="177"></a> */</span>
+<a name="178"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DisplayMenu</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">client</span>, <span class="identifier">time</span>);
+<a name="179"></a>
+<a name="180"></a><span class="comment">/**
+<a name="181"></a> * Displays a menu to a client, starting from the given item.
+<a name="182"></a> *
+<a name="183"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="184"></a> * <span class="doctag">@param</span> client			Client index.
+<a name="185"></a> * <span class="doctag">@param</span> first_item		First item to begin drawing from.
+<a name="186"></a> * <span class="doctag">@param</span> time				Maximum time to leave menu on the screen.
+<a name="187"></a> * <span class="doctag">@return</span>					True on success, false on failure.
+<a name="188"></a> * <span class="doctag">@error</span>					Invalid Handle or client not in game.
+<a name="189"></a> */</span>
+<a name="190"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DisplayMenuAtItem</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">client</span>, <span class="identifier">first_item</span>, <span class="identifier">time</span>);
+<a name="191"></a>
+<a name="192"></a><span class="comment">/**
+<a name="193"></a> * Appends a new item to the end of a menu.
+<a name="194"></a> *
+<a name="195"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="196"></a> * <span class="doctag">@param</span> info				Item information string.
+<a name="197"></a> * <span class="doctag">@param</span> display			Default item display string.
+<a name="198"></a> * <span class="doctag">@param</span> style				Drawing style flags.  Anything other than DEFAULT or 
+<a name="199"></a> *							DISABLED will be completely ignored when paginating.
+<a name="200"></a> * <span class="doctag">@return</span>					True on success, false on failure.
+<a name="201"></a> * <span class="doctag">@error</span>					Invalid Handle or item limit reached.
+<a name="202"></a> */</span>
+<a name="203"></a><span class="keyword">native</span> <span class="identifier">AddMenuItem</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, 
+<a name="204"></a>					<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">info</span>[], 
+<a name="205"></a>					<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">display</span>[], 
+<a name="206"></a>					<span class="identifier">style</span>=<span class="identifier">ITEMDRAW_DEFAULT</span>);
+<a name="207"></a>
+<a name="208"></a><span class="comment">/**
+<a name="209"></a> * Inserts an item into the menu before a certain position; the new item will
+<a name="210"></a> * be at the given position and all next items pushed forward.
+<a name="211"></a> *
+<a name="212"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="213"></a> * <span class="doctag">@param</span> position			Position, starting from 0.
+<a name="214"></a> * <span class="doctag">@param</span> info				Item information string.
+<a name="215"></a> * <span class="doctag">@param</span> display			Default item display string.
+<a name="216"></a> * <span class="doctag">@param</span> style				Drawing style flags.  Anything other than DEFAULT or 
+<a name="217"></a> *							DISABLED will be completely ignored when paginating.
+<a name="218"></a> * <span class="doctag">@return</span>					True on success, false on failure.
+<a name="219"></a> * <span class="doctag">@error</span>					Invalid Handle or menu position.
+<a name="220"></a> */</span>
+<a name="221"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">InsertMenuItem</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>,
+<a name="222"></a>						<span class="identifier">position</span>, 
+<a name="223"></a>						<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">info</span>[], 
+<a name="224"></a>						<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">display</span>[], 
+<a name="225"></a>						<span class="identifier">style</span>=<span class="identifier">ITEMDRAW_DEFAULT</span>);
+<a name="226"></a>
+<a name="227"></a><span class="comment">/**
+<a name="228"></a> * Removes an item from the menu.
+<a name="229"></a> *
+<a name="230"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="231"></a> * <span class="doctag">@param</span> position			Position, starting from 0.
+<a name="232"></a> * <span class="doctag">@return</span>					True on success, false on failure.
+<a name="233"></a> * <span class="doctag">@error</span>					Invalid Handle or menu position.
+<a name="234"></a> */</span>
+<a name="235"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RemoveMenuItem</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">position</span>);
+<a name="236"></a>
+<a name="237"></a><span class="comment">/**
+<a name="238"></a> * Removes all items from a menu.
+<a name="239"></a> *
+<a name="240"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="241"></a> * <span class="doctag">@noreturn</span>
+<a name="242"></a> * <span class="doctag">@error</span>					Invalid Handle or menu position.
+<a name="243"></a> */</span>
+<a name="244"></a><span class="keyword">native</span> <span class="identifier">RemoveAllMenuItems</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="245"></a>
+<a name="246"></a><span class="comment">/**
+<a name="247"></a> * Retrieves information about a menu item.
+<a name="248"></a> *
+<a name="249"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="250"></a> * <span class="doctag">@param</span> position			Position, starting from 0.
+<a name="251"></a> * <span class="doctag">@param</span> infoBuf			Info buffer.
+<a name="252"></a> * <span class="doctag">@param</span> infoBufLen		Maximum length of the info buffer.
+<a name="253"></a> * <span class="doctag">@param</span> style				By-reference variable to store drawing flags.
+<a name="254"></a> * <span class="doctag">@param</span> dispBuf			Display buffer.
+<a name="255"></a> * <span class="doctag">@param</span> dispBufLen		Maximum length of the display buffer.
+<a name="256"></a> * <span class="doctag">@return</span>					True on success, false if position is invalid.
+<a name="257"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="258"></a> */</span>
+<a name="259"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetMenuItem</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, 
+<a name="260"></a>						<span class="identifier">position</span>, 
+<a name="261"></a>						<span class="keyword type">String</span>:<span class="identifier">infoBuf</span>[], 
+<a name="262"></a>						<span class="identifier">infoBufLen</span>, 
+<a name="263"></a>						&amp;<span class="identifier">style</span>=<span class="number">0</span>, 
+<a name="264"></a>						<span class="keyword type">String</span>:<span class="identifier">dispBuf</span>[]=<span class="string">""</span>,
+<a name="265"></a>						<span class="identifier">dispBufLen</span>=<span class="number">0</span>);
+<a name="266"></a>						
+<a name="267"></a><span class="comment">/**
+<a name="268"></a> * Returns the first item on the page of a currently selected menu.
+<a name="269"></a> *
+<a name="270"></a> * This is only valid inside a MenuAction_Select callback.
+<a name="271"></a> *
+<a name="272"></a> * <span class="doctag">@return</span>					First item number on the page the client was viewing 
+<a name="273"></a> *							before selecting the item in the callback.  This can 
+<a name="274"></a> *							be used to re-display the menu from the original 
+<a name="275"></a> *							position.
+<a name="276"></a> * <span class="doctag">@error</span>					Not called from inside a MenuAction_Select callback.
+<a name="277"></a> */</span>
+<a name="278"></a><span class="keyword">native</span> <span class="identifier">GetMenuSelectionPosition</span>();
+<a name="279"></a>
+<a name="280"></a><span class="comment">/**
+<a name="281"></a> * Returns the number of items in a menu.
+<a name="282"></a> *
+<a name="283"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="284"></a> * <span class="doctag">@return</span>					Number of items in the menu.
+<a name="285"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="286"></a> */</span>
+<a name="287"></a><span class="keyword">native</span> <span class="identifier">GetMenuItemCount</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="288"></a>
+<a name="289"></a><span class="comment">/**
+<a name="290"></a> * Sets whether the menu should be paginated or not.
+<a name="291"></a> *
+<a name="292"></a> * If itemsPerPage is MENU_NO_PAGINATION, and the exit button flag is set, 
+<a name="293"></a> * then the exit button flag is removed.  It can be re-applied if desired.
+<a name="294"></a> *
+<a name="295"></a> * <span class="doctag">@param</span> menu				Handle to the menu.
+<a name="296"></a> * <span class="doctag">@param</span> itemsPerPage		Number of items per page, or MENU_NO_PAGINATION.
+<a name="297"></a> * <span class="doctag">@return</span>					True on success, false if pagination is too high or 
+<a name="298"></a> *							low.
+<a name="299"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="300"></a> */</span>
+<a name="301"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SetMenuPagination</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">itemsPerPage</span>);
+<a name="302"></a>
+<a name="303"></a><span class="comment">/**
+<a name="304"></a> * Returns a menu's pagination setting.
+<a name="305"></a> *
+<a name="306"></a> * <span class="doctag">@param</span> menu				Handle to the menu.
+<a name="307"></a> * <span class="doctag">@return</span>					Pagination setting.
+<a name="308"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="309"></a> */</span>
+<a name="310"></a><span class="keyword">native</span> <span class="identifier">GetMenuPagination</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="311"></a>
+<a name="312"></a><span class="comment">/**
+<a name="313"></a> * Returns a menu's MenuStyle Handle.  The Handle
+<a name="314"></a> * is global and cannot be freed.
+<a name="315"></a> *
+<a name="316"></a> * <span class="doctag">@param</span> menu				Handle to the menu.
+<a name="317"></a> * <span class="doctag">@return</span> 					Handle to the menu's draw style.
+<a name="318"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="319"></a> */</span>
+<a name="320"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">GetMenuStyle</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="321"></a>
+<a name="322"></a><span class="comment">/**
+<a name="323"></a> * Sets the menu's default title/instruction message.
+<a name="324"></a> *
+<a name="325"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="326"></a> * <span class="doctag">@param</span> fmt				Message string format
+<a name="327"></a> * <span class="doctag">@param</span> ...				Message string arguments.
+<a name="328"></a> * <span class="doctag">@noreturn</span>
+<a name="329"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="330"></a> */</span>
+<a name="331"></a><span class="keyword">native</span> <span class="identifier">SetMenuTitle</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[], <span class="keyword type">any</span>:...);
+<a name="332"></a>
+<a name="333"></a><span class="comment">/**
+<a name="334"></a> * Returns the text of a menu's title.
+<a name="335"></a> *
+<a name="336"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="337"></a> * <span class="doctag">@param</span> buffer			Buffer to store title.
+<a name="338"></a> * <span class="doctag">@param</span> maxlength			Maximum length of the buffer.
+<a name="339"></a> * <span class="doctag">@return</span>					Number of bytes written.
+<a name="340"></a> * <span class="doctag">@error</span>					Invalid Handle/
+<a name="341"></a> */</span>
+<a name="342"></a><span class="keyword">native</span> <span class="identifier">GetMenuTitle</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="343"></a>
+<a name="344"></a><span class="comment">/**
+<a name="345"></a> * Creates a raw MenuPanel based off the menu's style.
+<a name="346"></a> * The Handle must be freed with CloseHandle().
+<a name="347"></a> *
+<a name="348"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="349"></a> * <span class="doctag">@return</span>					A new MenuPanel Handle.
+<a name="350"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="351"></a> */</span>
+<a name="352"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreatePanelFromMenu</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="353"></a>
+<a name="354"></a><span class="comment">/**
+<a name="355"></a> * Returns whether or not the menu has an exit button.
+<a name="356"></a> * By default, menus have an exit button.
+<a name="357"></a> *
+<a name="358"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="359"></a> * <span class="doctag">@return</span> 					True if the menu has an exit button; false otherwise.
+<a name="360"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="361"></a> */</span>
+<a name="362"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetMenuExitButton</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="363"></a>
+<a name="364"></a><span class="comment">/**
+<a name="365"></a> * Sets whether or not the menu has an exit button.  By default, paginated menus 
+<a name="366"></a> * have an exit button.
+<a name="367"></a> *
+<a name="368"></a> * If a menu's pagination is changed to MENU_NO_PAGINATION, and the pagination 
+<a name="369"></a> * was previously a different value, then the Exit button status is changed to 
+<a name="370"></a> * false.  It must be explicitly re-enabled afterwards.
+<a name="371"></a> *
+<a name="372"></a> * If a non-paginated menu has an exit button, then at most 9 items will be 
+<a name="373"></a> * displayed.
+<a name="374"></a> *
+<a name="375"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="376"></a> * <span class="doctag">@param</span> button			True to enable the button, false to remove it.
+<a name="377"></a> * <span class="doctag">@return</span> 					True if allowed; false on failure.
+<a name="378"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="379"></a> */</span>
+<a name="380"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SetMenuExitButton</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="keyword type">bool</span>:<span class="identifier">button</span>);
+<a name="381"></a>
+<a name="382"></a><span class="comment">/**
+<a name="383"></a> * Returns whether or not the menu has an "exit back" button.  By default, 
+<a name="384"></a> * menus do not have an exit back button.  
+<a name="385"></a> *
+<a name="386"></a> * Exit Back buttons appear as "Back" on page 1 of paginated menus and have 
+<a name="387"></a> * functionality defined by the user in MenuEnd_ExitBack.
+<a name="388"></a> *
+<a name="389"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="390"></a> * <span class="doctag">@return</span> 					True if the menu has an exit back button; false otherwise.
+<a name="391"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="392"></a> */</span>
+<a name="393"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetMenuExitBackButton</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="394"></a>
+<a name="395"></a><span class="comment">/**
+<a name="396"></a> * Sets whether or not the menu has an "exit back" button. By default, menus 
+<a name="397"></a> * do not have an exit back button.
+<a name="398"></a> *
+<a name="399"></a> * Exit Back buttons appear as "Back" on page 1 of paginated menus and have 
+<a name="400"></a> * functionality defined by the user in MenuEnd_ExitBack.
+<a name="401"></a> *
+<a name="402"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="403"></a> * <span class="doctag">@param</span> button			True to enable the button, false to remove it.
+<a name="404"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="405"></a> */</span>
+<a name="406"></a><span class="keyword">native</span> <span class="identifier">SetMenuExitBackButton</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="keyword type">bool</span>:<span class="identifier">button</span>);
+<a name="407"></a>
+<a name="408"></a><span class="comment">/**
+<a name="409"></a> * Sets whether or not the menu has a "no vote" button in slot 1.
+<a name="410"></a> * By default, menus do not have a no vote button.
+<a name="411"></a> *
+<a name="412"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="413"></a> * <span class="doctag">@param</span> button			True to enable the button, false to remove it.
+<a name="414"></a> * <span class="doctag">@return</span> 					True if allowed; false on failure.
+<a name="415"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="416"></a> */</span>
+<a name="417"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SetMenuNoVoteButton</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="keyword type">bool</span>:<span class="identifier">button</span>);
+<a name="418"></a>
+<a name="419"></a><span class="comment">/**
+<a name="420"></a> * Cancels a menu from displaying on all clients.  While the
+<a name="421"></a> * cancellation is in progress, this menu cannot be re-displayed
+<a name="422"></a> * to any clients.
+<a name="423"></a> *
+<a name="424"></a> * The menu may still exist on the client's screen after this command.
+<a name="425"></a> * This simply verifies that the menu is not being used anywhere.
+<a name="426"></a> *
+<a name="427"></a> * If any vote is in progress on a menu, it will be cancelled.
+<a name="428"></a> *
+<a name="429"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="430"></a> * <span class="doctag">@noreturn</span>
+<a name="431"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="432"></a> */</span>
+<a name="433"></a><span class="keyword">native</span> <span class="identifier">CancelMenu</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="434"></a>
+<a name="435"></a><span class="comment">/**
+<a name="436"></a> * Retrieves a menu's option flags.
+<a name="437"></a> *
+<a name="438"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="439"></a> * <span class="doctag">@return</span>					A bitstring of MENUFLAG bits.
+<a name="440"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="441"></a> */</span>
+<a name="442"></a><span class="keyword">native</span> <span class="identifier">GetMenuOptionFlags</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>);
+<a name="443"></a>
+<a name="444"></a><span class="comment">/**
+<a name="445"></a> * Sets a menu's option flags.
+<a name="446"></a> *
+<a name="447"></a> * If a certain bit is not supported, it will be stripped before being set.
+<a name="448"></a> * See SetMenuExitButton() for information on Exit buttons.
+<a name="449"></a> * See SetMenuExitBackButton() for information on Exit Back buttons.
+<a name="450"></a> *
+<a name="451"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="452"></a> * <span class="doctag">@param</span> flags				A new bitstring of MENUFLAG bits.
+<a name="453"></a> * <span class="doctag">@noreturn</span>
+<a name="454"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="455"></a> */</span>
+<a name="456"></a><span class="keyword">native</span> <span class="identifier">SetMenuOptionFlags</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">flags</span>);
+<a name="457"></a>
+<a name="458"></a><span class="comment">/**
+<a name="459"></a> * Returns whether a vote is in progress.
+<a name="460"></a> *
+<a name="461"></a> * <span class="doctag">@param</span> menu				Deprecated; no longer used.
+<a name="462"></a> * <span class="doctag">@return</span>					True if a vote is in progress, false otherwise.
+<a name="463"></a> */</span>
+<a name="464"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsVoteInProgress</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>=<span class="keyword core">INVALID_HANDLE</span>);
+<a name="465"></a>
+<a name="466"></a><span class="comment">/**
+<a name="467"></a> * Cancels the vote in progress.
+<a name="468"></a> *
+<a name="469"></a> * <span class="doctag">@noreturn</span>
+<a name="470"></a> * <span class="doctag">@error</span>					If no vote is in progress.
+<a name="471"></a> */</span>
+<a name="472"></a><span class="keyword">native</span> <span class="identifier">CancelVote</span>();
+<a name="473"></a>
+<a name="474"></a><span class="comment">/**
+<a name="475"></a> * Broadcasts a menu to a list of clients.  The most selected item will be 
+<a name="476"></a> * returned through MenuAction_End.  On a tie, a random item will be returned 
+<a name="477"></a> * from a list of the tied items.
+<a name="478"></a> *
+<a name="479"></a> * Note that MenuAction_VoteEnd and MenuAction_VoteStart are both
+<a name="480"></a> * default callbacks and do not need to be enabled.
+<a name="481"></a> *
+<a name="482"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="483"></a> * <span class="doctag">@param</span> clients			Array of clients to broadcast to.
+<a name="484"></a> * <span class="doctag">@param</span> numClients		Number of clients in the array.
+<a name="485"></a> * <span class="doctag">@param</span> time				Maximum time to leave menu on the screen.
+<a name="486"></a> * <span class="doctag">@param</span> flags				Optional voting flags.
+<a name="487"></a> * <span class="doctag">@return</span>					True on success, false if this menu already has a vote session
+<a name="488"></a> *							in progress.
+<a name="489"></a> * <span class="doctag">@error</span>					Invalid Handle, or a vote is already in progress.
+<a name="490"></a> */</span>
+<a name="491"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">VoteMenu</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">clients</span>[], <span class="identifier">numClients</span>, <span class="identifier">time</span>, <span class="identifier">flags</span>=<span class="number">0</span>);
+<a name="492"></a>
+<a name="493"></a><span class="comment">/**
+<a name="494"></a> * Sends a vote menu to all clients.  See VoteMenu() for more information.
+<a name="495"></a> *
+<a name="496"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="497"></a> * <span class="doctag">@param</span> time				Maximum time to leave menu on the screen.
+<a name="498"></a> * <span class="doctag">@param</span> flags				Optional voting flags.
+<a name="499"></a> * <span class="doctag">@return</span>					True on success, false if this menu already has a vote session
+<a name="500"></a> *							in progress.
+<a name="501"></a> * <span class="doctag">@error</span>					Invalid Handle.
+<a name="502"></a> */</span>
+<a name="503"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">VoteMenuToAll</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">time</span>, <span class="identifier">flags</span>=<span class="number">0</span>)
+<a name="504"></a>{
+<a name="505"></a>	<span class="keyword">new</span> <span class="identifier">total</span>;
+<a name="506"></a>	<span class="identifier">decl</span> <span class="identifier">players</span>[<span class="identifier">MaxClients</span>];
+<a name="507"></a>	
+<a name="508"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span>=<span class="number">1</span>; <span class="identifier">i</span>&lt;=<span class="identifier">MaxClients</span>; <span class="identifier">i</span>++)
+<a name="509"></a>	{
+<a name="510"></a>		<span class="keyword statement">if</span> (!<span class="identifier">IsClientInGame</span>(<span class="identifier">i</span>) || <span class="identifier">IsFakeClient</span>(<span class="identifier">i</span>))
+<a name="511"></a>		{
+<a name="512"></a>			<span class="keyword statement">continue</span>;
+<a name="513"></a>		}
+<a name="514"></a>		<span class="identifier">players</span>[<span class="identifier">total</span>++] = <span class="identifier">i</span>;
+<a name="515"></a>	}
+<a name="516"></a>	
+<a name="517"></a>	<span class="keyword statement">return</span> <span class="identifier">VoteMenu</span>(<span class="identifier">menu</span>, <span class="identifier">players</span>, <span class="identifier">total</span>, <span class="identifier">time</span>, <span class="identifier">flags</span>);
+<a name="518"></a>}
+<a name="519"></a><span class="comment">/**
+<a name="520"></a> * Callback for when a vote has ended and results are available.
+<a name="521"></a> *
+<a name="522"></a> * <span class="doctag">@param</span> menu				The menu being voted on.
+<a name="523"></a> * <span class="doctag">@param</span> num_votes			Number of votes tallied in total.
+<a name="524"></a> * <span class="doctag">@param</span> num_clients		Number of clients who could vote.
+<a name="525"></a> * <span class="doctag">@param</span> client_info		Array of clients.  Use VOTEINFO_CLIENT_ defines.
+<a name="526"></a> * <span class="doctag">@param</span> num_items			Number of unique items that were selected.
+<a name="527"></a> * <span class="doctag">@param</span> item_info			Array of items, sorted by count.  Use VOTEINFO_ITEM
+<a name="528"></a> *							defines.
+<a name="529"></a> * <span class="doctag">@noreturn</span>
+<a name="530"></a> */</span>
+<a name="531"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">VoteHandler</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>,
+<a name="532"></a>						   <span class="identifier">num_votes</span>, 
+<a name="533"></a>						   <span class="identifier">num_clients</span>,
+<a name="534"></a>						   <span class="keyword">const</span> <span class="identifier">client_info</span>[][<span class="number">2</span>], 
+<a name="535"></a>						   <span class="identifier">num_items</span>,
+<a name="536"></a>						   <span class="keyword">const</span> <span class="identifier">item_info</span>[][<span class="number">2</span>]);	   
+<a name="537"></a>
+<a name="538"></a><span class="comment">/**
+<a name="539"></a> * Sets an advanced vote handling callback.  If this callback is set,
+<a name="540"></a> * MenuAction_VoteEnd will not be called.
+<a name="541"></a> *
+<a name="542"></a> * <span class="doctag">@param</span> menu				Menu Handle.
+<a name="543"></a> * <span class="doctag">@param</span> callback			Callback function.
+<a name="544"></a> * <span class="doctag">@noreturn</span>
+<a name="545"></a> * <span class="doctag">@error</span>					Invalid Handle or callback.
+<a name="546"></a> */</span>
+<a name="547"></a><span class="keyword">native</span> <span class="identifier">SetVoteResultCallback</span>(<span class="keyword type">Handle</span>:<span class="identifier">menu</span>, <span class="identifier">VoteHandler</span>:<span class="identifier">callback</span>);
+<a name="548"></a>
+<a name="549"></a><span class="comment">/**
+<a name="550"></a> * Returns the number of seconds you should "wait" before displaying
+<a name="551"></a> * a publicly invocable menu.  This number is the time remaining until
+<a name="552"></a> * (last_vote + sm_vote_delay).
+<a name="553"></a> *
+<a name="554"></a> * <span class="doctag">@return</span>					Number of seconds to wait, or 0 for none.
+<a name="555"></a> */</span>
+<a name="556"></a><span class="keyword">native</span> <span class="identifier">CheckVoteDelay</span>();
+<a name="557"></a>
+<a name="558"></a><span class="comment">/**
+<a name="559"></a> * Returns whether a client is in the pool of clients allowed 
+<a name="560"></a> * to participate in the current vote.  This is determined by 
+<a name="561"></a> * the client list passed to VoteMenu().
+<a name="562"></a> *
+<a name="563"></a> * <span class="doctag">@param</span> client			Client index.
+<a name="564"></a> * <span class="doctag">@return</span>					True if client is allowed to vote, false otherwise.
+<a name="565"></a> * <span class="doctag">@error</span>					If no vote is in progress or client index is invalid.
+<a name="566"></a> */</span>
+<a name="567"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientInVotePool</span>(<span class="identifier">client</span>);
+<a name="568"></a>
+<a name="569"></a><span class="comment">/**
+<a name="570"></a> * Redraws the current vote menu to a client in the voting pool.
+<a name="571"></a> *
+<a name="572"></a> * <span class="doctag">@param</span> client			Client index.
+<a name="573"></a> * <span class="doctag">@param</span> revotes			True to allow revotes, false otherwise.
+<a name="574"></a> * <span class="doctag">@return</span>					True on success, false if the client is in the vote pool 
+<a name="575"></a> *							but cannot vote again.
+<a name="576"></a> * <span class="doctag">@error</span>					No vote in progress, client is not in the voting pool, 
+<a name="577"></a> *							or client index is invalid.
+<a name="578"></a> */</span>
+<a name="579"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RedrawClientVoteMenu</span>(<span class="identifier">client</span>, <span class="keyword type">bool</span>:<span class="identifier">revotes</span>=<span class="keyword literal">true</span>);
+<a name="580"></a>
+<a name="581"></a><span class="comment">/**
+<a name="582"></a> * Returns a style's global Handle.
+<a name="583"></a> *
+<a name="584"></a> * <span class="doctag">@param</span> style			Menu Style.
+<a name="585"></a> * <span class="doctag">@return</span>				A Handle, or INVALID_HANDLE if not found or unusable.
+<a name="586"></a> */</span>
+<a name="587"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">GetMenuStyleHandle</span>(<span class="identifier">MenuStyle</span>:<span class="identifier">style</span>);
+<a name="588"></a>
+<a name="589"></a><span class="comment">/**
+<a name="590"></a> * Creates a MenuPanel from a MenuStyle.  Panels are used for drawing raw 
+<a name="591"></a> * menus without any extra helper functions.  The Handle must be closed
+<a name="592"></a> * with CloseHandle().
+<a name="593"></a> *
+<a name="594"></a> * <span class="doctag">@param</span> hStyle		MenuStyle Handle, or INVALID_HANDLE to use the default style.
+<a name="595"></a> * <span class="doctag">@return</span>				A new MenuPanel Handle.
+<a name="596"></a> * <span class="doctag">@error</span>				Invalid Handle other than INVALID_HANDLE.
+<a name="597"></a> */</span>
+<a name="598"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreatePanel</span>(<span class="keyword type">Handle</span>:<span class="identifier">hStyle</span>=<span class="keyword core">INVALID_HANDLE</span>);
+<a name="599"></a>
+<a name="600"></a><span class="comment">/** 
+<a name="601"></a> * Creates a Menu from a MenuStyle.  The Handle must be closed with 
+<a name="602"></a> * CloseHandle().
+<a name="603"></a> *
+<a name="604"></a> * <span class="doctag">@param</span> hStyle		MenuStyle Handle, or INVALID_HANDLE to use the default style.
+<a name="605"></a> * <span class="doctag">@param</span> handler		Function which will receive menu actions.
+<a name="606"></a> * <span class="doctag">@param</span> actions		Optionally set which actions to receive.  Select, 
+<a name="607"></a> *						Cancel, and End will always be received regardless
+<a name="608"></a> *						of whether they are set or not.  They are also
+<a name="609"></a> *						the only default actions.
+<a name="610"></a> * <span class="doctag">@return</span>				A new menu Handle.
+<a name="611"></a> * <span class="doctag">@error</span>				Invalid Handle other than INVALID_HANDLE.
+<a name="612"></a> */</span>
+<a name="613"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateMenuEx</span>(<span class="keyword type">Handle</span>:<span class="identifier">hStyle</span>=<span class="keyword core">INVALID_HANDLE</span>, <span class="identifier">MenuHandler</span>:<span class="identifier">handler</span>, <span class="identifier">MenuAction</span>:<span class="identifier">actions</span>=<span class="identifier">MENU_ACTIONS_DEFAULT</span>);
+<a name="614"></a>
+<a name="615"></a><span class="comment">/**
+<a name="616"></a> * Returns whether a client is viewing a menu.
+<a name="617"></a> *
+<a name="618"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="619"></a> * <span class="doctag">@param</span> hStyle		MenuStyle Handle, or INVALID_HANDLE to use the default style.
+<a name="620"></a> * <span class="doctag">@return</span>				A MenuSource value.
+<a name="621"></a> * <span class="doctag">@error</span>				Invalid Handle other than INVALID_HANDLE.
+<a name="622"></a> */</span>
+<a name="623"></a><span class="keyword">native</span> <span class="identifier">MenuSource</span>:<span class="identifier">GetClientMenu</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">hStyle</span>=<span class="keyword core">INVALID_HANDLE</span>);
+<a name="624"></a>
+<a name="625"></a><span class="comment">/** 
+<a name="626"></a> * Cancels a menu on a client.  This will only affect non-external menus.
+<a name="627"></a> *
+<a name="628"></a> * <span class="doctag">@param</span> hStyle		MenuStyle Handle, or INVALID_HANDLE to use the default style.
+<a name="629"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="630"></a> * <span class="doctag">@param</span> autoIgnore	If true, no menus can be re-drawn on the client during
+<a name="631"></a> *						the cancellation process.
+<a name="632"></a> * <span class="doctag">@return</span>				True if a menu was cancelled, false otherwise.
+<a name="633"></a> */</span>
+<a name="634"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">CancelClientMenu</span>(<span class="identifier">client</span>, <span class="keyword type">bool</span>:<span class="identifier">autoIgnore</span>=<span class="keyword literal">false</span>, <span class="keyword type">Handle</span>:<span class="identifier">hStyle</span>=<span class="keyword core">INVALID_HANDLE</span>);
+<a name="635"></a>
+<a name="636"></a><span class="comment">/**
+<a name="637"></a> * Returns a style's maximum items per page.
+<a name="638"></a> *
+<a name="639"></a> * <span class="doctag">@param</span> hStyle		MenuStyle Handle, or INVALID_HANDLE to use the default style.
+<a name="640"></a> * <span class="doctag">@return</span>				Maximum items per page.
+<a name="641"></a> * <span class="doctag">@error</span>				Invalid Handle other than INVALID_HANDLE.
+<a name="642"></a> */</span>
+<a name="643"></a><span class="keyword">native</span> <span class="identifier">GetMaxPageItems</span>(<span class="keyword type">Handle</span>:<span class="identifier">hStyle</span>=<span class="keyword core">INVALID_HANDLE</span>);
+<a name="644"></a>
+<a name="645"></a><span class="comment">/**
+<a name="646"></a> * Returns a MenuPanel's parent style.
+<a name="647"></a> *
+<a name="648"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="649"></a> * <span class="doctag">@return</span>				The MenuStyle Handle that created the panel.
+<a name="650"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="651"></a> */</span>
+<a name="652"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">GetPanelStyle</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>);
+<a name="653"></a>
+<a name="654"></a><span class="comment">/**
+<a name="655"></a> * Sets the panel's title.
+<a name="656"></a> *
+<a name="657"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="658"></a> * <span class="doctag">@param</span> text			Text to set as the title.
+<a name="659"></a> * <span class="doctag">@param</span> onlyIfEmpty	If true, the title will only be set if no title is set.
+<a name="660"></a> * <span class="doctag">@noreturn</span>
+<a name="661"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="662"></a> */</span>
+<a name="663"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SetPanelTitle</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">text</span>[], <span class="keyword type">bool</span>:<span class="identifier">onlyIfEmpty</span>=<span class="keyword literal">false</span>);
+<a name="664"></a>
+<a name="665"></a><span class="comment">/**
+<a name="666"></a> * Draws an item on a panel.  If the item takes up a slot, the position
+<a name="667"></a> * is returned.
+<a name="668"></a> *
+<a name="669"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="670"></a> * <span class="doctag">@param</span> text			Display text to use.  If not a raw line, 
+<a name="671"></a> *						the style may automatically add color markup.
+<a name="672"></a> *						No numbering or newlines are needed.
+<a name="673"></a> * <span class="doctag">@param</span> style			ITEMDRAW style flags.
+<a name="674"></a> * <span class="doctag">@return</span>				A slot position, or 0 if item was a rawline or could not be drawn.
+<a name="675"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="676"></a> */</span>
+<a name="677"></a><span class="keyword">native</span> <span class="identifier">DrawPanelItem</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">text</span>[], <span class="identifier">style</span>=<span class="identifier">ITEMDRAW_DEFAULT</span>);
+<a name="678"></a>
+<a name="679"></a><span class="comment">/**
+<a name="680"></a> * Draws a raw line of text on a panel, without any markup other than a newline.
+<a name="681"></a> *
+<a name="682"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle, or INVALID_HANDLE if inside a 
+<a name="683"></a> *						MenuAction_DisplayItem callback.
+<a name="684"></a> * <span class="doctag">@param</span> text			Display text to use.
+<a name="685"></a> * <span class="doctag">@return</span>				True on success, false if raw lines are not supported.
+<a name="686"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="687"></a> */</span>
+<a name="688"></a><span class="keyword">native</span> <span class="identifier">DrawPanelText</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">text</span>[]);
+<a name="689"></a>
+<a name="690"></a><span class="comment">/**
+<a name="691"></a> * Returns whether or not the given drawing flags are supported by
+<a name="692"></a> * the menu style.
+<a name="693"></a> *
+<a name="694"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="695"></a> * <span class="doctag">@param</span> style			ITEMDRAW style flags.
+<a name="696"></a> * <span class="doctag">@return</span>				True if item is drawable, false otherwise.
+<a name="697"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="698"></a> */</span>
+<a name="699"></a><span class="keyword">native</span> <span class="identifier">CanPanelDrawFlags</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>, <span class="identifier">style</span>);
+<a name="700"></a>
+<a name="701"></a><span class="comment">/**
+<a name="702"></a> * Sets the selectable key map of a panel.  This is not supported by
+<a name="703"></a> * all styles (only by Radio, as of this writing).  
+<a name="704"></a> *
+<a name="705"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="706"></a> * <span class="doctag">@param</span> keys			An integer where each bit N allows key
+<a name="707"></a> *						N+1 to be selected.  If no keys are selectable,
+<a name="708"></a> *						then key 0 (bit 9) is automatically set.
+<a name="709"></a> * <span class="doctag">@return</span> 				True if supported, false otherwise.
+<a name="710"></a> */</span>
+<a name="711"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SetPanelKeys</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>, <span class="identifier">keys</span>);
+<a name="712"></a>
+<a name="713"></a><span class="comment">/**
+<a name="714"></a> * Sends a panel to a client.  Unlike full menus, the handler
+<a name="715"></a> * function will only receive the following actions, both of 
+<a name="716"></a> * which will have INVALID_HANDLE for a menu, and the client
+<a name="717"></a> * as param1.
+<a name="718"></a> *
+<a name="719"></a> * MenuAction_Select (param2 will be the key pressed)
+<a name="720"></a> * MenuAction_Cancel (param2 will be the reason)
+<a name="721"></a> *
+<a name="722"></a> * Also, if the menu fails to display, no callbacks will be called.
+<a name="723"></a> *
+<a name="724"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="725"></a> * <span class="doctag">@param</span> client		A client to draw to.
+<a name="726"></a> * <span class="doctag">@param</span> handler		The MenuHandler function to catch actions with.
+<a name="727"></a> * <span class="doctag">@param</span> time			Time to hold the menu for.
+<a name="728"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="729"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="730"></a> */</span>
+<a name="731"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SendPanelToClient</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>, <span class="identifier">client</span>, <span class="identifier">MenuHandler</span>:<span class="identifier">handler</span>, <span class="identifier">time</span>);
+<a name="732"></a>
+<a name="733"></a><span class="comment">/**
+<a name="734"></a> * <span class="doctag">@brief</span> Returns the amount of text the menu can still hold.  If this is 
+<a name="735"></a> * limit is reached or overflowed, the text is silently truncated.  
+<a name="736"></a> *
+<a name="737"></a> * Radio menus: Currently 511 characters (512 bytes).
+<a name="738"></a> * Valve menus: Currently -1 (no meaning).
+<a name="739"></a> *
+<a name="740"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="741"></a> * <span class="doctag">@return</span>				Number of characters that the menu can still hold, 
+<a name="742"></a> *						or -1 if there is no known limit.
+<a name="743"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="744"></a> */</span>
+<a name="745"></a><span class="keyword">native</span> <span class="identifier">GetPanelTextRemaining</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>);
+<a name="746"></a>
+<a name="747"></a><span class="comment">/**
+<a name="748"></a> * <span class="doctag">@brief</span> Returns the current key position.
+<a name="749"></a> *
+<a name="750"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="751"></a> * <span class="doctag">@return</span>				Current key position starting at 1.
+<a name="752"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="753"></a> */</span>
+<a name="754"></a><span class="keyword">native</span> <span class="identifier">GetPanelCurrentKey</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>);
+<a name="755"></a>
+<a name="756"></a><span class="comment">/**
+<a name="757"></a> * <span class="doctag">@brief</span> Sets the next key position.  This cannot be used
+<a name="758"></a> * to traverse backwards.
+<a name="759"></a> *
+<a name="760"></a> * <span class="doctag">@param</span> panel			A MenuPanel Handle.
+<a name="761"></a> * <span class="doctag">@param</span> key			Key that is greater or equal to
+<a name="762"></a> *						GetPanelCurrentKey().
+<a name="763"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="764"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="765"></a> */</span>
+<a name="766"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SetPanelCurrentKey</span>(<span class="keyword type">Handle</span>:<span class="identifier">panel</span>, <span class="identifier">key</span>);
+<a name="767"></a>
+<a name="768"></a><span class="comment">/**
+<a name="769"></a> * <span class="doctag">@brief</span> Redraws menu text from inside a MenuAction_DisplayItem callback.
+<a name="770"></a> * 
+<a name="771"></a> * <span class="doctag">@param</span> text			Menu text to draw.
+<a name="772"></a> * <span class="doctag">@return</span>				Item position; must be returned via the callback.
+<a name="773"></a> */</span>
+<a name="774"></a><span class="keyword">native</span> <span class="identifier">RedrawMenuItem</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">text</span>[]);
+<a name="775"></a>
+<a name="776"></a><span class="comment">/**
+<a name="777"></a> * This function is provided for legacy code only.  Some older plugins may use 
+<a name="778"></a> * network messages instead of the panel API.  This function wraps the panel 
+<a name="779"></a> * API for eased portability into the SourceMod menu system.  
+<a name="780"></a> *
+<a name="781"></a> * This function is only usable with the Radio Menu style.  You do not need to 
+<a name="782"></a> * split up your menu into multiple packets; SourceMod will break the string 
+<a name="783"></a> * up internally.
+<a name="784"></a> *
+<a name="785"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="786"></a> * <span class="doctag">@param</span> str			Full menu string as would be passed over the network. 
+<a name="787"></a> * <span class="doctag">@param</span> time			Time to hold the menu for.
+<a name="788"></a> * <span class="doctag">@param</span> keys			Selectable key bitstring.
+<a name="789"></a> * <span class="doctag">@param</span> handler		Optional handler function, with the same rules as
+<a name="790"></a> *						SendPanelToClient().
+<a name="791"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="792"></a> * <span class="doctag">@error</span>				Invalid client index, or radio menus not supported.
+<a name="793"></a> */</span>
+<a name="794"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">InternalShowMenu</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="identifier">time</span>, <span class="identifier">keys</span>=-<span class="number">1</span>, <span class="identifier">MenuHandler</span>:<span class="identifier">handler</span>=<span class="identifier">MenuHandler</span>:-<span class="number">1</span>);
+<a name="795"></a>
+<a name="796"></a><span class="comment">/**
+<a name="797"></a> * Retrieves voting information from MenuAction_VoteEnd.
+<a name="798"></a> *
+<a name="799"></a> * <span class="doctag">@param</span> param2		Second parameter of MenuAction_VoteEnd.
+<a name="800"></a> * <span class="doctag">@param</span> winningVotes	Number of votes received by the winning option.
+<a name="801"></a> * <span class="doctag">@param</span> totalVotes	Number of total votes received.
+<a name="802"></a> * <span class="doctag">@noreturn</span>
+<a name="803"></a> */</span>
+<a name="804"></a><span class="keyword">stock</span> <span class="identifier">GetMenuVoteInfo</span>(<span class="identifier">param2</span>, &amp;<span class="identifier">winningVotes</span>, &amp;<span class="identifier">totalVotes</span>)
+<a name="805"></a>{
+<a name="806"></a>	<span class="identifier">winningVotes</span> = <span class="identifier">param2</span> &amp; <span class="number">0xFFFF</span>;
+<a name="807"></a>	<span class="identifier">totalVotes</span> = <span class="identifier">param2</span> &gt;&gt; <span class="number">16</span>;
+<a name="808"></a>}
+<a name="809"></a>
+<a name="810"></a><span class="comment">/**
+<a name="811"></a> * Quick stock to determine whether voting is allowed.  This doesn't let you 
+<a name="812"></a> * fine-tune a reason for not voting, so it's not recommended for lazily 
+<a name="813"></a> * telling clients that voting isn't allowed.
+<a name="814"></a> * 
+<a name="815"></a> * <span class="doctag">@return</span>				True if voting is allowed, false if voting is in progress
+<a name="816"></a> *						or the cooldown is active.
+<a name="817"></a> */</span>
+<a name="818"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">IsNewVoteAllowed</span>()
+<a name="819"></a>{
+<a name="820"></a>	<span class="keyword statement">if</span> (<span class="identifier">IsVoteInProgress</span>() || <span class="identifier">CheckVoteDelay</span>() != <span class="number">0</span>)
+<a name="821"></a>	{
+<a name="822"></a>		<span class="keyword statement">return</span> <span class="keyword literal">false</span>;
+<a name="823"></a>	}
+<a name="824"></a>	
+<a name="825"></a>	<span class="keyword statement">return</span> <span class="keyword literal">true</span>;
+<a name="826"></a>}
+<a name="827"></a>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

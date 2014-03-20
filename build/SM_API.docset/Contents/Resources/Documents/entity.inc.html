@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<title>entity.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2011 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_entity_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_entity_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Property types for entities.
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">enum</span> <span class="identifier">PropType</span>
+<a name="42"></a>{
+<a name="43"></a>	<span class="identifier">Prop_Send</span> = <span class="number">0</span>,	<span class="comment">/**&lt; This property is networked. */</span>
+<a name="44"></a>	<span class="identifier">Prop_Data</span> = <span class="number">1</span>,	<span class="comment">/**&lt; This property is for save game data fields. */</span>
+<a name="45"></a>};
+<a name="46"></a>
+<a name="47"></a><span class="comment">/**
+<a name="48"></a> * <span class="doctag">@section</span> For more information on these, see the HL2SDK (public/edict.h)
+<a name="49"></a> */</span>
+<a name="50"></a><span class="preprocessor">#define <span class="identifier">FL_EDICT_CHANGED</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)	<span class="comment">/**&lt; Game DLL sets this when the entity state changes
+<a name="51"></a>										 Mutually exclusive with FL_EDICT_PARTIAL_CHANGE. */</span>
+<a name="52"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_FREE</span>			(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)	<span class="comment">/**&lt; this edict if free for reuse */</span>
+<a name="53"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_FULL</span>			(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)	<span class="comment">/**&lt; this is a full server entity */</span>
+<a name="54"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_FULLCHECK</span>		(<span class="number">0</span>&lt;&lt;<span class="number">0</span>)  <span class="comment">/**&lt; call ShouldTransmit() each time, this is a fake flag */</span>
+<a name="55"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_ALWAYS</span>			(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)	<span class="comment">/**&lt; always transmit this entity */</span>
+<a name="56"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_DONTSEND</span>		(<span class="number">1</span>&lt;&lt;<span class="number">4</span>)	<span class="comment">/**&lt; don't transmit this entity */</span>
+<a name="57"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_PVSCHECK</span>		(<span class="number">1</span>&lt;&lt;<span class="number">5</span>)	<span class="comment">/**&lt; always transmit entity, but cull against PVS */</span>
+<a name="58"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_PENDING_DORMANT_CHECK</span>	(<span class="number">1</span>&lt;&lt;<span class="number">6</span>)
+<a name="59"></a></span><span class="preprocessor">#define <span class="identifier">FL_EDICT_DIRTY_PVS_INFORMATION</span>	(<span class="number">1</span>&lt;&lt;<span class="number">7</span>)
+<a name="60"></a></span><span class="preprocessor">#define <span class="identifier">FL_FULL_EDICT_CHANGED</span>		(<span class="number">1</span>&lt;&lt;<span class="number">8</span>)
+<a name="61"></a></span>
+<a name="62"></a><span class="keyword">enum</span> <span class="identifier">PropFieldType</span>
+<a name="63"></a>{
+<a name="64"></a>	<span class="identifier">PropField_Unsupported</span>,		<span class="comment">/**&lt; The type is unsupported. */</span>
+<a name="65"></a>	<span class="identifier">PropField_Integer</span>,			<span class="comment">/**&lt; Valid for SendProp and Data fields */</span>
+<a name="66"></a>	<span class="identifier">PropField_Float</span>,			<span class="comment">/**&lt; Valid for SendProp and Data fields */</span>
+<a name="67"></a>	<span class="identifier">PropField_Entity</span>,			<span class="comment">/**&lt; Valid for Data fields only (SendProp shows as int) */</span>
+<a name="68"></a>	<span class="identifier">PropField_Vector</span>,			<span class="comment">/**&lt; Valid for SendProp and Data fields */</span>
+<a name="69"></a>	<span class="identifier">PropField_String</span>,			<span class="comment">/**&lt; Valid for SendProp and Data fields */</span>
+<a name="70"></a>	<span class="identifier">PropField_String_T</span>,			<span class="comment">/**&lt; Valid for Data fields.  Read only.  
+<a name="71"></a>									 Note that the size of a string_t is dynamic, and 
+<a name="72"></a>									 thus FindDataMapOffs() will return the constant size 
+<a name="73"></a>									 of the string_t container (which is 32 bits right now).
+<a name="74"></a>								 */</span>
+<a name="75"></a>};
+<a name="76"></a>
+<a name="77"></a><span class="comment">/**
+<a name="78"></a> * <span class="doctag">@endsection</span>
+<a name="79"></a> */</span>
+<a name="80"></a>
+<a name="81"></a><span class="comment">/**
+<a name="82"></a> * Returns the maximum number of entities.
+<a name="83"></a> *
+<a name="84"></a> * <span class="doctag">@return</span>				Maximum number of entities.
+<a name="85"></a> */</span>
+<a name="86"></a><span class="keyword">native</span> <span class="identifier">GetMaxEntities</span>();
+<a name="87"></a>
+<a name="88"></a><span class="comment">/**
+<a name="89"></a> * Returns the number of entities in the server.
+<a name="90"></a> *
+<a name="91"></a> * <span class="doctag">@return</span>				Number of entities in the server.
+<a name="92"></a> */</span>
+<a name="93"></a><span class="keyword">native</span> <span class="identifier">GetEntityCount</span>();
+<a name="94"></a>
+<a name="95"></a><span class="comment">/**
+<a name="96"></a> * Returns whether or not an entity is valid.  Returns false
+<a name="97"></a> * if there is no matching CBaseEntity for this edict index.
+<a name="98"></a> *
+<a name="99"></a> * <span class="doctag">@param</span> edict			Index of the entity/edict.
+<a name="100"></a> * <span class="doctag">@return</span>				True if valid, false otherwise.
+<a name="101"></a> */</span>
+<a name="102"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsValidEntity</span>(<span class="identifier">edict</span>);
+<a name="103"></a>
+<a name="104"></a><span class="comment">/**
+<a name="105"></a> * Returns whether or not an edict index is valid.
+<a name="106"></a> *
+<a name="107"></a> * <span class="doctag">@param</span> edict			Index of the edict.
+<a name="108"></a> * <span class="doctag">@return</span>				True if valid, false otherwise.
+<a name="109"></a> */</span>
+<a name="110"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsValidEdict</span>(<span class="identifier">edict</span>);
+<a name="111"></a>
+<a name="112"></a><span class="comment">/**
+<a name="113"></a> * Returns whether or not an entity is a valid networkable edict.
+<a name="114"></a> *
+<a name="115"></a> * <span class="doctag">@param</span> edict			Index of the edict.
+<a name="116"></a> * <span class="doctag">@return</span>				True if networkable, false if invalid or not networkable.
+<a name="117"></a> */</span>
+<a name="118"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsEntNetworkable</span>(<span class="identifier">edict</span>);
+<a name="119"></a>
+<a name="120"></a><span class="comment">/**
+<a name="121"></a> * Creates a new edict (the basis of a networkable entity)
+<a name="122"></a> *
+<a name="123"></a> * <span class="doctag">@return</span>				Index of the edict, 0 on failure.
+<a name="124"></a> */</span>
+<a name="125"></a><span class="keyword">native</span> <span class="identifier">CreateEdict</span>();
+<a name="126"></a>
+<a name="127"></a><span class="comment">/** 
+<a name="128"></a> * Removes an edict from the world.
+<a name="129"></a> *
+<a name="130"></a> * <span class="doctag">@param</span> edict			Index of the edict.
+<a name="131"></a> * <span class="doctag">@noreturn</span>
+<a name="132"></a> * <span class="doctag">@error</span>				Invalid edict index.
+<a name="133"></a> */</span>
+<a name="134"></a><span class="keyword">native</span> <span class="identifier">RemoveEdict</span>(<span class="identifier">edict</span>);
+<a name="135"></a>
+<a name="136"></a><span class="comment">/**
+<a name="137"></a> * Returns the flags on an edict.  These are not the same as entity flags.
+<a name="138"></a> *
+<a name="139"></a> * <span class="doctag">@param</span> edict			Index of the entity.
+<a name="140"></a> * <span class="doctag">@return</span>				Edict flags.
+<a name="141"></a> * <span class="doctag">@error</span>				Invalid edict index.
+<a name="142"></a> */</span>
+<a name="143"></a><span class="keyword">native</span> <span class="identifier">GetEdictFlags</span>(<span class="identifier">edict</span>);
+<a name="144"></a>
+<a name="145"></a><span class="comment">/**
+<a name="146"></a> * Sets the flags on an edict.  These are not the same as entity flags.
+<a name="147"></a> *
+<a name="148"></a> * <span class="doctag">@param</span> edict			Index of the entity.
+<a name="149"></a> * <span class="doctag">@param</span> flags			Flags to set.
+<a name="150"></a> * <span class="doctag">@noreturn</span>
+<a name="151"></a> * <span class="doctag">@error</span>				Invalid edict index.
+<a name="152"></a> */</span>
+<a name="153"></a><span class="keyword">native</span> <span class="identifier">SetEdictFlags</span>(<span class="identifier">edict</span>, <span class="identifier">flags</span>);
+<a name="154"></a>
+<a name="155"></a><span class="comment">/**
+<a name="156"></a> * Retrieves an edict classname.
+<a name="157"></a> *
+<a name="158"></a> * <span class="doctag">@param</span> edict			Index of the entity.
+<a name="159"></a> * <span class="doctag">@param</span> clsname		Buffer to store the classname.
+<a name="160"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="161"></a> * <span class="doctag">@return</span>				True on success, false if there is no classname set.
+<a name="162"></a> */</span>
+<a name="163"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetEdictClassname</span>(<span class="identifier">edict</span>, <span class="keyword type">String</span>:<span class="identifier">clsname</span>[], <span class="identifier">maxlength</span>);
+<a name="164"></a>
+<a name="165"></a><span class="comment">/**
+<a name="166"></a> * Retrieves an entity's networkable serverclass name.
+<a name="167"></a> * This is not the same as the classname and is used for networkable state changes.
+<a name="168"></a> *
+<a name="169"></a> * <span class="doctag">@param</span> edict			Index of the entity.
+<a name="170"></a> * <span class="doctag">@param</span> clsname		Buffer to store the serverclass name.
+<a name="171"></a> * <span class="doctag">@param</span> maxlength		Maximum lnegth of the buffer.
+<a name="172"></a> * <span class="doctag">@return</span>				True on success, false if the edict is not networkable.
+<a name="173"></a> * <span class="doctag">@error</span>				Invalid edict index.
+<a name="174"></a> */</span>
+<a name="175"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetEntityNetClass</span>(<span class="identifier">edict</span>, <span class="keyword type">String</span>:<span class="identifier">clsname</span>[], <span class="identifier">maxlength</span>);
+<a name="176"></a>
+<a name="177"></a><span class="comment">/**
+<a name="178"></a> * <span class="doctag">@section</span> Entity offset functions
+<a name="179"></a> *
+<a name="180"></a> * Offsets should be specified in byte distance from the CBaseEntity 
+<a name="181"></a> * structure, not short (double byte) or integer (four byte) multiples.  
+<a name="182"></a> * It is somewhat common practice to use offsets aligned to their final 
+<a name="183"></a> * type, and thus make sure you are not falling to this error in SourceMod.
+<a name="184"></a> * For example, if your "integer-aligned" offset was 119, your byte-aligned
+<a name="185"></a> * offset is 119*4, or 476.
+<a name="186"></a> 
+<a name="187"></a> * Specifying incorrect offsets or the incorrect data type for an offset
+<a name="188"></a> * can have fatal consequences.  If you are hardcoding offsets, and the 
+<a name="189"></a> * layout of CBaseEntity does not match, you can easily crash the server.
+<a name="190"></a> *
+<a name="191"></a> * The reasonable bounds for offsets is greater than or equal to 0 and 
+<a name="192"></a> * below 32768.  Offsets out of these bounds will throw an error.  However,
+<a name="193"></a> * this does not represent any real range, it is simply a sanity check for
+<a name="194"></a> * illegal values.  Any range outside of the CBaseEntity structure's private
+<a name="195"></a> * size will cause undefined behaviour or even crash.
+<a name="196"></a> */</span>
+<a name="197"></a> 
+<a name="198"></a><span class="comment">/**
+<a name="199"></a> * Marks an entity as state changed.  This can be useful if you set an offset 
+<a name="200"></a> * and wish for it to be immediately changed over the network.  By default this 
+<a name="201"></a> * is not done for offset setting functions.  
+<a name="202"></a> *
+<a name="203"></a> * <span class="doctag">@param</span> edict			Index to the edict.
+<a name="204"></a> * <span class="doctag">@param</span> offset		Offset to mark as changed.  If 0, 
+<a name="205"></a> *						the entire edict is marked as changed.
+<a name="206"></a> * <span class="doctag">@noreturn</span>
+<a name="207"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of bounds.
+<a name="208"></a> */</span>
+<a name="209"></a><span class="keyword">native</span> <span class="identifier">ChangeEdictState</span>(<span class="identifier">edict</span>, <span class="identifier">offset</span> = <span class="number">0</span>);
+<a name="210"></a>
+<a name="211"></a><span class="comment">/**
+<a name="212"></a> * Peeks into an entity's object data and retrieves the integer value at 
+<a name="213"></a> * the given offset.
+<a name="214"></a> * 
+<a name="215"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="216"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="217"></a> * <span class="doctag">@param</span> size			Number of bytes to read (valid values are 1, 2, or 4).
+<a name="218"></a> * <span class="doctag">@return</span>				Value at the given memory location.
+<a name="219"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="220"></a> */</span>
+<a name="221"></a><span class="keyword">native</span> <span class="identifier">GetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="identifier">size</span>=<span class="number">4</span>);
+<a name="222"></a>
+<a name="223"></a><span class="comment">/**
+<a name="224"></a> * Peeks into an entity's object data and sets the integer value at 
+<a name="225"></a> * the given offset.
+<a name="226"></a> *
+<a name="227"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="228"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="229"></a> * <span class="doctag">@param</span> value			Value to set.
+<a name="230"></a> * <span class="doctag">@param</span> size			Number of bytes to write (valid values are 1, 2, or 4).
+<a name="231"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="232"></a> * <span class="doctag">@return</span>				Value at the given memory location.
+<a name="233"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="234"></a> * <span class="doctag">@noreturn</span>
+<a name="235"></a> */</span>
+<a name="236"></a><span class="keyword">native</span> <span class="identifier">SetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="keyword type">any</span>:<span class="identifier">value</span>, <span class="identifier">size</span>=<span class="number">4</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="237"></a>
+<a name="238"></a><span class="comment">/**
+<a name="239"></a> * Peeks into an entity's object data and retrieves the float value at 
+<a name="240"></a> * the given offset.
+<a name="241"></a> * 
+<a name="242"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="243"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="244"></a> * <span class="doctag">@return</span>				Value at the given memory location.
+<a name="245"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="246"></a> */</span>
+<a name="247"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetEntDataFloat</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>);
+<a name="248"></a>
+<a name="249"></a><span class="comment">/**
+<a name="250"></a> * Peeks into an entity's object data and sets the float value at 
+<a name="251"></a> * the given offset.
+<a name="252"></a> *
+<a name="253"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="254"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="255"></a> * <span class="doctag">@param</span> value			Value to set.
+<a name="256"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="257"></a> * <span class="doctag">@return</span>				Value at the given memory location.
+<a name="258"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="259"></a> * <span class="doctag">@noreturn</span>
+<a name="260"></a> */</span>
+<a name="261"></a><span class="keyword">native</span> <span class="identifier">SetEntDataFloat</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="keyword type">Float</span>:<span class="identifier">value</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="262"></a>
+<a name="263"></a><span class="comment">/**
+<a name="264"></a> * This function is deprecated.  Use GetEntDataEnt2 instead, for 
+<a name="265"></a> * reasons explained in the notes.
+<a name="266"></a> *
+<a name="267"></a> * Note: This function returns 0 on failure, which may be misleading, 
+<a name="268"></a> * as the number 0 is also used for the world entity index.
+<a name="269"></a> *
+<a name="270"></a> * Note: This function makes no attempt to validate the returned 
+<a name="271"></a> * entity, and in fact, it could be garbage or completely unexpected.
+<a name="272"></a> * 
+<a name="273"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="274"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="275"></a> * <span class="doctag">@return</span>				Entity index at the given location, or 0 if none.
+<a name="276"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="277"></a> */</span>
+<a name="278"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">GetEntDataEnt2</span>() <span class="identifier">instead</span>.
+<a name="279"></a></span><span class="keyword">native</span> <span class="identifier">GetEntDataEnt</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>);
+<a name="280"></a>
+<a name="281"></a><span class="comment">/**
+<a name="282"></a> * This function is deprecated.   Use SetEntDataEnt2 instead, for 
+<a name="283"></a> * reasons explained in the notes.
+<a name="284"></a> *
+<a name="285"></a> * Note: This function uses 0 as an indicator to unset data, but 
+<a name="286"></a> * 0 is also the world entity index.  Thus, a property cannot 
+<a name="287"></a> * be set to the world entity using this native.
+<a name="288"></a> * 
+<a name="289"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="290"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="291"></a> * <span class="doctag">@param</span> other			Entity index to set, or 0 to clear.
+<a name="292"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="293"></a> * <span class="doctag">@noreturn</span>
+<a name="294"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="295"></a> */</span>
+<a name="296"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">SetEntDataEnt2</span>() <span class="identifier">instead</span>.
+<a name="297"></a></span><span class="keyword">native</span> <span class="identifier">SetEntDataEnt</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="identifier">other</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="298"></a>
+<a name="299"></a><span class="comment">/**
+<a name="300"></a> * Peeks into an entity's object data and retrieves the entity index 
+<a name="301"></a> * at the given offset.
+<a name="302"></a> *
+<a name="303"></a> * Note: This will only work on offsets that are stored as "entity 
+<a name="304"></a> * handles" (which usually looks like m_h* in properties).  These 
+<a name="305"></a> * are not SourceMod Handles, but internal Source structures.
+<a name="306"></a> * 
+<a name="307"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="308"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="309"></a> * <span class="doctag">@return</span>				Entity index at the given location.  If there is no entity, 
+<a name="310"></a> *						or the stored entity is invalid, then -1 is returned.
+<a name="311"></a> * <span class="doctag">@error</span>				Invalid input entity, or offset out of reasonable bounds.
+<a name="312"></a> */</span>
+<a name="313"></a><span class="keyword">native</span> <span class="identifier">GetEntDataEnt2</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>);
+<a name="314"></a>
+<a name="315"></a><span class="comment">/**
+<a name="316"></a> * Peeks into an entity's object data and sets the entity index at the 
+<a name="317"></a> * given offset.
+<a name="318"></a> *
+<a name="319"></a> * Note: This will only work on offsets that are stored as "entity 
+<a name="320"></a> * handles" (which usually looks like m_h* in properties).  These 
+<a name="321"></a> * are not SourceMod Handles, but internal Source structures.
+<a name="322"></a> * 
+<a name="323"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="324"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="325"></a> * <span class="doctag">@param</span> other			Entity index to set, or -1 to clear.
+<a name="326"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="327"></a> * <span class="doctag">@noreturn</span>
+<a name="328"></a> * <span class="doctag">@error</span>				Invalid input entity, or offset out of reasonable bounds.
+<a name="329"></a> */</span>
+<a name="330"></a><span class="keyword">native</span> <span class="identifier">SetEntDataEnt2</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="identifier">other</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="331"></a>
+<a name="332"></a><span class="comment">/**
+<a name="333"></a> * Peeks into an entity's object data and retrieves the vector at the 
+<a name="334"></a> * given offset.
+<a name="335"></a> * <span class="doctag">@note</span> Both a Vector and a QAngle are three floats.  This is a 
+<a name="336"></a> * convenience function and will work with both types.
+<a name="337"></a> * 
+<a name="338"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="339"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="340"></a> * <span class="doctag">@param</span> vec			Vector buffer to store data in.
+<a name="341"></a> * <span class="doctag">@noreturn</span>
+<a name="342"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="343"></a> */</span>
+<a name="344"></a><span class="keyword">native</span> <span class="identifier">GetEntDataVector</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>]);
+<a name="345"></a>
+<a name="346"></a><span class="comment">/**
+<a name="347"></a> * Peeks into an entity's object data and sets the vector at the given 
+<a name="348"></a> * offset.
+<a name="349"></a> * <span class="doctag">@note</span> Both a Vector and a QAngle are three floats.  This is a 
+<a name="350"></a> * convenience function and will work with both types.
+<a name="351"></a> * 
+<a name="352"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="353"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="354"></a> * <span class="doctag">@param</span> vec			Vector to set.
+<a name="355"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="356"></a> * <span class="doctag">@noreturn</span>
+<a name="357"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="358"></a> */</span>
+<a name="359"></a><span class="keyword">native</span> <span class="identifier">SetEntDataVector</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="360"></a>
+<a name="361"></a><span class="comment">/**
+<a name="362"></a> * Peeks into an entity's object data and retrieves the string at 
+<a name="363"></a> * the given offset.
+<a name="364"></a> * 
+<a name="365"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="366"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="367"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="368"></a> * <span class="doctag">@param</span> maxlen		Maximum length of output string buffer.
+<a name="369"></a> * <span class="doctag">@return</span>			Number of non-null bytes written.
+<a name="370"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="371"></a> */</span>
+<a name="372"></a><span class="keyword">native</span> <span class="identifier">GetEntDataString</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>);
+<a name="373"></a>
+<a name="374"></a><span class="comment">/**
+<a name="375"></a> * Peeks into an entity's object data and sets the string at 
+<a name="376"></a> * the given offset.
+<a name="377"></a> * 
+<a name="378"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="379"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="380"></a> * <span class="doctag">@param</span> buffer		String to set.
+<a name="381"></a> * <span class="doctag">@param</span> maxlen		Maximum length of bytes to write.
+<a name="382"></a> * <span class="doctag">@param</span> changeState	If true, change will be sent over the network.
+<a name="383"></a> * <span class="doctag">@return</span>			Number of non-null bytes written.
+<a name="384"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="385"></a> */</span>
+<a name="386"></a><span class="keyword">native</span> <span class="identifier">SetEntDataString</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>);
+<a name="387"></a>
+<a name="388"></a><span class="comment">/**
+<a name="389"></a> * <span class="doctag">@endsection</span>
+<a name="390"></a> */</span>
+<a name="391"></a>
+<a name="392"></a><span class="comment">/**
+<a name="393"></a> * Given a ServerClass name, finds a networkable send property offset.
+<a name="394"></a> * This information is cached for future calls.
+<a name="395"></a> *
+<a name="396"></a> * Note, this function may return offsets that do not work!
+<a name="397"></a> * If a property is nested beneath a parent object, the resulting offset 
+<a name="398"></a> * will be invalid for direct use with data functions.  Therefore, you 
+<a name="399"></a> * should use FindSendPropInfo() instead.  An example of such a property is 
+<a name="400"></a> * CTFPlayer::DT_LocalPlayer.m_nDisguiseClass on Team Fortress.
+<a name="401"></a> *
+<a name="402"></a> * <span class="doctag">@param</span> cls			Classname.
+<a name="403"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="404"></a> * <span class="doctag">@return</span>				An offset, or -1 on failure.
+<a name="405"></a> */</span>
+<a name="406"></a><span class="keyword">native</span> <span class="identifier">FindSendPropOffs</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cls</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[]);
+<a name="407"></a>
+<a name="408"></a><span class="comment">/**
+<a name="409"></a> * Given a ServerClass name, finds a networkable send property offset.
+<a name="410"></a> * This information is cached for future calls.
+<a name="411"></a> * 
+<a name="412"></a> * Note: This function will correctly compute nested offsets, unlike 
+<a name="413"></a> * FindSendPropOffs().  YOU SHOULD NOT use this function to self-compute 
+<a name="414"></a> * nested offsets.  For example, it is okay to add indexes for arrays, 
+<a name="415"></a> * but not to add DT_LocalPlayer to m_nDisguiseClass.
+<a name="416"></a> *
+<a name="417"></a> * <span class="doctag">@param</span> cls			Classname.
+<a name="418"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="419"></a> * <span class="doctag">@param</span> type			Optional parameter to store the type.
+<a name="420"></a> * <span class="doctag">@param</span> num_bits		Optional parameter to store the number of bits the field 
+<a name="421"></a> *						uses, if applicable (otherwise 0 is stored).  The number 
+<a name="422"></a> *						of bits varies for integers and floats, and is always 0 
+<a name="423"></a> * 						for strings.
+<a name="424"></a> * <span class="doctag">@param</span> local_offset	Optional parameter to store the local offset, as 
+<a name="425"></a> *						FindSendPropOffs() would return.
+<a name="426"></a> * <span class="doctag">@return</span>				On success, returns an absolutely computed offset.
+<a name="427"></a> *						If no offset is available, 0 is returned.
+<a name="428"></a> *						If the property is not found, -1 is returned.
+<a name="429"></a> */</span>
+<a name="430"></a><span class="keyword">native</span> <span class="identifier">FindSendPropInfo</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cls</span>[], 
+<a name="431"></a>						<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], 
+<a name="432"></a>						&amp;<span class="identifier">PropFieldType</span>:<span class="identifier">type</span>=<span class="identifier">PropFieldType</span>:<span class="number">0</span>,
+<a name="433"></a>						&amp;<span class="identifier">num_bits</span>=<span class="number">0</span>,
+<a name="434"></a>						&amp;<span class="identifier">local_offset</span>=<span class="number">0</span>);
+<a name="435"></a>
+<a name="436"></a><span class="comment">/**
+<a name="437"></a> * Given an entity, finds a datamap property offset.
+<a name="438"></a> * This information is cached for future calls.
+<a name="439"></a> *
+<a name="440"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="441"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="442"></a> * <span class="doctag">@param</span> type			Optional parameter to store the type.
+<a name="443"></a> * <span class="doctag">@param</span> num_bits		Optional parameter to store the number of bits the field 
+<a name="444"></a> *						uses.  The bit count will either be 1 (for boolean) or 
+<a name="445"></a> *						divisible by 8 (including 0 if unknown).
+<a name="446"></a> * <span class="doctag">@return</span>				An offset, or -1 on failure.
+<a name="447"></a> */</span>
+<a name="448"></a><span class="keyword">native</span> <span class="identifier">FindDataMapOffs</span>(<span class="identifier">entity</span>, 
+<a name="449"></a>					   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[],
+<a name="450"></a>					   &amp;<span class="identifier">PropFieldType</span>:<span class="identifier">type</span>=<span class="identifier">PropFieldType</span>:<span class="number">0</span>,
+<a name="451"></a>					   &amp;<span class="identifier">num_bits</span>=<span class="number">0</span>);
+<a name="452"></a>
+<a name="453"></a><span class="comment">/**
+<a name="454"></a> * Wrapper function for finding a send property for a particular entity.
+<a name="455"></a> *
+<a name="456"></a> * <span class="doctag">@param</span> ent			Entity index.
+<a name="457"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="458"></a> * <span class="doctag">@param</span> actual		Defaults to false for backwards compatibility.
+<a name="459"></a> *						If true, the newer FindSendPropInfo() function 
+<a name="460"></a> *						is used instead.
+<a name="461"></a> * <span class="doctag">@return</span>				An offset, or -1 on failure.
+<a name="462"></a> */</span>
+<a name="463"></a><span class="keyword">stock</span> <span class="identifier">GetEntSendPropOffs</span>(<span class="identifier">ent</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">bool</span>:<span class="identifier">actual</span>=<span class="keyword literal">false</span>)
+<a name="464"></a>{
+<a name="465"></a>	<span class="identifier">decl</span> <span class="keyword type">String</span>:<span class="identifier">cls</span>[<span class="number">64</span>];
+<a name="466"></a>	
+<a name="467"></a>	<span class="keyword statement">if</span> (!<span class="identifier">GetEntityNetClass</span>(<span class="identifier">ent</span>, <span class="identifier">cls</span>, <span class="keyword ">sizeof</span>(<span class="identifier">cls</span>)))
+<a name="468"></a>	{
+<a name="469"></a>		<span class="keyword statement">return</span> -<span class="number">1</span>;
+<a name="470"></a>	}
+<a name="471"></a>	
+<a name="472"></a>	<span class="keyword statement">if</span> (<span class="identifier">actual</span>)
+<a name="473"></a>	{
+<a name="474"></a>		<span class="keyword statement">return</span> <span class="identifier">FindSendPropInfo</span>(<span class="identifier">cls</span>, <span class="identifier">prop</span>);
+<a name="475"></a>	}
+<a name="476"></a>	<span class="keyword statement">else</span>
+<a name="477"></a>	{
+<a name="478"></a>		<span class="keyword statement">return</span> <span class="identifier">FindSendPropOffs</span>(<span class="identifier">cls</span>, <span class="identifier">prop</span>);
+<a name="479"></a>	}
+<a name="480"></a>}
+<a name="481"></a>
+<a name="482"></a><span class="comment">/**
+<a name="483"></a> * Retrieves an integer value from an entity's property.
+<a name="484"></a> *
+<a name="485"></a> * This function is considered safer and more robust over GetEntData, 
+<a name="486"></a> * because it performs strict offset checking and typing rules.
+<a name="487"></a> * 
+<a name="488"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="489"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="490"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="491"></a> * <span class="doctag">@param</span> size			Number of bytes to write (valid values are 1, 2, or 4).
+<a name="492"></a> *						This value is auto-detected, and the size parameter is 
+<a name="493"></a> *						only used as a fallback in case detection fails.
+<a name="494"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="495"></a> * <span class="doctag">@return</span>				Value at the given property offset.
+<a name="496"></a> * <span class="doctag">@error</span>				Invalid entity or property not found.
+<a name="497"></a> */</span>
+<a name="498"></a><span class="keyword">native</span> <span class="identifier">GetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">size</span>=<span class="number">4</span>, <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="499"></a>
+<a name="500"></a><span class="comment">/**
+<a name="501"></a> * Sets an integer value in an entity's property.
+<a name="502"></a> *
+<a name="503"></a> * This function is considered safer and more robust over SetEntData, 
+<a name="504"></a> * because it performs strict offset checking and typing rules.
+<a name="505"></a> * 
+<a name="506"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="507"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="508"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="509"></a> * <span class="doctag">@param</span> value			Value to set.
+<a name="510"></a> * <span class="doctag">@param</span> size			Number of bytes to write (valid values are 1, 2, or 4).
+<a name="511"></a> *						This value is auto-detected, and the size parameter is 
+<a name="512"></a> *						only used as a fallback in case detection fails.
+<a name="513"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="514"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="515"></a> * <span class="doctag">@noreturn</span>
+<a name="516"></a> */</span>
+<a name="517"></a><span class="keyword">native</span> <span class="identifier">SetEntProp</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">any</span>:<span class="identifier">value</span>, <span class="identifier">size</span>=<span class="number">4</span>, <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="518"></a>
+<a name="519"></a><span class="comment">/**
+<a name="520"></a> * Retrieves a float value from an entity's property.
+<a name="521"></a> *
+<a name="522"></a> * This function is considered safer and more robust over GetEntDataFloat, 
+<a name="523"></a> * because it performs strict offset checking and typing rules.
+<a name="524"></a> * 
+<a name="525"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="526"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="527"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="528"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="529"></a> * <span class="doctag">@return</span>				Value at the given property offset.
+<a name="530"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="531"></a> */</span>
+<a name="532"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetEntPropFloat</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="533"></a>
+<a name="534"></a><span class="comment">/**
+<a name="535"></a> * Sets a float value in an entity's property.
+<a name="536"></a> *
+<a name="537"></a> * This function is considered safer and more robust over SetEntDataFloat, 
+<a name="538"></a> * because it performs strict offset checking and typing rules.
+<a name="539"></a> * 
+<a name="540"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="541"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="542"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="543"></a> * <span class="doctag">@param</span> value			Value to set.
+<a name="544"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="545"></a> * <span class="doctag">@noreturn</span>
+<a name="546"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="547"></a> */</span>
+<a name="548"></a><span class="keyword">native</span> <span class="identifier">SetEntPropFloat</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">Float</span>:<span class="identifier">value</span>, <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="549"></a>
+<a name="550"></a><span class="comment">/**
+<a name="551"></a> * Retrieves an entity index from an entity's property.
+<a name="552"></a> *
+<a name="553"></a> * This function is considered safer and more robust over GetEntDataEnt*, 
+<a name="554"></a> * because it performs strict offset checking and typing rules.
+<a name="555"></a> * 
+<a name="556"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="557"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="558"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="559"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="560"></a> * <span class="doctag">@return</span>				Entity index at the given property.
+<a name="561"></a> *						If there is no entity, or the entity is not valid, 
+<a name="562"></a> *						then -1 is returned.
+<a name="563"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="564"></a> */</span>
+<a name="565"></a><span class="keyword">native</span> <span class="identifier">GetEntPropEnt</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="566"></a>
+<a name="567"></a><span class="comment">/**
+<a name="568"></a> * Sets an entity index in an entity's property.
+<a name="569"></a> *
+<a name="570"></a> * This function is considered safer and more robust over SetEntDataEnt*, 
+<a name="571"></a> * because it performs strict offset checking and typing rules.
+<a name="572"></a> * 
+<a name="573"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="574"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="575"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="576"></a> * <span class="doctag">@param</span> other			Entity index to set, or -1 to unset.
+<a name="577"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="578"></a> * <span class="doctag">@noreturn</span>
+<a name="579"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="580"></a> */</span>
+<a name="581"></a><span class="keyword">native</span> <span class="identifier">SetEntPropEnt</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="identifier">other</span>, <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="582"></a>
+<a name="583"></a><span class="comment">/**
+<a name="584"></a> * Retrieves a vector of floats from an entity, given a named network property.
+<a name="585"></a> *
+<a name="586"></a> * This function is considered safer and more robust over GetEntDataVector, 
+<a name="587"></a> * because it performs strict offset checking and typing rules.
+<a name="588"></a> * 
+<a name="589"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="590"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="591"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="592"></a> * <span class="doctag">@param</span> vec			Vector buffer to store data in.
+<a name="593"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="594"></a> * <span class="doctag">@noreturn</span>
+<a name="595"></a> * <span class="doctag">@error</span>				Invalid entity, property not found, or property not 
+<a name="596"></a> *						actually a vector data type.
+<a name="597"></a> */</span>
+<a name="598"></a><span class="keyword">native</span> <span class="identifier">GetEntPropVector</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="599"></a>
+<a name="600"></a><span class="comment">/**
+<a name="601"></a> * Sets a vector of floats in an entity, given a named network property.
+<a name="602"></a> *
+<a name="603"></a> * This function is considered safer and more robust over SetEntDataVector, 
+<a name="604"></a> * because it performs strict offset checking and typing rules.
+<a name="605"></a> * 
+<a name="606"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="607"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="608"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="609"></a> * <span class="doctag">@param</span> vec			Vector to set.
+<a name="610"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="611"></a> * <span class="doctag">@noreturn</span>
+<a name="612"></a> * <span class="doctag">@error</span>				Invalid entity, property not found, or property not 
+<a name="613"></a> *						actually a vector data type.
+<a name="614"></a> */</span>
+<a name="615"></a><span class="keyword">native</span> <span class="identifier">SetEntPropVector</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="616"></a>
+<a name="617"></a><span class="comment">/**
+<a name="618"></a> * Gets a network property as a string.
+<a name="619"></a> * 
+<a name="620"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="621"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="622"></a> * <span class="doctag">@param</span> prop			Property to use.
+<a name="623"></a> * <span class="doctag">@param</span> buffer		Destination string buffer.
+<a name="624"></a> * <span class="doctag">@param</span> maxlen		Maximum length of output string buffer.		
+<a name="625"></a> * <span class="doctag">@param</span> element		Element # (starting from 0) if property is an array.
+<a name="626"></a> * <span class="doctag">@return</span>				Number of non-null bytes written.
+<a name="627"></a> * <span class="doctag">@error</span>				Invalid entity, offset out of reasonable bounds, or property is not a valid string.
+<a name="628"></a> */</span>
+<a name="629"></a><span class="keyword">native</span> <span class="identifier">GetEntPropString</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>, <span class="identifier">element</span>=<span class="number">0</span>);
+<a name="630"></a>
+<a name="631"></a><span class="comment">/**
+<a name="632"></a> * Sets a network property as a string.
+<a name="633"></a> *
+<a name="634"></a> * This cannot set property fields of type PropField_String_T (such as "m_target").
+<a name="635"></a> * To set such fields, you should use DispatchKeyValue() from SDKTools.
+<a name="636"></a> * 
+<a name="637"></a> * <span class="doctag">@param</span> entity		Edict index.
+<a name="638"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="639"></a> * <span class="doctag">@param</span> prop			Property to use.
+<a name="640"></a> * <span class="doctag">@param</span> buffer		String to set.		
+<a name="641"></a> * <span class="doctag">@return</span>				Number of non-null bytes written.
+<a name="642"></a> * <span class="doctag">@error</span>				Invalid entity, offset out of reasonable bounds, or property is not a valid string.
+<a name="643"></a> */</span>
+<a name="644"></a><span class="keyword">native</span> <span class="identifier">SetEntPropString</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">buffer</span>[]);
+<a name="645"></a>
+<a name="646"></a><span class="comment">/**
+<a name="647"></a> * Retrieves the count of values that an entity property's array can store.
+<a name="648"></a> * 
+<a name="649"></a> * <span class="doctag">@param</span> entity		Entity/edict index.
+<a name="650"></a> * <span class="doctag">@param</span> type			Property type.
+<a name="651"></a> * <span class="doctag">@param</span> prop			Property name.
+<a name="652"></a> * <span class="doctag">@return</span>				Size of array (in elements) or 1 if property is not an array.
+<a name="653"></a> * <span class="doctag">@error</span>				Invalid entity or property not found.
+<a name="654"></a> */</span>
+<a name="655"></a><span class="keyword">native</span> <span class="identifier">GetEntPropArraySize</span>(<span class="identifier">entity</span>, <span class="identifier">PropType</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">prop</span>[]);
+<a name="656"></a>
+<a name="657"></a><span class="comment">/**
+<a name="658"></a> * Copies an array of cells from an entity at a given offset.
+<a name="659"></a> *
+<a name="660"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="661"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="662"></a> * <span class="doctag">@param</span> array			Array to read into.
+<a name="663"></a> * <span class="doctag">@param</span> arraySize		Number of values to read.
+<a name="664"></a> * <span class="doctag">@param</span> dataSize		Size of each value in bytes (1, 2, or 4).
+<a name="665"></a> * <span class="doctag">@noreturn</span>
+<a name="666"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="667"></a> */</span>
+<a name="668"></a><span class="keyword">stock</span> <span class="identifier">GetEntDataArray</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="identifier">array</span>[], <span class="identifier">arraySize</span>, <span class="identifier">dataSize</span>=<span class="number">4</span>)
+<a name="669"></a>{
+<a name="670"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span>=<span class="number">0</span>; <span class="identifier">i</span>&lt;<span class="identifier">arraySize</span>; <span class="identifier">i</span>++)
+<a name="671"></a>	{
+<a name="672"></a>		<span class="identifier">array</span>[<span class="identifier">i</span>] = <span class="identifier">GetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span> + <span class="identifier">i</span>*<span class="identifier">dataSize</span>, <span class="identifier">dataSize</span>)
+<a name="673"></a>	}
+<a name="674"></a>}
+<a name="675"></a>
+<a name="676"></a><span class="comment">/**
+<a name="677"></a> * Copies an array of cells to an entity at a given offset.
+<a name="678"></a> *
+<a name="679"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="680"></a> * <span class="doctag">@param</span> offset		Offset to use.
+<a name="681"></a> * <span class="doctag">@param</span> array			Array of values to copy.
+<a name="682"></a> * <span class="doctag">@param</span> arraySize		Number of values to copy.
+<a name="683"></a> * <span class="doctag">@param</span> dataSize		Size of each value in bytes (1, 2, or 4).
+<a name="684"></a> * <span class="doctag">@param</span> changeState	True to set the network state as changed; false otherwise.
+<a name="685"></a> * <span class="doctag">@noreturn</span>
+<a name="686"></a> * <span class="doctag">@error</span>				Invalid entity or offset out of reasonable bounds.
+<a name="687"></a> */</span>
+<a name="688"></a><span class="keyword">stock</span> <span class="identifier">SetEntDataArray</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span>, <span class="keyword">const</span> <span class="identifier">array</span>[], <span class="identifier">arraySize</span>, <span class="identifier">dataSize</span>=<span class="number">4</span>, <span class="keyword type">bool</span>:<span class="identifier">changeState</span>=<span class="keyword literal">false</span>)
+<a name="689"></a>{
+<a name="690"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span>=<span class="number">0</span>; <span class="identifier">i</span>&lt;<span class="identifier">arraySize</span>; <span class="identifier">i</span>++)
+<a name="691"></a>	{
+<a name="692"></a>		<span class="identifier">SetEntData</span>(<span class="identifier">entity</span>, <span class="identifier">offset</span> + <span class="identifier">i</span>*<span class="identifier">dataSize</span>, <span class="identifier">array</span>[<span class="identifier">i</span>], <span class="identifier">dataSize</span>, <span class="identifier">changeState</span>);
+<a name="693"></a>	}
+<a name="694"></a>}
+<a name="695"></a>
+<a name="696"></a><span class="comment">/**
+<a name="697"></a> * Gets the memory address of an entity.
+<a name="698"></a> * 
+<a name="699"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="700"></a> * <span class="doctag">@return</span>				Address of the entity.
+<a name="701"></a> * <span class="doctag">@error</span>				Invalid entity.
+<a name="702"></a> */</span>
+<a name="703"></a><span class="keyword">native</span> <span class="identifier">Address</span>:<span class="identifier">GetEntityAddress</span>(<span class="identifier">entity</span>);
+<a name="704"></a>
+<a name="705"></a><span class="comment">/**
+<a name="706"></a> * Retrieves the classname of an entity.
+<a name="707"></a> * This is like GetEdictClassname(), except it works for ALL
+<a name="708"></a> * entities, not just edicts.
+<a name="709"></a> *
+<a name="710"></a> * <span class="doctag">@param</span> entity			Index of the entity.
+<a name="711"></a> * <span class="doctag">@param</span> clsname		Buffer to store the classname.
+<a name="712"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="713"></a> * <span class="doctag">@return</span>				True on success, false if there is no classname set.
+<a name="714"></a> */</span>
+<a name="715"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">GetEntityClassname</span>(<span class="identifier">entity</span>, <span class="keyword type">String</span>:<span class="identifier">clsname</span>[], <span class="identifier">maxlength</span>)
+<a name="716"></a>{
+<a name="717"></a>	<span class="keyword statement">return</span> !!<span class="identifier">GetEntPropString</span>(<span class="identifier">entity</span>, <span class="identifier">Prop_Data</span>, <span class="string">"m_iClassname"</span>, <span class="identifier">clsname</span>, <span class="identifier">maxlength</span>);
+<a name="718"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

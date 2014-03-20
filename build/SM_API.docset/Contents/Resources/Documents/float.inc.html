@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<title>float.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_float_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_float_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Converts an integer into a floating point value.
+<a name="40"></a> *
+<a name="41"></a> * <span class="doctag">@param</span> value			Integer to convert.
+<a name="42"></a> * <span class="doctag">@return</span>				Floating point value.
+<a name="43"></a> */</span>
+<a name="44"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">float</span>(<span class="identifier">value</span>);
+<a name="45"></a>
+<a name="46"></a><span class="comment">/**
+<a name="47"></a> * Multiplies two floats together.
+<a name="48"></a> *
+<a name="49"></a> * <span class="doctag">@param</span> oper1			First value.
+<a name="50"></a> * <span class="doctag">@param</span> oper2			Second value.
+<a name="51"></a> * <span class="doctag">@return</span>				oper1*oper2.
+<a name="52"></a> */</span>
+<a name="53"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">FloatMul</span>(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>);
+<a name="54"></a>
+<a name="55"></a><span class="comment">/**
+<a name="56"></a> * Divides the dividend by the divisor.
+<a name="57"></a> *
+<a name="58"></a> * <span class="doctag">@param</span> dividend		First value.
+<a name="59"></a> * <span class="doctag">@param</span> divisor		Second value.
+<a name="60"></a> * <span class="doctag">@return</span>				dividend/divisor.
+<a name="61"></a> */</span>
+<a name="62"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">FloatDiv</span>(<span class="keyword type">Float</span>:<span class="identifier">dividend</span>, <span class="keyword type">Float</span>:<span class="identifier">divisor</span>);
+<a name="63"></a>
+<a name="64"></a><span class="comment">/**
+<a name="65"></a> * Adds two floats together.
+<a name="66"></a> *
+<a name="67"></a> * <span class="doctag">@param</span> oper1			First value.
+<a name="68"></a> * <span class="doctag">@param</span> oper2			Second value.
+<a name="69"></a> * <span class="doctag">@return</span>				oper1+oper2.
+<a name="70"></a> */</span>
+<a name="71"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">FloatAdd</span>(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>);
+<a name="72"></a>
+<a name="73"></a><span class="comment">/**
+<a name="74"></a> * Subtracts oper2 from oper1.
+<a name="75"></a> *
+<a name="76"></a> * <span class="doctag">@param</span> oper1			First value.
+<a name="77"></a> * <span class="doctag">@param</span> oper2			Second value.
+<a name="78"></a> * <span class="doctag">@return</span>				oper1-oper2.
+<a name="79"></a> */</span>
+<a name="80"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">FloatSub</span>(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>);
+<a name="81"></a>
+<a name="82"></a><span class="comment">/**
+<a name="83"></a> * Returns the decimal part of a float.
+<a name="84"></a> *
+<a name="85"></a> * <span class="doctag">@param</span> value			Input value.
+<a name="86"></a> * <span class="doctag">@return</span>				Decimal part.
+<a name="87"></a> */</span>
+<a name="88"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">FloatFraction</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="89"></a>
+<a name="90"></a><span class="comment">/**
+<a name="91"></a> * Rounds a float to the closest integer to zero.
+<a name="92"></a> *
+<a name="93"></a> * <span class="doctag">@param</span> value			Input value to be rounded.
+<a name="94"></a> * <span class="doctag">@return</span>				Rounded value.
+<a name="95"></a> */</span>
+<a name="96"></a><span class="keyword">native</span> <span class="identifier">RoundToZero</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="97"></a>
+<a name="98"></a><span class="comment">/**
+<a name="99"></a> * Rounds a float to the next highest integer value.
+<a name="100"></a> *
+<a name="101"></a> * <span class="doctag">@param</span> value			Input value to be rounded.
+<a name="102"></a> * <span class="doctag">@return</span>				Rounded value.
+<a name="103"></a> */</span>
+<a name="104"></a><span class="keyword">native</span> <span class="identifier">RoundToCeil</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="105"></a>
+<a name="106"></a><span class="comment">/**
+<a name="107"></a> * Rounds a float to the next lowest integer value.
+<a name="108"></a> *
+<a name="109"></a> * <span class="doctag">@param</span> value			Input value to be rounded.
+<a name="110"></a> * <span class="doctag">@return</span>				Rounded value.
+<a name="111"></a> */</span>
+<a name="112"></a><span class="keyword">native</span> <span class="identifier">RoundToFloor</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="113"></a>
+<a name="114"></a><span class="comment">/**
+<a name="115"></a> * Standard IEEE rounding.
+<a name="116"></a> *
+<a name="117"></a> * <span class="doctag">@param</span> value			Input value to be rounded.
+<a name="118"></a> * <span class="doctag">@return</span>				Rounded value.
+<a name="119"></a> */</span>
+<a name="120"></a><span class="keyword">native</span> <span class="identifier">RoundToNearest</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="121"></a>
+<a name="122"></a><span class="comment">/**
+<a name="123"></a> * Compares two floats.
+<a name="124"></a> *
+<a name="125"></a> * <span class="doctag">@param</span> fOne			First value.
+<a name="126"></a> * <span class="doctag">@param</span> fTwo			Second value.
+<a name="127"></a> * <span class="doctag">@return</span>				Returns 1 if the first argument is greater than the second argument.
+<a name="128"></a> *                      Returns -1 if the first argument is smaller than the second argument.
+<a name="129"></a> *                      Returns 0 if both arguments are equal.
+<a name="130"></a> */</span>
+<a name="131"></a><span class="keyword">native</span> <span class="identifier">FloatCompare</span>(<span class="keyword type">Float</span>:<span class="identifier">fOne</span>, <span class="keyword type">Float</span>:<span class="identifier">fTwo</span>);
+<a name="132"></a>
+<a name="133"></a><span class="comment">/**
+<a name="134"></a> * Returns the square root of the input value, equivalent to floatpower(value, 0.5).
+<a name="135"></a> *
+<a name="136"></a> * <span class="doctag">@param</span> value			Input value.
+<a name="137"></a> * <span class="doctag">@return</span>				Square root of the value.
+<a name="138"></a> */</span>
+<a name="139"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">SquareRoot</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="140"></a>
+<a name="141"></a><span class="comment">/**
+<a name="142"></a> * Returns the value raised to the power of the exponent.
+<a name="143"></a> *
+<a name="144"></a> * <span class="doctag">@param</span> value			Value to be raised.
+<a name="145"></a> * <span class="doctag">@param</span> exponent		Value to raise the base.
+<a name="146"></a> * <span class="doctag">@return</span>				value^exponent.
+<a name="147"></a> */</span>
+<a name="148"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">Pow</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>, <span class="keyword type">Float</span>:<span class="identifier">exponent</span>);
+<a name="149"></a>
+<a name="150"></a><span class="comment">/**
+<a name="151"></a> * Returns the value of raising the input by e.
+<a name="152"></a> *
+<a name="153"></a> * <span class="doctag">@param</span> value			Input value.
+<a name="154"></a> * <span class="doctag">@return</span>				exp(value).
+<a name="155"></a> */</span>
+<a name="156"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">Exponential</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="157"></a>
+<a name="158"></a><span class="comment">/**
+<a name="159"></a> * Returns the logarithm of any base specified.
+<a name="160"></a> *
+<a name="161"></a> * <span class="doctag">@param</span> value			Input value.
+<a name="162"></a> * <span class="doctag">@param</span> base			Logarithm base to use, default is 10.
+<a name="163"></a> * <span class="doctag">@return</span>				log(value)/log(base).
+<a name="164"></a> */</span>
+<a name="165"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">Logarithm</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>, <span class="keyword type">Float</span>:<span class="identifier">base</span>=<span class="number">10.0</span>);
+<a name="166"></a>
+<a name="167"></a><span class="comment">/**
+<a name="168"></a> * Returns the sine of the argument.
+<a name="169"></a> *
+<a name="170"></a> * <span class="doctag">@param</span> value			Input value in radians.
+<a name="171"></a> * <span class="doctag">@return</span>				sin(value).
+<a name="172"></a> */</span>
+<a name="173"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">Sine</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="174"></a>
+<a name="175"></a><span class="comment">/**
+<a name="176"></a> * Returns the cosine of the argument.
+<a name="177"></a> *
+<a name="178"></a> * <span class="doctag">@param</span> value			Input value in radians.
+<a name="179"></a> * <span class="doctag">@return</span>				cos(value).
+<a name="180"></a> */</span>
+<a name="181"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">Cosine</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="182"></a>
+<a name="183"></a><span class="comment">/**
+<a name="184"></a> * Returns the tangent of the argument.
+<a name="185"></a> *
+<a name="186"></a> * <span class="doctag">@param</span> value			Input value in radians.
+<a name="187"></a> * <span class="doctag">@return</span>				tan(value).
+<a name="188"></a> */</span>
+<a name="189"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">Tangent</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="190"></a>
+<a name="191"></a><span class="comment">/**
+<a name="192"></a> * Returns an absolute value.
+<a name="193"></a> *
+<a name="194"></a> * <span class="doctag">@param</span> value			Input value.
+<a name="195"></a> * <span class="doctag">@return</span>				Absolute value of the input.
+<a name="196"></a> */</span>
+<a name="197"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">FloatAbs</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="198"></a>
+<a name="199"></a><span class="comment">/**
+<a name="200"></a> * Returns the arctangent of the input value.
+<a name="201"></a> *
+<a name="202"></a> * <span class="doctag">@param</span> angle			Input value.
+<a name="203"></a> * <span class="doctag">@return</span>				atan(value) in radians.
+<a name="204"></a> */</span>
+<a name="205"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">ArcTangent</span>(<span class="keyword type">Float</span>:<span class="identifier">angle</span>);
+<a name="206"></a>
+<a name="207"></a><span class="comment">/**
+<a name="208"></a> * Returns the arccosine of the input value.
+<a name="209"></a> *
+<a name="210"></a> * <span class="doctag">@param</span> angle			Input value.
+<a name="211"></a> * <span class="doctag">@return</span>				acos(value) in radians.
+<a name="212"></a> */</span>
+<a name="213"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">ArcCosine</span>(<span class="keyword type">Float</span>:<span class="identifier">angle</span>);
+<a name="214"></a>
+<a name="215"></a><span class="comment">/**
+<a name="216"></a> * Returns the arcsine of the input value.
+<a name="217"></a> *
+<a name="218"></a> * <span class="doctag">@param</span> angle			Input value.
+<a name="219"></a> * <span class="doctag">@return</span>				asin(value) in radians.
+<a name="220"></a> */</span>
+<a name="221"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">ArcSine</span>(<span class="keyword type">Float</span>:<span class="identifier">angle</span>);
+<a name="222"></a>
+<a name="223"></a><span class="comment">/**
+<a name="224"></a> * Returns the arctangent2 of the input values.
+<a name="225"></a> *
+<a name="226"></a> * <span class="doctag">@param</span> x				Horizontal value.
+<a name="227"></a> * <span class="doctag">@param</span> y				Vertical value.
+<a name="228"></a> * <span class="doctag">@return</span>				atan2(value) in radians.
+<a name="229"></a> */</span>
+<a name="230"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">ArcTangent2</span>(<span class="keyword type">Float</span>:<span class="identifier">x</span>, <span class="keyword type">Float</span>:<span class="identifier">y</span>);
+<a name="231"></a>
+<a name="232"></a><span class="comment">/**
+<a name="233"></a> * Rounds a floating point number using the "round to nearest" algorithm.
+<a name="234"></a> *
+<a name="235"></a> * <span class="doctag">@param</span> value			Floating point value to round.
+<a name="236"></a> * <span class="doctag">@return</span>				The value rounded to the nearest integer.
+<a name="237"></a> */</span>
+<a name="238"></a><span class="keyword">stock</span> <span class="identifier">RoundFloat</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>)
+<a name="239"></a>{
+<a name="240"></a>	<span class="keyword statement">return</span> <span class="identifier">RoundToNearest</span>(<span class="identifier">value</span>);
+<a name="241"></a>}
+<a name="242"></a>
+<a name="243"></a><span class="comment">/**
+<a name="244"></a> * User defined operators.
+<a name="245"></a> *
+<a name="246"></a> */</span>
+<a name="247"></a><span class="preprocessor">#pragma <span class="identifier">rational</span> <span class="keyword type">Float</span>
+<a name="248"></a></span>
+<a name="249"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>*(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>) = <span class="identifier">FloatMul</span>;
+<a name="250"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>/(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>) = <span class="identifier">FloatDiv</span>;
+<a name="251"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>+(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>) = <span class="identifier">FloatAdd</span>;
+<a name="252"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>-(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>) = <span class="identifier">FloatSub</span>;
+<a name="253"></a>
+<a name="254"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>++(<span class="keyword type">Float</span>:<span class="identifier">oper</span>)
+<a name="255"></a>{
+<a name="256"></a>	<span class="keyword statement">return</span> <span class="identifier">oper</span>+<span class="number">1.0</span>;
+<a name="257"></a>}
+<a name="258"></a>
+<a name="259"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>--(<span class="keyword type">Float</span>:<span class="identifier">oper</span>)
+<a name="260"></a>{
+<a name="261"></a>	<span class="keyword statement">return</span> <span class="identifier">oper</span>-<span class="number">1.0</span>;
+<a name="262"></a>}
+<a name="263"></a>
+<a name="264"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>-(<span class="keyword type">Float</span>:<span class="identifier">oper</span>)
+<a name="265"></a>{
+<a name="266"></a>	<span class="keyword statement">return</span> <span class="identifier">oper</span>^<span class="keyword type">Float</span>:<span class="identifier">cellmin</span>;				<span class="comment">/* IEEE values are sign/magnitude */</span>
+<a name="267"></a>}
+<a name="268"></a>
+<a name="269"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>*(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="270"></a>{
+<a name="271"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatMul</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>));			<span class="comment">/* "*" is commutative */</span>
+<a name="272"></a>}
+<a name="273"></a>
+<a name="274"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>/(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="275"></a>{
+<a name="276"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatDiv</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>));
+<a name="277"></a>}
+<a name="278"></a>
+<a name="279"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>/(<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="280"></a>{
+<a name="281"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatDiv</span>(<span class="identifier">float</span>(<span class="identifier">oper1</span>), <span class="identifier">oper2</span>);
+<a name="282"></a>}
+<a name="283"></a>
+<a name="284"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>+(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="285"></a>{
+<a name="286"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatAdd</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>));			<span class="comment">/* "+" is commutative */</span>
+<a name="287"></a>}
+<a name="288"></a>
+<a name="289"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>-(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="290"></a>{
+<a name="291"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatSub</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>));
+<a name="292"></a>}
+<a name="293"></a>
+<a name="294"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="keyword">operator</span>-(<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="295"></a>{
+<a name="296"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatSub</span>(<span class="identifier">float</span>(<span class="identifier">oper1</span>), <span class="identifier">oper2</span>);
+<a name="297"></a>}
+<a name="298"></a>
+<a name="299"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>==(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="300"></a>{
+<a name="301"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">oper2</span>) == <span class="number">0</span>;
+<a name="302"></a>}
+<a name="303"></a>
+<a name="304"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>==(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="305"></a>{
+<a name="306"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>)) == <span class="number">0</span>; 	<span class="comment">/* "==" is commutative */</span>
+<a name="307"></a>}
+<a name="308"></a>
+<a name="309"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>!=(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="310"></a>{
+<a name="311"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">oper2</span>) != <span class="number">0</span>;
+<a name="312"></a>}
+<a name="313"></a>
+<a name="314"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>!=(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="315"></a>{
+<a name="316"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>)) != <span class="number">0</span>; 	<span class="comment">/* "==" is commutative */</span>
+<a name="317"></a>}
+<a name="318"></a>
+<a name="319"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&gt;(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="320"></a>{
+<a name="321"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">oper2</span>) &gt; <span class="number">0</span>;
+<a name="322"></a>}
+<a name="323"></a>
+<a name="324"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&gt;(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="325"></a>{
+<a name="326"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>)) &gt; <span class="number">0</span>;
+<a name="327"></a>}
+<a name="328"></a>
+<a name="329"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&gt;(<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="330"></a>{
+<a name="331"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">float</span>(<span class="identifier">oper1</span>), <span class="identifier">oper2</span>) &gt; <span class="number">0</span>;
+<a name="332"></a>}
+<a name="333"></a>
+<a name="334"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&gt;=(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="335"></a>{
+<a name="336"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">oper2</span>) &gt;= <span class="number">0</span>;
+<a name="337"></a>}
+<a name="338"></a>
+<a name="339"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&gt;=(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="340"></a>{
+<a name="341"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>)) &gt;= <span class="number">0</span>;
+<a name="342"></a>}
+<a name="343"></a>
+<a name="344"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&gt;=(<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="345"></a>{
+<a name="346"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">float</span>(<span class="identifier">oper1</span>), <span class="identifier">oper2</span>) &gt;= <span class="number">0</span>;
+<a name="347"></a>}
+<a name="348"></a>
+<a name="349"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&lt;(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="350"></a>{
+<a name="351"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">oper2</span>) &lt; <span class="number">0</span>;
+<a name="352"></a>}
+<a name="353"></a>
+<a name="354"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&lt;(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="355"></a>{
+<a name="356"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>)) &lt; <span class="number">0</span>;
+<a name="357"></a>}
+<a name="358"></a>
+<a name="359"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&lt;(<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="360"></a>{
+<a name="361"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">float</span>(<span class="identifier">oper1</span>), <span class="identifier">oper2</span>) &lt; <span class="number">0</span>;
+<a name="362"></a>}
+<a name="363"></a>
+<a name="364"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&lt;=(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="365"></a>{
+<a name="366"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">oper2</span>) &lt;= <span class="number">0</span>;
+<a name="367"></a>}
+<a name="368"></a>
+<a name="369"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&lt;=(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>)
+<a name="370"></a>{
+<a name="371"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">oper1</span>, <span class="identifier">float</span>(<span class="identifier">oper2</span>)) &lt;= <span class="number">0</span>;
+<a name="372"></a>}
+<a name="373"></a>
+<a name="374"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>&lt;=(<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>)
+<a name="375"></a>{
+<a name="376"></a>	<span class="keyword statement">return</span> <span class="identifier">FloatCompare</span>(<span class="identifier">float</span>(<span class="identifier">oper1</span>), <span class="identifier">oper2</span>) &lt;= <span class="number">0</span>;
+<a name="377"></a>}
+<a name="378"></a>
+<a name="379"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="keyword">operator</span>!(<span class="keyword type">Float</span>:<span class="identifier">oper</span>)
+<a name="380"></a>{
+<a name="381"></a>	<span class="keyword statement">return</span> (<span class="identifier">_</span>:<span class="identifier">oper</span> &amp; ((-<span class="number">1</span>)/<span class="number">2</span>)) == <span class="number">0</span>;		<span class="comment">/* -1 = all bits to 1; /2 = remove most significant bit (sign)
+<a name="382"></a>											works on both 32bit and 64bit systems; no constant required */</span>
+<a name="383"></a>}
+<a name="384"></a>
+<a name="385"></a><span class="comment">/**
+<a name="386"></a> * Forbidden operators.
+<a name="387"></a> *
+<a name="388"></a> */</span>
+<a name="389"></a><span class="keyword">forward</span> <span class="keyword">operator</span>%(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>);
+<a name="390"></a><span class="keyword">forward</span> <span class="keyword">operator</span>%(<span class="keyword type">Float</span>:<span class="identifier">oper1</span>, <span class="identifier">oper2</span>);
+<a name="391"></a><span class="keyword">forward</span> <span class="keyword">operator</span>%(<span class="identifier">oper1</span>, <span class="keyword type">Float</span>:<span class="identifier">oper2</span>);
+<a name="392"></a>
+<a name="393"></a><span class="preprocessor">#define <span class="identifier">FLOAT_PI</span> <span class="number">3.1415926535897932384626433832795</span>
+<a name="394"></a></span>
+<a name="395"></a><span class="comment">/**
+<a name="396"></a> * Converts degrees to radians.
+<a name="397"></a> *
+<a name="398"></a> * <span class="doctag">@param</span> angle		Degrees.
+<a name="399"></a> * <span class="doctag">@return</span>			Radians.
+<a name="400"></a> */</span>
+<a name="401"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="identifier">DegToRad</span>(<span class="keyword type">Float</span>:<span class="identifier">angle</span>)
+<a name="402"></a>{
+<a name="403"></a>	<span class="keyword statement">return</span> (<span class="identifier">angle</span>*<span class="identifier">FLOAT_PI</span>)/<span class="number">180</span>;
+<a name="404"></a>}
+<a name="405"></a>
+<a name="406"></a><span class="comment">/**
+<a name="407"></a> * Converts degrees to radians.
+<a name="408"></a> *
+<a name="409"></a> * <span class="doctag">@param</span> angle		Radians.
+<a name="410"></a> * <span class="doctag">@return</span>			Degrees.
+<a name="411"></a> */</span>
+<a name="412"></a><span class="keyword">stock</span> <span class="keyword type">Float</span>:<span class="identifier">RadToDeg</span>(<span class="keyword type">Float</span>:<span class="identifier">angle</span>)
+<a name="413"></a>{
+<a name="414"></a>	<span class="keyword statement">return</span> (<span class="identifier">angle</span>*<span class="number">180</span>)/<span class="identifier">FLOAT_PI</span>;
+<a name="415"></a>}
+<a name="416"></a>
+<a name="417"></a><span class="comment">/**
+<a name="418"></a> * Returns a random integer in the range [0, 2^31-1].
+<a name="419"></a> *
+<a name="420"></a> * Note: Uniform random number streams are seeded automatically per-plugin.
+<a name="421"></a> *
+<a name="422"></a> * <span class="doctag">@return</span>			Random integer.
+<a name="423"></a> */</span>
+<a name="424"></a><span class="keyword">native</span> <span class="identifier">GetURandomInt</span>();
+<a name="425"></a>
+<a name="426"></a><span class="comment">/**
+<a name="427"></a> * Returns a uniform random float in the range [0, 1).
+<a name="428"></a> *
+<a name="429"></a> * Note: Uniform random number streams are seeded automatically per-plugin.
+<a name="430"></a> *
+<a name="431"></a> * <span class="doctag">@return</span>			Uniform random floating-point number.
+<a name="432"></a> */</span>
+<a name="433"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetURandomFloat</span>();
+<a name="434"></a>
+<a name="435"></a><span class="comment">/**
+<a name="436"></a> * Seeds a plugin's uniform random number stream. This is done automatically,
+<a name="437"></a> * so normally it is totally unnecessary to call this.
+<a name="438"></a> *
+<a name="439"></a> * <span class="doctag">@param</span> seeds		Array of numbers to use as seeding data.
+<a name="440"></a> * <span class="doctag">@param</span> numSeeds	Number of seeds in the seeds array.
+<a name="441"></a> * <span class="doctag">@noreturn</span>
+<a name="442"></a> */</span>
+<a name="443"></a><span class="keyword">native</span> <span class="identifier">SetURandomSeed</span>(<span class="keyword">const</span> <span class="identifier">seeds</span>[], <span class="identifier">numSeeds</span>);
+<a name="444"></a>
+<a name="445"></a><span class="comment">/**
+<a name="446"></a> * Seeds a plugin's uniform random number stream. This is done automatically,
+<a name="447"></a> * so normally it is totally unnecessary to call this.
+<a name="448"></a> *
+<a name="449"></a> * <span class="doctag">@param</span> seed      Single seed value.
+<a name="450"></a> * <span class="doctag">@noreturn</span>
+<a name="451"></a> */</span>
+<a name="452"></a><span class="keyword">stock</span> <span class="identifier">SetURandomSeedSimple</span>(<span class="identifier">seed</span>)
+<a name="453"></a>{
+<a name="454"></a>	<span class="keyword">new</span> <span class="identifier">seeds</span>[<span class="number">1</span>];
+<a name="455"></a>	<span class="identifier">seeds</span>[<span class="number">0</span>] = <span class="identifier">seed</span>;
+<a name="456"></a>	<span class="identifier">SetURandomSeed</span>(<span class="identifier">seeds</span>, <span class="number">1</span>);
+<a name="457"></a>}
+<a name="458"></a>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

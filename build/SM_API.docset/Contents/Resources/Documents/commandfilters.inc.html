@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<title>commandfilters.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_commandfilters_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_commandfilters_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="preprocessor">#define <span class="identifier">MAX_TARGET_LENGTH</span>			<span class="number">64</span>
+<a name="39"></a></span>
+<a name="40"></a><span class="preprocessor">#define <span class="identifier">COMMAND_FILTER_ALIVE</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)		<span class="comment">/**&lt; Only allow alive players */</span>
+<a name="41"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_FILTER_DEAD</span>			(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)		<span class="comment">/**&lt; Only filter dead players */</span>
+<a name="42"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_FILTER_CONNECTED</span>	(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)		<span class="comment">/**&lt; Allow players not fully in-game */</span>
+<a name="43"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_FILTER_NO_IMMUNITY</span>	(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)		<span class="comment">/**&lt; Ignore immunity rules */</span>
+<a name="44"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_FILTER_NO_MULTI</span>		(<span class="number">1</span>&lt;&lt;<span class="number">4</span>)		<span class="comment">/**&lt; Do not allow multiple target patterns */</span>
+<a name="45"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_FILTER_NO_BOTS</span>		(<span class="number">1</span>&lt;&lt;<span class="number">5</span>)		<span class="comment">/**&lt; Do not allow bots to be targetted */</span>
+<a name="46"></a></span>
+<a name="47"></a><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_NONE</span>			<span class="number">0</span>			<span class="comment">/**&lt; No target was found */</span>
+<a name="48"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_NOT_ALIVE</span>	-<span class="number">1</span>			<span class="comment">/**&lt; Single client is not alive */</span>
+<a name="49"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_NOT_DEAD</span>		-<span class="number">2</span>			<span class="comment">/**&lt; Single client is not dead */</span>
+<a name="50"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_NOT_IN_GAME</span>	-<span class="number">3</span>			<span class="comment">/**&lt; Single client is not in game */</span>
+<a name="51"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_IMMUNE</span>		-<span class="number">4</span>			<span class="comment">/**&lt; Single client is immune */</span>
+<a name="52"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_EMPTY_FILTER</span>	-<span class="number">5</span>			<span class="comment">/**&lt; A multi-filter (such as <span class="doctag">@all</span>) had no targets */</span>
+<a name="53"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_NOT_HUMAN</span>	-<span class="number">6</span>			<span class="comment">/**&lt; Target was not human */</span>
+<a name="54"></a></span><span class="preprocessor">#define <span class="identifier">COMMAND_TARGET_AMBIGUOUS</span>	-<span class="number">7</span>			<span class="comment">/**&lt; Partial name had too many targets */</span>
+<a name="55"></a></span>
+<a name="56"></a><span class="comment">/**
+<a name="57"></a> * Processes a generic command target string, and resolves it to a list 
+<a name="58"></a> * of clients or one client, based on filtering rules and a pattern.
+<a name="59"></a> *
+<a name="60"></a> * Note that you should use LoadTranslations("common.phrases") in OnPluginStart(), 
+<a name="61"></a> * as that file is guaranteed to contain all of the translatable phrases that 
+<a name="62"></a> * ProcessTargetString() will return.
+<a name="63"></a> *
+<a name="64"></a> * <span class="doctag">@param</span> pattern		Pattern to find clients against.
+<a name="65"></a> * <span class="doctag">@param</span> admin			Admin performing the action, or 0 if the server.
+<a name="66"></a> * <span class="doctag">@param</span> targets		Array to hold targets.
+<a name="67"></a> * <span class="doctag">@param</span> max_targets	Maximum size of the targets array.
+<a name="68"></a> * <span class="doctag">@param</span> filter_flags	Filter flags.
+<a name="69"></a> * <span class="doctag">@param</span> target_name	Buffer to store the target name.
+<a name="70"></a> * <span class="doctag">@param</span> tn_maxlength	Maximum length of the target name buffer.
+<a name="71"></a> * <span class="doctag">@param</span> tn_is_ml		OUTPUT: Will be true if the target name buffer is an ML phrase,
+<a name="72"></a> *						false if it is a normal string.
+<a name="73"></a> * <span class="doctag">@return</span>				If a multi-target pattern was used, the number of clients found 
+<a name="74"></a> *						is returned.  If a single-target pattern was used, 1 is returned 
+<a name="75"></a> *						if one valid client is found.  Otherwise, a COMMAND_TARGET reason 
+<a name="76"></a> *						for failure is returned.
+<a name="77"></a> */</span>
+<a name="78"></a><span class="keyword">native</span> <span class="identifier">ProcessTargetString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">pattern</span>[],
+<a name="79"></a>						   <span class="identifier">admin</span>, 
+<a name="80"></a>						   <span class="identifier">targets</span>[],
+<a name="81"></a>						   <span class="identifier">max_targets</span>,
+<a name="82"></a>						   <span class="identifier">filter_flags</span>,
+<a name="83"></a>						   <span class="keyword type">String</span>:<span class="identifier">target_name</span>[],
+<a name="84"></a>						   <span class="identifier">tn_maxlength</span>,
+<a name="85"></a>						   &amp;<span class="keyword type">bool</span>:<span class="identifier">tn_is_ml</span>);
+<a name="86"></a>
+<a name="87"></a><span class="comment">/**
+<a name="88"></a> * Replies to a client with a given message describing a targetting 
+<a name="89"></a> * failure reason.
+<a name="90"></a> *
+<a name="91"></a> * Note: The translation phrases are found in common.phrases.txt.
+<a name="92"></a> *
+<a name="93"></a> * <span class="doctag">@param</span> client		Client index, or 0 for server.
+<a name="94"></a> * <span class="doctag">@param</span> reason		COMMAND_TARGET reason.
+<a name="95"></a> * <span class="doctag">@noreturn</span>
+<a name="96"></a> */</span>
+<a name="97"></a><span class="keyword">stock</span> <span class="identifier">ReplyToTargetError</span>(<span class="identifier">client</span>, <span class="identifier">reason</span>)
+<a name="98"></a>{
+<a name="99"></a>	<span class="keyword statement">switch</span> (<span class="identifier">reason</span>)
+<a name="100"></a>	{
+<a name="101"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_NONE</span>:
+<a name="102"></a>		{
+<a name="103"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"No matching client"</span>);
+<a name="104"></a>		}
+<a name="105"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_NOT_ALIVE</span>:
+<a name="106"></a>		{
+<a name="107"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"Target must be alive"</span>);
+<a name="108"></a>		}
+<a name="109"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_NOT_DEAD</span>:
+<a name="110"></a>		{
+<a name="111"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"Target must be dead"</span>);
+<a name="112"></a>		}
+<a name="113"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_NOT_IN_GAME</span>:
+<a name="114"></a>		{
+<a name="115"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"Target is not in game"</span>);
+<a name="116"></a>		}
+<a name="117"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_IMMUNE</span>:
+<a name="118"></a>		{
+<a name="119"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"Unable to target"</span>);
+<a name="120"></a>		}
+<a name="121"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_EMPTY_FILTER</span>:
+<a name="122"></a>		{
+<a name="123"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"No matching clients"</span>);
+<a name="124"></a>		}
+<a name="125"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_NOT_HUMAN</span>:
+<a name="126"></a>		{
+<a name="127"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"Cannot target bot"</span>);
+<a name="128"></a>		}
+<a name="129"></a>		<span class="keyword statement">case</span> <span class="identifier">COMMAND_TARGET_AMBIGUOUS</span>:
+<a name="130"></a>		{
+<a name="131"></a>			<span class="identifier">ReplyToCommand</span>(<span class="identifier">client</span>, <span class="string">"[SM] %t"</span>, <span class="string">"More than one client matched"</span>);
+<a name="132"></a>		}
+<a name="133"></a>	}
+<a name="134"></a>}
+<a name="135"></a>
+<a name="136"></a><span class="comment">/**
+<a name="137"></a> * Adds clients to a multi-target filter.
+<a name="138"></a> *
+<a name="139"></a> * <span class="doctag">@param</span> pattern       Pattern name.
+<a name="140"></a> * <span class="doctag">@param</span> clients       Array to fill with unique, valid client indexes.
+<a name="141"></a> * <span class="doctag">@return</span>              True if pattern was recognized, false otherwise.
+<a name="142"></a> */</span>
+<a name="143"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="keyword type">bool</span>:<span class="identifier">MultiTargetFilter</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">pattern</span>[], <span class="keyword type">Handle</span>:<span class="identifier">clients</span>);
+<a name="144"></a>
+<a name="145"></a><span class="comment">/**
+<a name="146"></a> * Adds a multi-target filter function for ProcessTargetString().
+<a name="147"></a> *
+<a name="148"></a> * <span class="doctag">@param</span> pattern       Pattern to match (case sensitive).
+<a name="149"></a> * <span class="doctag">@param</span> filter        Filter function.
+<a name="150"></a> * <span class="doctag">@param</span> phrase        Descriptive phrase to display on successful match.
+<a name="151"></a> * <span class="doctag">@param</span> phraseIsML    True if phrase is multi-lingual, false otherwise.
+<a name="152"></a> * <span class="doctag">@noreturn</span>
+<a name="153"></a> */</span>
+<a name="154"></a><span class="keyword">native</span> <span class="identifier">AddMultiTargetFilter</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">pattern</span>[], <span class="identifier">MultiTargetFilter</span>:<span class="identifier">filter</span>,
+<a name="155"></a>                            <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">phrase</span>[], <span class="keyword type">bool</span>:<span class="identifier">phraseIsML</span>);
+<a name="156"></a>
+<a name="157"></a><span class="comment">/**
+<a name="158"></a> * Removes a multi-target filter function from ProcessTargetString().
+<a name="159"></a> *
+<a name="160"></a> * <span class="doctag">@param</span> pattern       Pattern to match (case sensitive).
+<a name="161"></a> * <span class="doctag">@param</span> filter        Filter function.
+<a name="162"></a> * <span class="doctag">@noreturn</span>
+<a name="163"></a> */</span>
+<a name="164"></a><span class="keyword">native</span> <span class="identifier">RemoveMultiTargetFilter</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">pattern</span>[], <span class="identifier">MultiTargetFilter</span>:<span class="identifier">filter</span>);
+<a name="165"></a>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

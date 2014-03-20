@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<title>sdktools_hooks.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2009 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_sdktools_hooks_included</span>
+<a name="34"></a></span>  <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_sdktools_hooks_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="preprocessor">#define <span class="identifier">FEATURECAP_PLAYERRUNCMD_11PARAMS</span>	<span class="string">"SDKTools PlayerRunCmd 11Params"</span>
+<a name="39"></a></span>
+<a name="40"></a><span class="comment">/**
+<a name="41"></a> * <span class="doctag">@brief</span> Called when a clients movement buttons are being processed
+<a name="42"></a> *
+<a name="43"></a> * <span class="doctag">@param</span> client	Index of the client.
+<a name="44"></a> * <span class="doctag">@param</span> buttons	Copyback buffer containing the current commands (as bitflags - see entity_prop_stocks.inc).
+<a name="45"></a> * <span class="doctag">@param</span> impulse	Copyback buffer containing the current impulse command.
+<a name="46"></a> * <span class="doctag">@param</span> vel		Players desired velocity.
+<a name="47"></a> * <span class="doctag">@param</span> angles	Players desired view angles.
+<a name="48"></a> * <span class="doctag">@param</span> weapon	Entity index of the new weapon if player switches weapon, 0 otherwise.
+<a name="49"></a> * <span class="doctag">@param</span> subtype	Weapon subtype when selected from a menu.
+<a name="50"></a> * <span class="doctag">@param</span> cmdnum	Command number. Increments from the first command sent.
+<a name="51"></a> * <span class="doctag">@param</span> tickcount	Tick count. A client's prediction based on the server's GetGameTickCount value.
+<a name="52"></a> * <span class="doctag">@param</span> seed		Random seed. Used to determine weapon recoil, spread, and other predicted elements.
+<a name="53"></a> * <span class="doctag">@param</span> mouse		Mouse direction (x, y).
+<a name="54"></a> * <span class="doctag">@return</span> 			Plugin_Handled to block the commands from being processed, Plugin_Continue otherwise.
+<a name="55"></a> *
+<a name="56"></a> * <span class="doctag">@note</span>			To see if all 11 params are avaliable, use FeatureType_Capability and
+<a name="57"></a> *					FEATURECAP_PLAYERRUNCMD_11PARAMS.
+<a name="58"></a> */</span>
+<a name="59"></a><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">OnPlayerRunCmd</span>(<span class="identifier">client</span>, &amp;<span class="identifier">buttons</span>, &amp;<span class="identifier">impulse</span>, <span class="keyword type">Float</span>:<span class="identifier">vel</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">angles</span>[<span class="number">3</span>], &amp;<span class="identifier">weapon</span>, &amp;<span class="identifier">subtype</span>, &amp;<span class="identifier">cmdnum</span>, &amp;<span class="identifier">tickcount</span>, &amp;<span class="identifier">seed</span>, <span class="identifier">mouse</span>[<span class="number">2</span>]);<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

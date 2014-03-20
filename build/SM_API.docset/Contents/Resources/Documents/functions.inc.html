@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<title>functions.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_functions_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_functions_included</span>
+<a name="37"></a></span> 
+<a name="38"></a><span class="preprocessor">#define <span class="identifier">SP_PARAMFLAG_BYREF</span>	(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)	<span class="comment">/**&lt; Internal use only. */</span>
+<a name="39"></a></span>
+<a name="40"></a><span class="comment">/**
+<a name="41"></a> * Describes the various ways to pass parameters to functions or forwards.
+<a name="42"></a> */</span>
+<a name="43"></a><span class="keyword">enum</span> <span class="identifier">ParamType</span>
+<a name="44"></a>{
+<a name="45"></a>	<span class="identifier">Param_Any</span>			= <span class="number">0</span>,							<span class="comment">/**&lt; Any data type can be pushed */</span>
+<a name="46"></a>	<span class="identifier">Param_Cell</span>			= (<span class="number">1</span>&lt;&lt;<span class="number">1</span>),						<span class="comment">/**&lt; Only basic cells can be pushed */</span>
+<a name="47"></a>	<span class="identifier">Param_Float</span>			= (<span class="number">2</span>&lt;&lt;<span class="number">1</span>),						<span class="comment">/**&lt; Only floats can be pushed */</span>
+<a name="48"></a>	<span class="identifier">Param_String</span>		= (<span class="number">3</span>&lt;&lt;<span class="number">1</span>)|<span class="identifier">SP_PARAMFLAG_BYREF</span>,	<span class="comment">/**&lt; Only strings can be pushed */</span>
+<a name="49"></a>	<span class="identifier">Param_Array</span>			= (<span class="number">4</span>&lt;&lt;<span class="number">1</span>)|<span class="identifier">SP_PARAMFLAG_BYREF</span>,	<span class="comment">/**&lt; Only arrays can be pushed */</span>
+<a name="50"></a>	<span class="identifier">Param_VarArgs</span>		= (<span class="number">5</span>&lt;&lt;<span class="number">1</span>),						<span class="comment">/**&lt; Same as "..." in plugins, anything can be pushed, but it will always be byref */</span>
+<a name="51"></a>	<span class="identifier">Param_CellByRef</span>		= (<span class="number">1</span>&lt;&lt;<span class="number">1</span>)|<span class="identifier">SP_PARAMFLAG_BYREF</span>,	<span class="comment">/**&lt; Only a cell by reference can be pushed */</span>
+<a name="52"></a>	<span class="identifier">Param_FloatByRef</span>	= (<span class="number">2</span>&lt;&lt;<span class="number">1</span>)|<span class="identifier">SP_PARAMFLAG_BYREF</span>		<span class="comment">/**&lt; Only a float by reference can be pushed */</span>
+<a name="53"></a>};
+<a name="54"></a>
+<a name="55"></a><span class="comment">/**
+<a name="56"></a> * Defines how a forward iterates through plugin functions.
+<a name="57"></a> */</span>
+<a name="58"></a><span class="keyword">enum</span> <span class="identifier">ExecType</span>
+<a name="59"></a>{
+<a name="60"></a>	<span class="identifier">ET_Ignore</span>	= <span class="number">0</span>,	<span class="comment">/**&lt; Ignore all return values, return 0 */</span>
+<a name="61"></a>	<span class="identifier">ET_Single</span>	= <span class="number">1</span>,	<span class="comment">/**&lt; Only return the last exec, ignore all others */</span>
+<a name="62"></a>	<span class="identifier">ET_Event</span>	= <span class="number">2</span>,	<span class="comment">/**&lt; Acts as an event with the Actions defined in core.inc, no mid-Stops allowed, returns highest */</span>
+<a name="63"></a>	<span class="identifier">ET_Hook</span>		= <span class="number">3</span>		<span class="comment">/**&lt; Acts as a hook with the Actions defined in core.inc, mid-Stops allowed, returns highest */</span>
+<a name="64"></a>};
+<a name="65"></a>
+<a name="66"></a><span class="comment">/**
+<a name="67"></a> * <span class="doctag">@section</span> Flags that are used with Call_PushArrayEx() and Call_PushStringEx()
+<a name="68"></a> */</span>
+<a name="69"></a> 
+<a name="70"></a><span class="preprocessor">#define <span class="identifier">SM_PARAM_COPYBACK</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)		<span class="comment">/**&lt; Copy an array/reference back after call */</span>
+<a name="71"></a></span>
+<a name="72"></a><span class="preprocessor">#define <span class="identifier">SM_PARAM_STRING_UTF8</span>	(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)		<span class="comment">/**&lt; String should be UTF-8 handled */</span>
+<a name="73"></a></span><span class="preprocessor">#define <span class="identifier">SM_PARAM_STRING_COPY</span>	(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)		<span class="comment">/**&lt; String should be copied into the plugin */</span>
+<a name="74"></a></span><span class="preprocessor">#define <span class="identifier">SM_PARAM_STRING_BINARY</span>	(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)		<span class="comment">/**&lt; Treat the string as a binary string */</span>
+<a name="75"></a></span>
+<a name="76"></a><span class="comment">/**
+<a name="77"></a> * <span class="doctag">@endsection</span>
+<a name="78"></a> */</span>
+<a name="79"></a>
+<a name="80"></a><span class="comment">/**
+<a name="81"></a> * <span class="doctag">@section</span> Error codes
+<a name="82"></a> */</span>
+<a name="83"></a><span class="preprocessor">#define <span class="identifier">SP_ERROR_NONE</span>					<span class="number">0</span>	<span class="comment">/**&lt; No error occurred */</span>
+<a name="84"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_FILE_FORMAT</span>			<span class="number">1</span>	<span class="comment">/**&lt; File format unrecognized */</span>
+<a name="85"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_DECOMPRESSOR</span>			<span class="number">2</span>	<span class="comment">/**&lt; A decompressor was not found */</span>
+<a name="86"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_HEAPLOW</span>				<span class="number">3</span>	<span class="comment">/**&lt; Not enough space left on the heap */</span>
+<a name="87"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_PARAM</span>					<span class="number">4</span>	<span class="comment">/**&lt; Invalid parameter or parameter type */</span>
+<a name="88"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_INVALID_ADDRESS</span>		<span class="number">5</span>	<span class="comment">/**&lt; A memory address was not valid */</span>
+<a name="89"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_NOT_FOUND</span>				<span class="number">6</span>	<span class="comment">/**&lt; The object in question was not found */</span>
+<a name="90"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_INDEX</span>					<span class="number">7</span>	<span class="comment">/**&lt; Invalid index parameter */</span>
+<a name="91"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_STACKLOW</span>				<span class="number">8</span>	<span class="comment">/**&lt; Nnot enough space left on the stack */</span>
+<a name="92"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_NOTDEBUGGING</span>			<span class="number">9</span>	<span class="comment">/**&lt; Debug mode was not on or debug section not found */</span>
+<a name="93"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_INVALID_INSTRUCTION</span>	<span class="number">10</span>	<span class="comment">/**&lt; Invalid instruction was encountered */</span>
+<a name="94"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_MEMACCESS</span>				<span class="number">11</span>	<span class="comment">/**&lt; Invalid memory access */</span>
+<a name="95"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_STACKMIN</span>				<span class="number">12</span>	<span class="comment">/**&lt; Stack went beyond its minimum value */</span>
+<a name="96"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_HEAPMIN</span>				<span class="number">13</span>  <span class="comment">/**&lt; Heap went beyond its minimum value */</span>
+<a name="97"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_DIVIDE_BY_ZERO</span>			<span class="number">14</span>	<span class="comment">/**&lt; Division by zero */</span>
+<a name="98"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_ARRAY_BOUNDS</span>			<span class="number">15</span>	<span class="comment">/**&lt; Array index is out of bounds */</span>
+<a name="99"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_INSTRUCTION_PARAM</span>		<span class="number">16</span>	<span class="comment">/**&lt; Instruction had an invalid parameter */</span>
+<a name="100"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_STACKLEAK</span>				<span class="number">17</span>  <span class="comment">/**&lt; A native leaked an item on the stack */</span>
+<a name="101"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_HEAPLEAK</span>				<span class="number">18</span>  <span class="comment">/**&lt; A native leaked an item on the heap */</span>
+<a name="102"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_ARRAY_TOO_BIG</span>			<span class="number">19</span>	<span class="comment">/**&lt; A dynamic array is too big */</span>
+<a name="103"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_TRACKER_BOUNDS</span>			<span class="number">20</span>	<span class="comment">/**&lt; Tracker stack is out of bounds */</span>
+<a name="104"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_INVALID_NATIVE</span>			<span class="number">21</span>	<span class="comment">/**&lt; Native was pending or invalid */</span>
+<a name="105"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_PARAMS_MAX</span>				<span class="number">22</span>	<span class="comment">/**&lt; Maximum number of parameters reached */</span>
+<a name="106"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_NATIVE</span>					<span class="number">23</span>	<span class="comment">/**&lt; Error originates from a native */</span>
+<a name="107"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_NOT_RUNNABLE</span>			<span class="number">24</span>	<span class="comment">/**&lt; Function or plugin is not runnable */</span>
+<a name="108"></a></span><span class="preprocessor">#define <span class="identifier">SP_ERROR_ABORTED</span>				<span class="number">25</span>	<span class="comment">/**&lt; Function call was aborted */</span>
+<a name="109"></a></span>
+<a name="110"></a><span class="comment">/**
+<a name="111"></a> * <span class="doctag">@endsection</span>
+<a name="112"></a> */</span>
+<a name="113"></a>
+<a name="114"></a><span class="comment">/**
+<a name="115"></a> * Gets a function id from a function name. 
+<a name="116"></a> *
+<a name="117"></a> * <span class="doctag">@param</span> plugin			Handle of the plugin that contains the function.
+<a name="118"></a>							Pass INVALID_HANDLE to search in the calling plugin.
+<a name="119"></a> * <span class="doctag">@param</span> name				Name of the function.
+<a name="120"></a> * <span class="doctag">@return</span> 					Function id or INVALID_FUNCTION if not found.
+<a name="121"></a> * <span class="doctag">@error</span>					Invalid or corrupt plugin handle.
+<a name="122"></a> */</span>
+<a name="123"></a><span class="keyword">native</span> <span class="keyword type">Function</span>:<span class="identifier">GetFunctionByName</span>(<span class="keyword type">Handle</span>:<span class="identifier">plugin</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="124"></a>
+<a name="125"></a><span class="comment">/**
+<a name="126"></a> * Creates a global forward.
+<a name="127"></a> *
+<a name="128"></a> * <span class="doctag">@note</span> The name used to create the forward is used as its public function in all target plugins.
+<a name="129"></a> * <span class="doctag">@note</span> This is ideal for global, static forwards that are never changed.
+<a name="130"></a> * <span class="doctag">@note</span> Global forwards cannot be cloned.
+<a name="131"></a> * <span class="doctag">@note</span> Use CloseHandle() to destroy these.
+<a name="132"></a> *
+<a name="133"></a> * <span class="doctag">@param</span> name				Name of public function to use in forward.
+<a name="134"></a> * <span class="doctag">@param</span> type				Execution type to be used.
+<a name="135"></a> * <span class="doctag">@param</span> ...				Variable number of parameter types (up to 32).
+<a name="136"></a> * <span class="doctag">@return</span> 					Handle to new global forward.
+<a name="137"></a> * <span class="doctag">@error</span>					More than 32 paramater types passed.
+<a name="138"></a> */</span>
+<a name="139"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateGlobalForward</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">ExecType</span>:<span class="identifier">type</span>, <span class="identifier">ParamType</span>:...);
+<a name="140"></a>
+<a name="141"></a><span class="comment">/**
+<a name="142"></a> * Creates a private forward.
+<a name="143"></a> *
+<a name="144"></a> * <span class="doctag">@note</span> No functions are automatically added. Use AddToForward() to do this.
+<a name="145"></a> * <span class="doctag">@note</span> Private forwards can be cloned.
+<a name="146"></a> * <span class="doctag">@note</span> Use CloseHandle() to destroy these.
+<a name="147"></a> *
+<a name="148"></a> * <span class="doctag">@param</span> type				Execution type to be used.
+<a name="149"></a> * <span class="doctag">@param</span> ...				Variable number of parameter types (up to 32).
+<a name="150"></a> * <span class="doctag">@return</span> 					Handle to new private forward.
+<a name="151"></a> * <span class="doctag">@error</span>					More than 32 paramater types passed.
+<a name="152"></a> */</span>
+<a name="153"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateForward</span>(<span class="identifier">ExecType</span>:<span class="identifier">type</span>, <span class="identifier">ParamType</span>:...);
+<a name="154"></a>
+<a name="155"></a><span class="comment">/**
+<a name="156"></a> * Returns the number of functions in a global or private forward's call list.
+<a name="157"></a> *
+<a name="158"></a> * <span class="doctag">@param</span> fwd				Handle to global or private forward.
+<a name="159"></a> * <span class="doctag">@return</span>					Number of functions in forward.
+<a name="160"></a> * <span class="doctag">@error</span>					Invalid or corrupt forward handle.
+<a name="161"></a> */</span>
+<a name="162"></a><span class="keyword">native</span> <span class="identifier">GetForwardFunctionCount</span>(<span class="keyword type">Handle</span>:<span class="identifier">fwd</span>);
+<a name="163"></a>
+<a name="164"></a><span class="comment">/**
+<a name="165"></a> * Adds a function to a private forward's call list.
+<a name="166"></a> *
+<a name="167"></a> * <span class="doctag">@note</span> Cannot be used during an incompleted call.
+<a name="168"></a> *
+<a name="169"></a> * <span class="doctag">@param</span> fwd				Handle to private forward.
+<a name="170"></a> * <span class="doctag">@param</span> plugin			Handle of the plugin that contains the function.
+<a name="171"></a> *							Pass INVALID_HANDLE to specify the calling plugin.
+<a name="172"></a> * <span class="doctag">@param</span> func				Function to add to forward.
+<a name="173"></a> * <span class="doctag">@return</span>					True on success, false otherwise.
+<a name="174"></a> * <span class="doctag">@error</span>					Invalid or corrupt private forward handle, invalid or corrupt plugin handle, or invalid function.
+<a name="175"></a> */</span>
+<a name="176"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">AddToForward</span>(<span class="keyword type">Handle</span>:<span class="identifier">fwd</span>, <span class="keyword type">Handle</span>:<span class="identifier">plugin</span>, <span class="keyword type">Function</span>:<span class="identifier">func</span>);
+<a name="177"></a>
+<a name="178"></a><span class="comment">/**
+<a name="179"></a> * Removes a function from a private forward's call list.
+<a name="180"></a> *
+<a name="181"></a> * <span class="doctag">@note</span> Only removes one instance.
+<a name="182"></a> * <span class="doctag">@note</span> Functions will be removed automatically if their parent plugin is unloaded.
+<a name="183"></a> *
+<a name="184"></a> * <span class="doctag">@param</span> fwd				Handle to private forward.
+<a name="185"></a> * <span class="doctag">@param</span> plugin			Handle of the plugin that contains the function.
+<a name="186"></a> *							Pass INVALID_HANDLE to specify the calling plugin.
+<a name="187"></a> * <span class="doctag">@param</span> func				Function to remove from forward.
+<a name="188"></a> * <span class="doctag">@return</span>					True on success, false otherwise.
+<a name="189"></a> * <span class="doctag">@error</span>					Invalid or corrupt private forward handle, invalid or corrupt plugin handle, or invalid function.
+<a name="190"></a> */</span>
+<a name="191"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RemoveFromForward</span>(<span class="keyword type">Handle</span>:<span class="identifier">fwd</span>, <span class="keyword type">Handle</span>:<span class="identifier">plugin</span>, <span class="keyword type">Function</span>:<span class="identifier">func</span>);
+<a name="192"></a>
+<a name="193"></a><span class="comment">/**
+<a name="194"></a> * Removes all instances of a plugin from a private forward's call list.
+<a name="195"></a> *
+<a name="196"></a> * <span class="doctag">@note</span> Functions will be removed automatically if their parent plugin is unloaded.
+<a name="197"></a> *
+<a name="198"></a> * <span class="doctag">@param</span> fwd				Handle to private forward.
+<a name="199"></a> * <span class="doctag">@param</span> plugin			Handle of the plugin to remove instances of.
+<a name="200"></a> *							Pass INVALID_HANDLE to specify the calling plugin.
+<a name="201"></a> * <span class="doctag">@return</span>					Number of functions removed from forward.
+<a name="202"></a> * <span class="doctag">@error</span>					Invalid or corrupt private forward handle or invalid or corrupt plugin handle.
+<a name="203"></a> */</span>
+<a name="204"></a><span class="keyword">native</span> <span class="identifier">RemoveAllFromForward</span>(<span class="keyword type">Handle</span>:<span class="identifier">fwd</span>, <span class="keyword type">Handle</span>:<span class="identifier">plugin</span>);
+<a name="205"></a>
+<a name="206"></a><span class="comment">/**
+<a name="207"></a> * Starts a call to functions in a forward's call list.
+<a name="208"></a> *
+<a name="209"></a> * <span class="doctag">@note</span> Cannot be used during an incompleted call.
+<a name="210"></a> *
+<a name="211"></a> * <span class="doctag">@param</span> fwd				Handle to global or private forward.
+<a name="212"></a> * <span class="doctag">@noreturn</span>
+<a name="213"></a> * <span class="doctag">@error</span>					Invalid or corrupt forward handle or called before another call has completed.
+<a name="214"></a> */</span>
+<a name="215"></a><span class="keyword">native</span> <span class="identifier">Call_StartForward</span>(<span class="keyword type">Handle</span>:<span class="identifier">fwd</span>);
+<a name="216"></a>
+<a name="217"></a><span class="comment">/**
+<a name="218"></a> * Starts a call to a function.
+<a name="219"></a> *
+<a name="220"></a> * <span class="doctag">@note</span> Cannot be used during an incompleted call.
+<a name="221"></a> *
+<a name="222"></a> * <span class="doctag">@param</span> plugin			Handle of the plugin that contains the function.
+<a name="223"></a> *							Pass INVALID_HANDLE to specify the calling plugin.
+<a name="224"></a> * <span class="doctag">@param</span> func				Function to call.
+<a name="225"></a> * <span class="doctag">@noreturn</span>
+<a name="226"></a> * <span class="doctag">@error</span>					Invalid or corrupt plugin handle, invalid function, or called before another call has completed.
+<a name="227"></a> */</span>
+<a name="228"></a><span class="keyword">native</span> <span class="identifier">Call_StartFunction</span>(<span class="keyword type">Handle</span>:<span class="identifier">plugin</span>, <span class="keyword type">Function</span>:<span class="identifier">func</span>);
+<a name="229"></a>
+<a name="230"></a><span class="comment">/**
+<a name="231"></a> * Pushes a cell onto the current call.
+<a name="232"></a> *
+<a name="233"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="234"></a> *
+<a name="235"></a> * <span class="doctag">@param</span> value				Cell value to push.
+<a name="236"></a> * <span class="doctag">@noreturn</span>
+<a name="237"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="238"></a> */</span>
+<a name="239"></a><span class="keyword">native</span> <span class="identifier">Call_PushCell</span>(<span class="keyword type">any</span>:<span class="identifier">value</span>);
+<a name="240"></a>
+<a name="241"></a><span class="comment">/**
+<a name="242"></a> * Pushes a cell by reference onto the current call.
+<a name="243"></a> *
+<a name="244"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="245"></a> *
+<a name="246"></a> * <span class="doctag">@param</span> value				Cell reference to push.
+<a name="247"></a> * <span class="doctag">@noreturn</span>
+<a name="248"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="249"></a> */</span>
+<a name="250"></a><span class="keyword">native</span> <span class="identifier">Call_PushCellRef</span>(&amp;<span class="keyword type">any</span>:<span class="identifier">value</span>);
+<a name="251"></a>
+<a name="252"></a><span class="comment">/**
+<a name="253"></a> * Pushes a float onto the current call.
+<a name="254"></a> *
+<a name="255"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="256"></a> *
+<a name="257"></a> * <span class="doctag">@param</span> value				Floating point value to push.
+<a name="258"></a> * <span class="doctag">@noreturn</span>
+<a name="259"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="260"></a> */</span>
+<a name="261"></a><span class="keyword">native</span> <span class="identifier">Call_PushFloat</span>(<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="262"></a>
+<a name="263"></a><span class="comment">/**
+<a name="264"></a> * Pushes a float by reference onto the current call.
+<a name="265"></a> *
+<a name="266"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="267"></a> *
+<a name="268"></a> * <span class="doctag">@param</span> value				Floating point reference to push.
+<a name="269"></a> * <span class="doctag">@noreturn</span>
+<a name="270"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="271"></a> */</span>
+<a name="272"></a><span class="keyword">native</span> <span class="identifier">Call_PushFloatRef</span>(&amp;<span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="273"></a>
+<a name="274"></a><span class="comment">/**
+<a name="275"></a> * Pushes an array onto the current call.
+<a name="276"></a> *
+<a name="277"></a> * <span class="doctag">@note</span> Changes to array are not copied back to caller. Use PushArrayEx() to do this.
+<a name="278"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="279"></a> *
+<a name="280"></a> * <span class="doctag">@param</span> value				Array to push.
+<a name="281"></a> * <span class="doctag">@param</span> size				Size of array.
+<a name="282"></a> * <span class="doctag">@noreturn</span>
+<a name="283"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="284"></a> */</span>
+<a name="285"></a><span class="keyword">native</span> <span class="identifier">Call_PushArray</span>(<span class="keyword">const</span> <span class="keyword type">any</span>:<span class="identifier">value</span>[], <span class="identifier">size</span>);
+<a name="286"></a>
+<a name="287"></a><span class="comment">/**
+<a name="288"></a> * Pushes an array onto the current call.
+<a name="289"></a> *
+<a name="290"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="291"></a> *
+<a name="292"></a> * <span class="doctag">@param</span> value				Array to push.
+<a name="293"></a> * <span class="doctag">@param</span> size				Size of array.
+<a name="294"></a> * <span class="doctag">@param</span> cpflags			Whether or not changes should be copied back to the input array.
+<a name="295"></a> *							See SP_PARAM_* constants for details.
+<a name="296"></a> * <span class="doctag">@noreturn</span>
+<a name="297"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="298"></a> */</span>
+<a name="299"></a><span class="keyword">native</span> <span class="identifier">Call_PushArrayEx</span>(<span class="keyword type">any</span>:<span class="identifier">value</span>[], <span class="identifier">size</span>, <span class="identifier">cpflags</span>);
+<a name="300"></a>
+<a name="301"></a><span class="comment">/**
+<a name="302"></a> * Pushes a string onto the current call.
+<a name="303"></a> *
+<a name="304"></a> * <span class="doctag">@note</span> Changes to string are not copied back to caller. Use PushStringEx() to do this.
+<a name="305"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="306"></a> *
+<a name="307"></a> * <span class="doctag">@param</span> value				String to push.
+<a name="308"></a> * <span class="doctag">@noreturn</span>
+<a name="309"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="310"></a> */</span>
+<a name="311"></a><span class="keyword">native</span> <span class="identifier">Call_PushString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="312"></a>
+<a name="313"></a><span class="comment">/**
+<a name="314"></a> * Pushes a string onto the current call.
+<a name="315"></a> *
+<a name="316"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="317"></a> *
+<a name="318"></a> * <span class="doctag">@param</span> value				String to push.
+<a name="319"></a> * <span class="doctag">@param</span> length			Length of string buffer.
+<a name="320"></a> * <span class="doctag">@param</span> szflags			Flags determining how string should be handled.
+<a name="321"></a> *							See SP_PARAM_STRING_* constants for details.
+<a name="322"></a> *							The default (0) is to push ASCII.
+<a name="323"></a> * <span class="doctag">@param</span> cpflags			Whether or not changes should be copied back to the input array.
+<a name="324"></a> *							See SP_PARAM_* constants for details.		
+<a name="325"></a> * <span class="doctag">@noreturn</span>
+<a name="326"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="327"></a> */</span>
+<a name="328"></a><span class="keyword">native</span> <span class="identifier">Call_PushStringEx</span>(<span class="keyword type">String</span>:<span class="identifier">value</span>[], <span class="identifier">length</span>, <span class="identifier">szflags</span>, <span class="identifier">cpflags</span>);
+<a name="329"></a>
+<a name="330"></a><span class="comment">/**
+<a name="331"></a> * Completes a call to a function or forward's call list.
+<a name="332"></a> *
+<a name="333"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="334"></a> *
+<a name="335"></a> * <span class="doctag">@param</span> result			Return value of function or forward's call list.		
+<a name="336"></a> * <span class="doctag">@return</span>					SP_ERROR_NONE on success, any other integer on failure.
+<a name="337"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="338"></a> */</span>
+<a name="339"></a><span class="keyword">native</span> <span class="identifier">Call_Finish</span>(&amp;<span class="keyword type">any</span>:<span class="identifier">result</span>=<span class="number">0</span>);
+<a name="340"></a>
+<a name="341"></a><span class="comment">/**
+<a name="342"></a> * Cancels a call to a function or forward's call list.
+<a name="343"></a> *
+<a name="344"></a> * <span class="doctag">@note</span> Cannot be used before a call has been started.
+<a name="345"></a> *		
+<a name="346"></a> * <span class="doctag">@noreturn</span>
+<a name="347"></a> * <span class="doctag">@error</span>					Called before a call has been started.
+<a name="348"></a> */</span>
+<a name="349"></a><span class="keyword">native</span> <span class="identifier">Call_Cancel</span>();
+<a name="350"></a>
+<a name="351"></a><span class="comment">/**
+<a name="352"></a> * Defines a native function.
+<a name="353"></a> *
+<a name="354"></a> * It is not necessary to validate the parameter count 
+<a name="355"></a> *
+<a name="356"></a> * <span class="doctag">@param</span> plugin			Handle of the calling plugin.
+<a name="357"></a> * <span class="doctag">@param</span> numParams			Number of parameters passed to the native.
+<a name="358"></a> * <span class="doctag">@return</span> 					Value for the native call to return.
+<a name="359"></a> */</span>
+<a name="360"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">NativeCall</span>(<span class="keyword type">Handle</span>:<span class="identifier">plugin</span>, <span class="identifier">numParams</span>);
+<a name="361"></a>
+<a name="362"></a><span class="comment">/**
+<a name="363"></a> * Creates a dynamic native.  This should only be called in AskPluginLoad(), or 
+<a name="364"></a> * else you risk not having your native shared with other plugins.
+<a name="365"></a> *
+<a name="366"></a> * <span class="doctag">@param</span> name				Name of the dynamic native; must be unique amongst
+<a name="367"></a> *							all other registered dynamic natives.
+<a name="368"></a> * <span class="doctag">@param</span> func				Function to use as the dynamic native.
+<a name="369"></a> * <span class="doctag">@noreturn</span>
+<a name="370"></a> */</span>
+<a name="371"></a><span class="keyword">native</span> <span class="identifier">CreateNative</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">NativeCall</span>:<span class="identifier">func</span>);
+<a name="372"></a>
+<a name="373"></a><span class="comment">/**
+<a name="374"></a> * Throws an error in the calling plugin of a native, instead of your own plugin.
+<a name="375"></a> *
+<a name="376"></a> * <span class="doctag">@param</span> error				Error code to use.
+<a name="377"></a> * <span class="doctag">@param</span> fmt				Error message format.
+<a name="378"></a> * <span class="doctag">@param</span> ...				Format arguments.
+<a name="379"></a> */</span>
+<a name="380"></a><span class="keyword">native</span> <span class="identifier">ThrowNativeError</span>(<span class="identifier">error</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[], <span class="keyword type">any</span>:...);
+<a name="381"></a>
+<a name="382"></a><span class="comment">/**
+<a name="383"></a> * Retrieves the string length from a native parameter string.  This is useful 
+<a name="384"></a> * fetching the entire string using dynamic arrays.
+<a name="385"></a> * <span class="doctag">@note</span> If this function succeeds, Get/SetNativeString will also succeed.
+<a name="386"></a> *
+<a name="387"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="388"></a> * <span class="doctag">@param</span> length			Stores the length of the string.
+<a name="389"></a> * <span class="doctag">@return</span>					SP_ERROR_NONE on success, any other integer on failure.
+<a name="390"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="391"></a> */</span>
+<a name="392"></a><span class="keyword">native</span> <span class="identifier">GetNativeStringLength</span>(<span class="identifier">param</span>, &amp;<span class="identifier">length</span>);
+<a name="393"></a>
+<a name="394"></a><span class="comment">/**
+<a name="395"></a> * Retrieves a string from a native parameter.
+<a name="396"></a> * <span class="doctag">@note</span> Output conditions are undefined on failure.
+<a name="397"></a> *
+<a name="398"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="399"></a> * <span class="doctag">@param</span> buffer			Buffer to store the string in.
+<a name="400"></a> * <span class="doctag">@param</span> maxlength			Maximum length of the buffer.
+<a name="401"></a> * <span class="doctag">@param</span> bytes				Optionally store the number of bytes written.
+<a name="402"></a> * <span class="doctag">@return</span>					SP_ERROR_NONE on success, any other integer on failure.
+<a name="403"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="404"></a> */</span>
+<a name="405"></a><span class="keyword">native</span> <span class="identifier">GetNativeString</span>(<span class="identifier">param</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, &amp;<span class="identifier">bytes</span>=<span class="number">0</span>);
+<a name="406"></a>
+<a name="407"></a><span class="comment">/**
+<a name="408"></a> * Sets a string in a native parameter.
+<a name="409"></a> * <span class="doctag">@note</span> Output conditions are undefined on failure.
+<a name="410"></a> *
+<a name="411"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="412"></a> * <span class="doctag">@param</span> source			Source string to use.
+<a name="413"></a> * <span class="doctag">@param</span> maxlength			Maximum number of bytes to write.
+<a name="414"></a> * <span class="doctag">@param</span> utf8				If false, string will not be written
+<a name="415"></a> *							with UTF8 safety.
+<a name="416"></a> * <span class="doctag">@param</span> bytes				Optionally store the number of bytes written.
+<a name="417"></a> * <span class="doctag">@return</span>					SP_ERROR_NONE on success, any other integer on failure.
+<a name="418"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="419"></a> */</span>
+<a name="420"></a><span class="keyword">native</span> <span class="identifier">SetNativeString</span>(<span class="identifier">param</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">source</span>[], <span class="identifier">maxlength</span>, <span class="keyword type">bool</span>:<span class="identifier">utf8</span>=<span class="keyword literal">true</span>, &amp;<span class="identifier">bytes</span>=<span class="number">0</span>);
+<a name="421"></a>
+<a name="422"></a><span class="comment">/**
+<a name="423"></a> * Gets a cell from a native parameter.
+<a name="424"></a> *
+<a name="425"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="426"></a> * <span class="doctag">@return</span>					Cell value at the parameter number.
+<a name="427"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="428"></a> */</span>
+<a name="429"></a><span class="keyword">native</span> <span class="keyword type">any</span>:<span class="identifier">GetNativeCell</span>(<span class="identifier">param</span>);
+<a name="430"></a>
+<a name="431"></a><span class="comment">/**
+<a name="432"></a> * Gets a cell from a native parameter, by reference.
+<a name="433"></a> *
+<a name="434"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="435"></a> * <span class="doctag">@return</span>					Cell value at the parameter number.
+<a name="436"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="437"></a> */</span>
+<a name="438"></a><span class="keyword">native</span> <span class="keyword type">any</span>:<span class="identifier">GetNativeCellRef</span>(<span class="identifier">param</span>);
+<a name="439"></a>
+<a name="440"></a><span class="comment">/**
+<a name="441"></a> * Sets a cell from a native parameter, by reference.
+<a name="442"></a> *
+<a name="443"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="444"></a> * <span class="doctag">@param</span> value				Cell value at the parameter number to set by reference.
+<a name="445"></a> * <span class="doctag">@noreturn</span>
+<a name="446"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="447"></a> */</span>
+<a name="448"></a><span class="keyword">native</span> <span class="identifier">SetNativeCellRef</span>(<span class="identifier">param</span>, <span class="keyword type">any</span>:<span class="identifier">value</span>);
+<a name="449"></a>
+<a name="450"></a><span class="comment">/**
+<a name="451"></a> * Gets an array from a native parameter (always by reference).
+<a name="452"></a> *
+<a name="453"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="454"></a> * <span class="doctag">@param</span> local				Local array to copy into.
+<a name="455"></a> * <span class="doctag">@param</span> size				Maximum size of local array.
+<a name="456"></a> * <span class="doctag">@return</span>					SP_ERROR_NONE on success, anything else on failure.
+<a name="457"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="458"></a> */</span>
+<a name="459"></a><span class="keyword">native</span> <span class="identifier">GetNativeArray</span>(<span class="identifier">param</span>, <span class="keyword type">any</span>:<span class="identifier">local</span>[], <span class="identifier">size</span>);
+<a name="460"></a>
+<a name="461"></a><span class="comment">/**
+<a name="462"></a> * Copies a local array into a native parameter array (always by reference).
+<a name="463"></a> * 
+<a name="464"></a> * <span class="doctag">@param</span> param				Parameter number, starting from 1.
+<a name="465"></a> * <span class="doctag">@param</span> local				Local array to copy from.
+<a name="466"></a> * <span class="doctag">@param</span> size				Size of the local array to copy.
+<a name="467"></a> * <span class="doctag">@return</span>					SP_ERROR_NONE on success, anything else on failure.
+<a name="468"></a> * <span class="doctag">@error</span>					Invalid parameter number or calling from a non-native function.
+<a name="469"></a> */</span>
+<a name="470"></a><span class="keyword">native</span> <span class="identifier">SetNativeArray</span>(<span class="identifier">param</span>, <span class="keyword">const</span> <span class="keyword type">any</span>:<span class="identifier">local</span>[], <span class="identifier">size</span>);
+<a name="471"></a>
+<a name="472"></a><span class="comment">/**
+<a name="473"></a> * Formats a string using parameters from a native.
+<a name="474"></a> *
+<a name="475"></a> * <span class="doctag">@note</span> All parameter indexes start at 1.
+<a name="476"></a> * <span class="doctag">@note</span> If the input and output buffers overlap, the contents
+<a name="477"></a> *  of the output buffer at the end is undefined.
+<a name="478"></a> *
+<a name="479"></a> * <span class="doctag">@param</span> out_param			Output parameter number to write to.  If 0, out_string is used.
+<a name="480"></a> * <span class="doctag">@param</span> fmt_param			Format parameter number.  If 0, fmt_string is used.
+<a name="481"></a> * <span class="doctag">@param</span> vararg_param		First variable parameter number.
+<a name="482"></a> * <span class="doctag">@param</span> out_len			Output string buffer maximum length (always required).
+<a name="483"></a> * <span class="doctag">@param</span> written			Optionally stores the number of bytes written.
+<a name="484"></a> * <span class="doctag">@param</span> out_string		Output string buffer to use if out_param is not used.
+<a name="485"></a> * <span class="doctag">@param</span> fmt_string		Format string to use if fmt_param is not used.
+<a name="486"></a> * <span class="doctag">@return</span>					SP_ERROR_NONE on success, anything else on failure.
+<a name="487"></a> */</span>
+<a name="488"></a><span class="keyword">native</span> <span class="identifier">FormatNativeString</span>(<span class="identifier">out_param</span>, 
+<a name="489"></a>						  <span class="identifier">fmt_param</span>, 
+<a name="490"></a>						  <span class="identifier">vararg_param</span>, 
+<a name="491"></a>						  <span class="identifier">out_len</span>,
+<a name="492"></a>						  &amp;<span class="identifier">written</span>=<span class="number">0</span>,
+<a name="493"></a>						  <span class="keyword type">String</span>:<span class="identifier">out_string</span>[]=<span class="string">""</span>,
+<a name="494"></a>						  <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt_string</span>[]=<span class="string">""</span>);
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<title>keyvalues.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_keyvalues_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_keyvalues_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * KeyValue data value types
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">enum</span> <span class="identifier">KvDataTypes</span>
+<a name="42"></a>{
+<a name="43"></a>	<span class="identifier">KvData_None</span> = <span class="number">0</span>,	<span class="comment">/**&lt; Type could not be identified, or no type */</span>
+<a name="44"></a>	<span class="identifier">KvData_String</span>,		<span class="comment">/**&lt; String value */</span>
+<a name="45"></a>	<span class="identifier">KvData_Int</span>,			<span class="comment">/**&lt; Integer value */</span>
+<a name="46"></a>	<span class="identifier">KvData_Float</span>,		<span class="comment">/**&lt; Floating point value */</span>
+<a name="47"></a>	<span class="identifier">KvData_Ptr</span>,			<span class="comment">/**&lt; Pointer value (sometimes called "long") */</span>
+<a name="48"></a>	<span class="identifier">KvData_WString</span>,		<span class="comment">/**&lt; Wide string value */</span>
+<a name="49"></a>	<span class="identifier">KvData_Color</span>,		<span class="comment">/**&lt; Color value */</span>
+<a name="50"></a>	<span class="identifier">KvData_UInt64</span>,		<span class="comment">/**&lt; Large integer value */</span>
+<a name="51"></a>	<span class="comment">/* --- */</span>
+<a name="52"></a>	<span class="identifier">KvData_NUMTYPES</span>, 
+<a name="53"></a>};
+<a name="54"></a>
+<a name="55"></a><span class="comment">/**
+<a name="56"></a> * Creates a new KeyValues structure.  The Handle must always be closed.
+<a name="57"></a> *
+<a name="58"></a> * <span class="doctag">@param</span> name			Name of the root section.
+<a name="59"></a> * <span class="doctag">@param</span> firstKey		If non-empty, specifies the first key value.
+<a name="60"></a> * <span class="doctag">@param</span> firstValue	If firstKey is non-empty, specifies the first key's value.
+<a name="61"></a> * <span class="doctag">@return</span>				A Handle to a new KeyValues structure.
+<a name="62"></a> */</span>
+<a name="63"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateKeyValues</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">firstKey</span>[]=<span class="string">""</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">firstValue</span>[]=<span class="string">""</span>);
+<a name="64"></a>
+<a name="65"></a><span class="comment">/** 
+<a name="66"></a> * Sets a string value of a KeyValues key.
+<a name="67"></a> *
+<a name="68"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="69"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="70"></a> * <span class="doctag">@param</span> value			String value.
+<a name="71"></a> * <span class="doctag">@noreturn</span>
+<a name="72"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="73"></a> */</span>
+<a name="74"></a><span class="keyword">native</span> <span class="identifier">KvSetString</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="75"></a>
+<a name="76"></a><span class="comment">/** 
+<a name="77"></a> * Sets an integer value of a KeyValues key.
+<a name="78"></a> *
+<a name="79"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="80"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="81"></a> * <span class="doctag">@param</span> value			Value number.
+<a name="82"></a> * <span class="doctag">@noreturn</span>
+<a name="83"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="84"></a> */</span>
+<a name="85"></a><span class="keyword">native</span> <span class="identifier">KvSetNum</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="identifier">value</span>);
+<a name="86"></a>
+<a name="87"></a><span class="comment">/** 
+<a name="88"></a> * Sets a large integer value of a KeyValues key.
+<a name="89"></a> *
+<a name="90"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="91"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="92"></a> * <span class="doctag">@param</span> value			Large integer value (0=High bits, 1=Low bits)
+<a name="93"></a> * <span class="doctag">@noreturn</span>
+<a name="94"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="95"></a> */</span>
+<a name="96"></a><span class="keyword">native</span> <span class="identifier">KvSetUInt64</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword">const</span> <span class="identifier">value</span>[<span class="number">2</span>]);
+<a name="97"></a>
+<a name="98"></a><span class="comment">/** 
+<a name="99"></a> * Sets a floating point value of a KeyValues key.
+<a name="100"></a> *
+<a name="101"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="102"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="103"></a> * <span class="doctag">@param</span> value			Floating point value.
+<a name="104"></a> * <span class="doctag">@noreturn</span>
+<a name="105"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="106"></a> */</span>
+<a name="107"></a><span class="keyword">native</span> <span class="identifier">KvSetFloat</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="108"></a>
+<a name="109"></a><span class="comment">/** 
+<a name="110"></a> * Sets a set of color values of a KeyValues key.
+<a name="111"></a> *
+<a name="112"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="113"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="114"></a> * <span class="doctag">@param</span> r				Red value.
+<a name="115"></a> * <span class="doctag">@param</span> g				Green value.
+<a name="116"></a> * <span class="doctag">@param</span> b				Blue value.
+<a name="117"></a> * <span class="doctag">@param</span> a				Alpha value.
+<a name="118"></a> * <span class="doctag">@noreturn</span>
+<a name="119"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="120"></a> */</span>
+<a name="121"></a><span class="keyword">native</span> <span class="identifier">KvSetColor</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="identifier">r</span>, <span class="identifier">g</span>, <span class="identifier">b</span>, <span class="identifier">a</span>=<span class="number">0</span>);
+<a name="122"></a>
+<a name="123"></a><span class="comment">/** 
+<a name="124"></a> * Sets a vector value of a KeyValues key.
+<a name="125"></a> *
+<a name="126"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="127"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="128"></a> * <span class="doctag">@param</span> vec			Vector value.
+<a name="129"></a> * <span class="doctag">@noreturn</span>
+<a name="130"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="131"></a> */</span>
+<a name="132"></a><span class="keyword">native</span> <span class="identifier">KvSetVector</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>]);
+<a name="133"></a>
+<a name="134"></a><span class="comment">/** 
+<a name="135"></a> * Retrieves a string value from a KeyValues key.
+<a name="136"></a> *
+<a name="137"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="138"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="139"></a> * <span class="doctag">@param</span> value			Buffer to store key value in.
+<a name="140"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the value buffer.
+<a name="141"></a> * <span class="doctag">@param</span> defvalue		Optional default value to use if the key is not found.
+<a name="142"></a> * <span class="doctag">@noreturn</span>
+<a name="143"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="144"></a> */</span>
+<a name="145"></a><span class="keyword">native</span> <span class="identifier">KvGetString</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword type">String</span>:<span class="identifier">value</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">defvalue</span>[]=<span class="string">""</span>);
+<a name="146"></a>
+<a name="147"></a><span class="comment">/** 
+<a name="148"></a> * Retrieves an integer value from a KeyValues key.
+<a name="149"></a> *
+<a name="150"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="151"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="152"></a> * <span class="doctag">@param</span> defvalue		Optional default value to use if the key is not found.
+<a name="153"></a> * <span class="doctag">@return</span>				Integer value of the key.
+<a name="154"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="155"></a> */</span>
+<a name="156"></a><span class="keyword">native</span> <span class="identifier">KvGetNum</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="identifier">defvalue</span>=<span class="number">0</span>);
+<a name="157"></a>
+<a name="158"></a><span class="comment">/** 
+<a name="159"></a> * Retrieves a floating point value from a KeyValues key.
+<a name="160"></a> *
+<a name="161"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="162"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="163"></a> * <span class="doctag">@param</span> defvalue		Optional default value to use if the key is not found.
+<a name="164"></a> * <span class="doctag">@return</span>				Floating point value of the key.
+<a name="165"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="166"></a> */</span>
+<a name="167"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">KvGetFloat</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword type">Float</span>:<span class="identifier">defvalue</span>=<span class="number">0.0</span>);
+<a name="168"></a>
+<a name="169"></a><span class="comment">/** 
+<a name="170"></a> * Retrieves a set of color values from a KeyValues key.
+<a name="171"></a> *
+<a name="172"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="173"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="174"></a> * <span class="doctag">@param</span> r				Red value, set by reference.
+<a name="175"></a> * <span class="doctag">@param</span> g				Green value, set by reference. 
+<a name="176"></a> * <span class="doctag">@param</span> b				Blue value, set by reference. 
+<a name="177"></a> * <span class="doctag">@param</span> a				Alpha value, set by reference. 
+<a name="178"></a> * <span class="doctag">@noreturn</span>
+<a name="179"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="180"></a> */</span>
+<a name="181"></a><span class="keyword">native</span> <span class="identifier">KvGetColor</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], &amp;<span class="identifier">r</span>, &amp;<span class="identifier">g</span>, &amp;<span class="identifier">b</span>, &amp;<span class="identifier">a</span>);
+<a name="182"></a>
+<a name="183"></a><span class="comment">/** 
+<a name="184"></a> * Retrieves a large integer value from a KeyValues key.
+<a name="185"></a> *
+<a name="186"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="187"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="188"></a> * <span class="doctag">@param</span> value			Array to represent the large integer.
+<a name="189"></a> * <span class="doctag">@param</span> defvalue		Optional default value to use if the key is not found.
+<a name="190"></a> * <span class="doctag">@noreturn</span>
+<a name="191"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="192"></a> */</span>
+<a name="193"></a><span class="keyword">native</span> <span class="identifier">KvGetUInt64</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="identifier">value</span>[<span class="number">2</span>], <span class="identifier">defvalue</span>[<span class="number">2</span>]={<span class="number">0</span>,<span class="number">0</span>});
+<a name="194"></a>
+<a name="195"></a><span class="comment">/** 
+<a name="196"></a> * Retrieves a vector value from a KeyValues key.
+<a name="197"></a> *
+<a name="198"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="199"></a> * <span class="doctag">@param</span> key			Name of the key, or NULL_STRING.
+<a name="200"></a> * <span class="doctag">@param</span> vec			Destination vector to store the value in.
+<a name="201"></a> * <span class="doctag">@param</span> defvalue		Optional default value to use if the key is not found.
+<a name="202"></a> * <span class="doctag">@noreturn</span>
+<a name="203"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="204"></a> */</span>
+<a name="205"></a><span class="keyword">native</span> <span class="identifier">KvGetVector</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">defvalue</span>[<span class="number">3</span>]={<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>});
+<a name="206"></a>
+<a name="207"></a><span class="comment">/**
+<a name="208"></a> * Sets the current position in the KeyValues tree to the given key.
+<a name="209"></a> *
+<a name="210"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="211"></a> * <span class="doctag">@param</span> key			Name of the key.
+<a name="212"></a> * <span class="doctag">@param</span> create		If true, and the key does not exist, it will be created.
+<a name="213"></a> * <span class="doctag">@return</span>				True if the key exists, false if it does not and was not created.
+<a name="214"></a> */</span>
+<a name="215"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvJumpToKey</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword type">bool</span>:<span class="identifier">create</span>=<span class="keyword literal">false</span>);
+<a name="216"></a>
+<a name="217"></a><span class="comment">/**
+<a name="218"></a> * Sets the current position in the KeyValues tree to the given key.
+<a name="219"></a> *
+<a name="220"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="221"></a> * <span class="doctag">@param</span> id			KeyValues id.
+<a name="222"></a> * <span class="doctag">@return</span>				True if the key exists, false if it does not.
+<a name="223"></a> */</span>
+<a name="224"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvJumpToKeySymbol</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="identifier">id</span>);
+<a name="225"></a>
+<a name="226"></a><span class="comment">/**
+<a name="227"></a> * Sets the current position in the KeyValues tree to the first sub key.
+<a name="228"></a> * This native adds to the internal traversal stack.
+<a name="229"></a> *
+<a name="230"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="231"></a> * <span class="doctag">@param</span> keyOnly		If false, non-keys will be traversed (values).
+<a name="232"></a> * <span class="doctag">@return</span>				True on success, false if there was no first sub key.
+<a name="233"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="234"></a> */</span>
+<a name="235"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvGotoFirstSubKey</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword type">bool</span>:<span class="identifier">keyOnly</span>=<span class="keyword literal">true</span>);
+<a name="236"></a>
+<a name="237"></a><span class="comment">/**
+<a name="238"></a> * Sets the current position in the KeyValues tree to the next sub key.
+<a name="239"></a> * This native does NOT add to the internal traversal stack, and thus
+<a name="240"></a> * KvGoBack() is not needed for each successive call to this function.
+<a name="241"></a> *
+<a name="242"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="243"></a> * <span class="doctag">@param</span> keyOnly		If false, non-keys will be traversed (values).
+<a name="244"></a> * <span class="doctag">@return</span>				True on success, false if there was no next sub key.
+<a name="245"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="246"></a> */</span>
+<a name="247"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvGotoNextKey</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword type">bool</span>:<span class="identifier">keyOnly</span>=<span class="keyword literal">true</span>);
+<a name="248"></a>
+<a name="249"></a><span class="comment">/**
+<a name="250"></a> * Saves the current position in the traversal stack onto the traversal
+<a name="251"></a> * stack.  This can be useful if you wish to use KvGotoNextKey() and 
+<a name="252"></a> * have the previous key saved for backwards traversal.
+<a name="253"></a> *
+<a name="254"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="255"></a> * <span class="doctag">@noreturn</span>
+<a name="256"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="257"></a> */</span>
+<a name="258"></a><span class="keyword">native</span> <span class="identifier">KvSavePosition</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>);
+<a name="259"></a>
+<a name="260"></a><span class="comment">/**
+<a name="261"></a> * Removes the given key from the current position.
+<a name="262"></a> *
+<a name="263"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="264"></a> * <span class="doctag">@param</span> key			Name of the key.
+<a name="265"></a> * <span class="doctag">@return</span>				True on success, false if key did not exist.
+<a name="266"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="267"></a> */</span>
+<a name="268"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvDeleteKey</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[]);
+<a name="269"></a>
+<a name="270"></a><span class="comment">/**
+<a name="271"></a> * Removes the current sub-key and attempts to set the position
+<a name="272"></a> * to the sub-key after the removed one.  If no such sub-key exists,
+<a name="273"></a> * the position will be the parent key in the traversal stack.
+<a name="274"></a> * Given the sub-key having position "N" in the traversal stack, the 
+<a name="275"></a> * removal will always take place from position "N-1."
+<a name="276"></a> *
+<a name="277"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="278"></a> * <span class="doctag">@return</span>				1 if removal succeeded and there was another key.
+<a name="279"></a> *						0 if the current node was not contained in the
+<a name="280"></a> *						  previous node, or no previous node exists.
+<a name="281"></a> *						-1 if removal succeeded and there were no more keys,
+<a name="282"></a> *						  thus the state is as if KvGoBack() was called.
+<a name="283"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="284"></a> */</span>
+<a name="285"></a><span class="keyword">native</span> <span class="identifier">KvDeleteThis</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>);
+<a name="286"></a>
+<a name="287"></a><span class="comment">/**
+<a name="288"></a> * Jumps back to the previous position.  Returns false if there are no
+<a name="289"></a> * previous positions (i.e., at the root node).  This should be called
+<a name="290"></a> * once for each successful Jump call, in order to return to the top node.
+<a name="291"></a> * This function pops one node off the internal traversal stack.
+<a name="292"></a> *
+<a name="293"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="294"></a> * <span class="doctag">@return</span>				True on success, false if there is no higher node.
+<a name="295"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="296"></a> */</span>
+<a name="297"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvGoBack</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>);
+<a name="298"></a>
+<a name="299"></a><span class="comment">/**
+<a name="300"></a> * Sets the position back to the top node, emptying the entire node 
+<a name="301"></a> * traversal history.  This can be used instead of looping KvGoBack()
+<a name="302"></a> * if recursive iteration is not important.
+<a name="303"></a> *
+<a name="304"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="305"></a> * <span class="doctag">@noreturn</span>
+<a name="306"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="307"></a> */</span>
+<a name="308"></a><span class="keyword">native</span> <span class="identifier">KvRewind</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>);
+<a name="309"></a>
+<a name="310"></a><span class="comment">/**
+<a name="311"></a> * Retrieves the current section name.
+<a name="312"></a> * 
+<a name="313"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="314"></a> * <span class="doctag">@param</span> section		Buffer to store the section name.
+<a name="315"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the name buffer.
+<a name="316"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="317"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="318"></a> */</span>
+<a name="319"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvGetSectionName</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword type">String</span>:<span class="identifier">section</span>[], <span class="identifier">maxlength</span>);
+<a name="320"></a>
+<a name="321"></a><span class="comment">/**
+<a name="322"></a> * Sets the current section name.
+<a name="323"></a> * 
+<a name="324"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="325"></a> * <span class="doctag">@param</span> section		Section name.
+<a name="326"></a> * <span class="doctag">@noreturn</span>
+<a name="327"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="328"></a> */</span>
+<a name="329"></a><span class="keyword">native</span> <span class="identifier">KvSetSectionName</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">section</span>[]);
+<a name="330"></a>
+<a name="331"></a><span class="comment">/**
+<a name="332"></a> * Returns the data type at a key.
+<a name="333"></a> *
+<a name="334"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="335"></a> * <span class="doctag">@param</span> key			Key name.
+<a name="336"></a> * <span class="doctag">@return</span>				KvDataType value of the key.
+<a name="337"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="338"></a> */</span>
+<a name="339"></a><span class="keyword">native</span> <span class="identifier">KvDataTypes</span>:<span class="identifier">KvGetDataType</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[]);
+<a name="340"></a>
+<a name="341"></a><span class="comment">/**
+<a name="342"></a> * Converts a KeyValues tree to a file.  The tree is dumped
+<a name="343"></a> * from the current position.
+<a name="344"></a> *
+<a name="345"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="346"></a> * <span class="doctag">@param</span> file			File to dump write to.
+<a name="347"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="348"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="349"></a> */</span>
+<a name="350"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KeyValuesToFile</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">file</span>[]);
+<a name="351"></a>
+<a name="352"></a><span class="comment">/**
+<a name="353"></a> * Converts a file to a KeyValues tree.  The file is read into
+<a name="354"></a> * the current position of the tree.
+<a name="355"></a> *
+<a name="356"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="357"></a> * <span class="doctag">@param</span> file			File to read from.
+<a name="358"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="359"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="360"></a> */</span>
+<a name="361"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">FileToKeyValues</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">file</span>[]);
+<a name="362"></a>
+<a name="363"></a><span class="comment">/**
+<a name="364"></a> * Sets whether or not the KeyValues parser will read escape sequences.
+<a name="365"></a> * For example, \n would be read as a literal newline.  This defaults
+<a name="366"></a> * to false for new KeyValues structures.
+<a name="367"></a> *
+<a name="368"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="369"></a> * <span class="doctag">@param</span> useEscapes	Whether or not to read escape sequences.
+<a name="370"></a> * <span class="doctag">@noreturn</span>
+<a name="371"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="372"></a> */</span>
+<a name="373"></a><span class="keyword">native</span> <span class="identifier">KvSetEscapeSequences</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword type">bool</span>:<span class="identifier">useEscapes</span>);
+<a name="374"></a>
+<a name="375"></a><span class="comment">/**
+<a name="376"></a> * Returns the position in the jump stack; I.e. the number of calls
+<a name="377"></a> * required for KvGoBack to return to the root node.  If at the root node,
+<a name="378"></a> * 0 is returned.
+<a name="379"></a> *
+<a name="380"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="381"></a> * <span class="doctag">@return</span>				Number of non-root nodes in the jump stack.
+<a name="382"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="383"></a> */</span>
+<a name="384"></a><span class="keyword">native</span> <span class="identifier">KvNodesInStack</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>);
+<a name="385"></a>
+<a name="386"></a><span class="comment">/**
+<a name="387"></a> * Makes a new copy of all subkeys in the origin KeyValues to
+<a name="388"></a> * the destination KeyValues.
+<a name="389"></a> * NOTE: All KeyValues are processed from the current location not the root one.
+<a name="390"></a> *
+<a name="391"></a> * <span class="doctag">@param</span> origin		Origin KeyValues Handle.
+<a name="392"></a> * <span class="doctag">@param</span> dest			Destination KeyValues Handle.
+<a name="393"></a> * <span class="doctag">@noreturn</span>
+<a name="394"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="395"></a> */</span>
+<a name="396"></a><span class="keyword">native</span> <span class="identifier">KvCopySubkeys</span>(<span class="keyword type">Handle</span>:<span class="identifier">origin</span>, <span class="keyword type">Handle</span>:<span class="identifier">dest</span>);
+<a name="397"></a>
+<a name="398"></a><span class="comment">/** 
+<a name="399"></a> * Finds a KeyValues name by id.
+<a name="400"></a> *
+<a name="401"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="402"></a> * <span class="doctag">@param</span> id			KeyValues id.
+<a name="403"></a> * <span class="doctag">@param</span> name			Buffer to store the name.
+<a name="404"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the value buffer.
+<a name="405"></a> * <span class="doctag">@return</span>			True on success, false if id not found.
+<a name="406"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="407"></a> */</span>
+<a name="408"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvFindKeyById</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="identifier">id</span>, <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlength</span>);
+<a name="409"></a>
+<a name="410"></a><span class="comment">/** 
+<a name="411"></a> * Finds a KeyValues id inside a KeyValues tree.
+<a name="412"></a> *
+<a name="413"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="414"></a> * <span class="doctag">@param</span> key			Key name.
+<a name="415"></a> * <span class="doctag">@param</span> id			Id of the found KeyValue.
+<a name="416"></a> * <span class="doctag">@return</span>			True on success, false if key not found.
+<a name="417"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="418"></a> */</span>
+<a name="419"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvGetNameSymbol</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], &amp;<span class="identifier">id</span>);
+<a name="420"></a>
+<a name="421"></a><span class="comment">/**
+<a name="422"></a> * Retrieves the current section id.
+<a name="423"></a> * 
+<a name="424"></a> * <span class="doctag">@param</span> kv			KeyValues Handle.
+<a name="425"></a> * <span class="doctag">@param</span> id			Id of the current section.
+<a name="426"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="427"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="428"></a> */</span>
+<a name="429"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">KvGetSectionSymbol</span>(<span class="keyword type">Handle</span>:<span class="identifier">kv</span>, &amp;<span class="identifier">id</span>);
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

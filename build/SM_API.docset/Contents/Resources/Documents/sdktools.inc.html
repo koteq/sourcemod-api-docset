@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<title>sdktools.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_sdktools_included</span>
+<a name="34"></a></span>  <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_sdktools_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="preprocessor">#include <span class="tag">&lt;core&gt;</span>
+<a name="39"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_engine&gt;</span>
+<a name="40"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_functions&gt;</span>
+<a name="41"></a></span><span class="preprocessor">#if !<span class="identifier">defined</span> <span class="identifier">SDKTOOLS_DISABLE_SOUNDAPI</span>
+<a name="42"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_sound&gt;</span>
+<a name="43"></a></span><span class="preprocessor">#endif
+<a name="44"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_stringtables&gt;</span>
+<a name="45"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_trace&gt;</span>
+<a name="46"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_tempents&gt;</span>
+<a name="47"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_tempents_stocks&gt;</span>
+<a name="48"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_voice&gt;</span>
+<a name="49"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_entinput&gt;</span>
+<a name="50"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_entoutput&gt;</span>
+<a name="51"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_hooks&gt;</span>
+<a name="52"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_gamerules&gt;</span>
+<a name="53"></a></span><span class="preprocessor">#include <span class="tag">&lt;sdktools_client&gt;</span>
+<a name="54"></a></span>
+<a name="55"></a><span class="keyword">enum</span> <span class="identifier">SDKCallType</span>
+<a name="56"></a>{
+<a name="57"></a>	<span class="identifier">SDKCall_Static</span>,		<span class="comment">/**&lt; Static call */</span>
+<a name="58"></a>	<span class="identifier">SDKCall_Entity</span>,		<span class="comment">/**&lt; CBaseEntity call */</span>
+<a name="59"></a>	<span class="identifier">SDKCall_Player</span>,		<span class="comment">/**&lt; CBasePlayer call */</span>
+<a name="60"></a>	<span class="identifier">SDKCall_GameRules</span>,	<span class="comment">/**&lt; CGameRules call */</span>
+<a name="61"></a>	<span class="identifier">SDKCall_EntityList</span>,	<span class="comment">/**&lt; CGlobalEntityList call */</span> 
+<a name="62"></a>	<span class="identifier">SDKCall_Raw</span>,		<span class="comment">/**&lt; |this| pointer with an arbitrary address */</span> 
+<a name="63"></a>};
+<a name="64"></a>
+<a name="65"></a><span class="keyword">enum</span> <span class="identifier">SDKLibrary</span>
+<a name="66"></a>{
+<a name="67"></a>	<span class="identifier">SDKLibrary_Server</span>,	<span class="comment">/**&lt; server.dll/server_i486.so */</span>
+<a name="68"></a>	<span class="identifier">SDKLibrary_Engine</span>,	<span class="comment">/**&lt; engine.dll/engine_*.so */</span>
+<a name="69"></a>};
+<a name="70"></a>
+<a name="71"></a><span class="keyword">enum</span> <span class="identifier">SDKFuncConfSource</span>
+<a name="72"></a>{
+<a name="73"></a>	<span class="identifier">SDKConf_Virtual</span> = <span class="number">0</span>,	<span class="comment">/**&lt; Read a virtual index from the Offsets section */</span>
+<a name="74"></a>	<span class="identifier">SDKConf_Signature</span> = <span class="number">1</span>,	<span class="comment">/**&lt; Read a signature from the Signatures section */</span>
+<a name="75"></a>};
+<a name="76"></a>
+<a name="77"></a><span class="keyword">enum</span> <span class="identifier">SDKType</span>
+<a name="78"></a>{
+<a name="79"></a>	<span class="identifier">SDKType_CBaseEntity</span>,	<span class="comment">/**&lt; CBaseEntity (always as pointer) */</span>
+<a name="80"></a>	<span class="identifier">SDKType_CBasePlayer</span>,	<span class="comment">/**&lt; CBasePlayer (always as pointer) */</span>
+<a name="81"></a>	<span class="identifier">SDKType_Vector</span>,			<span class="comment">/**&lt; Vector (pointer, byval, or byref) */</span>
+<a name="82"></a>	<span class="identifier">SDKType_QAngle</span>,			<span class="comment">/**&lt; QAngles (pointer, byval, or byref) */</span>
+<a name="83"></a>	<span class="identifier">SDKType_PlainOldData</span>,	<span class="comment">/**&lt; Integer/generic data &lt;=32bit (any) */</span>
+<a name="84"></a>	<span class="identifier">SDKType_Float</span>,			<span class="comment">/**&lt; Float (any) */</span>
+<a name="85"></a>	<span class="identifier">SDKType_Edict</span>,			<span class="comment">/**&lt; edict_t (always as pointer) */</span>
+<a name="86"></a>	<span class="identifier">SDKType_String</span>,			<span class="comment">/**&lt; NULL-terminated string (always as pointer) */</span>
+<a name="87"></a>	<span class="identifier">SDKType_Bool</span>,			<span class="comment">/**&lt; Boolean (any) */</span>
+<a name="88"></a>};
+<a name="89"></a>
+<a name="90"></a><span class="keyword">enum</span> <span class="identifier">SDKPassMethod</span>
+<a name="91"></a>{
+<a name="92"></a>	<span class="identifier">SDKPass_Pointer</span>,		<span class="comment">/**&lt; Pass as a pointer */</span>
+<a name="93"></a>	<span class="identifier">SDKPass_Plain</span>,			<span class="comment">/**&lt; Pass as plain data */</span>
+<a name="94"></a>	<span class="identifier">SDKPass_ByValue</span>,		<span class="comment">/**&lt; Pass an object by value */</span>
+<a name="95"></a>	<span class="identifier">SDKPass_ByRef</span>,			<span class="comment">/**&lt; Pass an object by reference */</span>
+<a name="96"></a>};
+<a name="97"></a>
+<a name="98"></a><span class="preprocessor">#define <span class="identifier">VDECODE_FLAG_ALLOWNULL</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)		<span class="comment">/**&lt; Allow NULL for pointers */</span>
+<a name="99"></a></span><span class="preprocessor">#define <span class="identifier">VDECODE_FLAG_ALLOWNOTINGAME</span>	(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)		<span class="comment">/**&lt; Allow players not in game */</span>
+<a name="100"></a></span><span class="preprocessor">#define <span class="identifier">VDECODE_FLAG_ALLOWWORLD</span>		(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)		<span class="comment">/**&lt; Allow World entity */</span>
+<a name="101"></a></span><span class="preprocessor">#define <span class="identifier">VDECODE_FLAG_BYREF</span>			(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)		<span class="comment">/**&lt; Floats/ints by reference */</span>
+<a name="102"></a></span>
+<a name="103"></a><span class="preprocessor">#define <span class="identifier">VENCODE_FLAG_COPYBACK</span>		(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)		<span class="comment">/**&lt; Copy back data once done */</span>
+<a name="104"></a></span>
+<a name="105"></a><span class="comment">/**
+<a name="106"></a> * Starts the preparation of an SDK call.
+<a name="107"></a> *
+<a name="108"></a> * <span class="doctag">@param</span> type			Type of function call this will be.
+<a name="109"></a> * <span class="doctag">@noreturn</span>
+<a name="110"></a> */</span>
+<a name="111"></a><span class="keyword">native</span> <span class="identifier">StartPrepSDKCall</span>(<span class="identifier">SDKCallType</span>:<span class="identifier">type</span>);
+<a name="112"></a>
+<a name="113"></a><span class="comment">/**
+<a name="114"></a> * Sets the virtual index of the SDK call if it is virtual.
+<a name="115"></a> *
+<a name="116"></a> * <span class="doctag">@param</span> vtblidx		Virtual table index.
+<a name="117"></a> * <span class="doctag">@noreturn</span>
+<a name="118"></a> */</span>
+<a name="119"></a><span class="keyword">native</span> <span class="identifier">PrepSDKCall_SetVirtual</span>(<span class="identifier">vtblidx</span>);
+<a name="120"></a>
+<a name="121"></a><span class="comment">/**
+<a name="122"></a> * Finds an address in a library and sets it as the address to use for the SDK call.
+<a name="123"></a> *
+<a name="124"></a> * <span class="doctag">@param</span> lib			Library to use.
+<a name="125"></a> * <span class="doctag">@param</span> signature		Binary data to search for in the library.  If it starts with '@',
+<a name="126"></a> *						the bytes parameter is ignored and the signature is interpreted
+<a name="127"></a> *						as a symbol lookup in the library.
+<a name="128"></a> * <span class="doctag">@param</span> bytes			Number of bytes in the binary search string.
+<a name="129"></a> * <span class="doctag">@return</span>				True on success, false if nothing was found.
+<a name="130"></a> */</span>
+<a name="131"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">PrepSDKCall_SetSignature</span>(<span class="identifier">SDKLibrary</span>:<span class="identifier">lib</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">signature</span>[], <span class="identifier">bytes</span>);
+<a name="132"></a>
+<a name="133"></a><span class="comment">/**
+<a name="134"></a> * Finds an address or virtual function index in a GameConfig file and sets it as
+<a name="135"></a> * the calling information for the SDK call.
+<a name="136"></a> *
+<a name="137"></a> * <span class="doctag">@param</span> gameconf		GameConfig Handle, or INVALID_HANDLE to use sdktools.games.txt.
+<a name="138"></a> * <span class="doctag">@param</span> source		Whether to look in Offsets or Signatures.
+<a name="139"></a> * <span class="doctag">@param</span> name			Name of the property to find.
+<a name="140"></a> * <span class="doctag">@return</span>				True on success, false if nothing was found.
+<a name="141"></a> */</span>
+<a name="142"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">PrepSDKCall_SetFromConf</span>(<span class="keyword type">Handle</span>:<span class="identifier">gameconf</span>, <span class="identifier">SDKFuncConfSource</span>:<span class="identifier">source</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="143"></a>
+<a name="144"></a><span class="comment">/**
+<a name="145"></a> * Sets the return information of an SDK call.  Do not call this if there is no return data.
+<a name="146"></a> * This must be called if there is a return value (i.e. it is not necessarily safe to ignore 
+<a name="147"></a> * the data).
+<a name="148"></a> *
+<a name="149"></a> * <span class="doctag">@param</span> type			Data type to convert to/from.
+<a name="150"></a> * <span class="doctag">@param</span> pass			How the data is passed in C++.
+<a name="151"></a> * <span class="doctag">@param</span> decflags		Flags on decoding from the plugin to C++.
+<a name="152"></a> * <span class="doctag">@param</span> encflags		Flags on encoding from C++ to the plugin.
+<a name="153"></a> * <span class="doctag">@noreturn</span>
+<a name="154"></a> */</span>
+<a name="155"></a><span class="keyword">native</span> <span class="identifier">PrepSDKCall_SetReturnInfo</span>(<span class="identifier">SDKType</span>:<span class="identifier">type</span>, <span class="identifier">SDKPassMethod</span>:<span class="identifier">pass</span>, <span class="identifier">decflags</span>=<span class="number">0</span>, <span class="identifier">encflags</span>=<span class="number">0</span>);
+<a name="156"></a>
+<a name="157"></a><span class="comment">/**
+<a name="158"></a> * Adds a parameter to the calling convention.  This should be called in normal ascending order.
+<a name="159"></a> *
+<a name="160"></a> * <span class="doctag">@param</span> type			Data type to convert to/from.
+<a name="161"></a> * <span class="doctag">@param</span> pass			How the data is passed in C++.
+<a name="162"></a> * <span class="doctag">@param</span> decflags		Flags on decoding from the plugin to C++.
+<a name="163"></a> * <span class="doctag">@param</span> encflags		Flags on encoding from C++ to the plugin.
+<a name="164"></a> * <span class="doctag">@noreturn</span>
+<a name="165"></a> */</span>
+<a name="166"></a><span class="keyword">native</span> <span class="identifier">PrepSDKCall_AddParameter</span>(<span class="identifier">SDKType</span>:<span class="identifier">type</span>, <span class="identifier">SDKPassMethod</span>:<span class="identifier">pass</span>, <span class="identifier">decflags</span>=<span class="number">0</span>, <span class="identifier">encflags</span>=<span class="number">0</span>);
+<a name="167"></a>
+<a name="168"></a><span class="comment">/**
+<a name="169"></a> * Finalizes an SDK call preparation and returns the resultant Handle.
+<a name="170"></a> *
+<a name="171"></a> * <span class="doctag">@return</span>				A new SDKCall Handle on success, or INVALID_HANDLE on failure.
+<a name="172"></a> */</span>
+<a name="173"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">EndPrepSDKCall</span>();
+<a name="174"></a>
+<a name="175"></a><span class="comment">/**
+<a name="176"></a> * Calls an SDK function with the given parameters.
+<a name="177"></a> *
+<a name="178"></a> * If the call type is Entity or Player, the index MUST ALWAYS be the FIRST parameter passed.
+<a name="179"></a> * If the call type is GameRules, then nothing special needs to be passed.
+<a name="180"></a> * If the return value is a Vector or QAngles, the SECOND parameter must be a Float[3].
+<a name="181"></a> * If the return value is a string, the THIRD parameter must be a String buffer, and the
+<a name="182"></a> *  FOURTH parameter must be the maximum length.
+<a name="183"></a> * All parameters must be passed after the above is followed.  Failure to follow these 
+<a name="184"></a> *  rules will result in crashes or wildly unexpected behavior!
+<a name="185"></a> *
+<a name="186"></a> * If the return value is a float or integer, the return value will be this value.
+<a name="187"></a> * If the return value is a CBaseEntity, CBasePlayer, or edict, the return value will
+<a name="188"></a> *   always be the entity index, or -1 for NULL.
+<a name="189"></a> *
+<a name="190"></a> * <span class="doctag">@param</span> call			SDKCall Handle.
+<a name="191"></a> * <span class="doctag">@param</span> ...			Call Parameters.
+<a name="192"></a> * <span class="doctag">@return</span>				Simple return value, if any.
+<a name="193"></a> * <span class="doctag">@error</span>				Invalid Handle or internal decoding error.
+<a name="194"></a> */</span>
+<a name="195"></a><span class="keyword">native</span> <span class="keyword type">any</span>:<span class="identifier">SDKCall</span>(<span class="keyword type">Handle</span>:<span class="identifier">call</span>, <span class="keyword type">any</span>:...);
+<a name="196"></a>
+<a name="197"></a><span class="comment">/*
+<a name="198"></a> * Returns the entity index of the player resource/manager entity.
+<a name="199"></a> *
+<a name="200"></a> * <span class="doctag">@return</span>				Index of resource entity or -1 if not found.
+<a name="201"></a> */</span>
+<a name="202"></a><span class="keyword">native</span> <span class="identifier">GetPlayerResourceEntity</span>();
+<a name="203"></a>
+<a name="204"></a><span class="preprocessor">#include <span class="tag">&lt;sdktools_stocks&gt;</span>
+<a name="205"></a></span>
+<a name="206"></a><span class="comment">/**
+<a name="207"></a> * Do not edit below this line!
+<a name="208"></a> */</span>
+<a name="209"></a><span class="keyword">public</span> <span class="identifier">Extension</span>:<span class="identifier">__ext_sdktools</span> = 
+<a name="210"></a>{
+<a name="211"></a>	<span class="identifier">name</span> = <span class="string">"SDKTools"</span>,
+<a name="212"></a>	<span class="identifier">file</span> = <span class="string">"sdktools.ext"</span>,
+<a name="213"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">AUTOLOAD_EXTENSIONS</span>
+<a name="214"></a></span>	<span class="identifier">autoload</span> = <span class="number">1</span>,
+<a name="215"></a><span class="preprocessor">#else
+<a name="216"></a></span>	<span class="identifier">autoload</span> = <span class="number">0</span>,
+<a name="217"></a><span class="preprocessor">#endif
+<a name="218"></a></span><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">REQUIRE_EXTENSIONS</span>
+<a name="219"></a></span>	<span class="identifier">required</span> = <span class="number">1</span>,
+<a name="220"></a><span class="preprocessor">#else
+<a name="221"></a></span>	<span class="identifier">required</span> = <span class="number">0</span>,
+<a name="222"></a><span class="preprocessor">#endif
+<a name="223"></a></span>};
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<title>halflife.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_halflife_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_halflife_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_UNKNOWN</span>			<span class="number">0</span>		<span class="comment">/**&lt; Could not determine the engine version */</span>
+<a name="39"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_ORIGINAL</span>			<span class="number">10</span>		<span class="comment">/**&lt; Original Source engine (still used by "The Ship") */</span>
+<a name="40"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_DARKMESSIAH</span>		<span class="number">15</span>		<span class="comment">/**&lt; Modified version of original engine used by Dark Messiah (no SDK) */</span>
+<a name="41"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_EPISODE1</span>			<span class="number">20</span>		<span class="comment">/**&lt; SDK+Engine released after Episode 1 */</span>
+<a name="42"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_EPISODE2</span>			<span class="number">30</span>		<span class="comment">/**&lt; SDK+Engine released after Episode 2/Orange Box */</span>
+<a name="43"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_BLOODYGOODTIME</span>	<span class="number">32</span>		<span class="comment">/**&lt; Modified version of ep2 engine used by Bloody Good Time (no SDK) */</span>
+<a name="44"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_EYE</span>				<span class="number">33</span>		<span class="comment">/**&lt; Modified version of ep2 engine used by E.Y.E Divine Cybermancy (no SDK) */</span>
+<a name="45"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_CSS</span>				<span class="number">34</span>		<span class="comment">/**&lt; Sometime-older version of Source 2009 SDK+Engine, used for Counter-Strike: Source */</span>
+<a name="46"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_EPISODE2VALVE</span>	<span class="number">35</span>		<span class="comment">/**&lt; SDK+Engine released after Episode 2/Orange Box, "Source 2009" or "Source MP" */</span>
+<a name="47"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_LEFT4DEAD</span>		<span class="number">40</span>		<span class="comment">/**&lt; Engine released after Left 4 Dead (no SDK yet) */</span>
+<a name="48"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_LEFT4DEAD2</span>		<span class="number">50</span>		<span class="comment">/**&lt; Engine released after Left 4 Dead 2 (no SDK yet) */</span>
+<a name="49"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_ALIENSWARM</span>		<span class="number">60</span>		<span class="comment">/**&lt; SDK+Engine released after Alien Swarm */</span>
+<a name="50"></a></span><span class="preprocessor">#define <span class="identifier">SOURCE_SDK_CSGO</span>				<span class="number">80</span>		<span class="comment">/**&lt; Engine released after CS:GO (no SDK yet) */</span>
+<a name="51"></a></span>
+<a name="52"></a><span class="preprocessor">#define <span class="identifier">MOTDPANEL_TYPE_TEXT</span>		<span class="number">0</span>	<span class="comment">/**&lt; Treat msg as plain text */</span>
+<a name="53"></a></span><span class="preprocessor">#define <span class="identifier">MOTDPANEL_TYPE_INDEX</span>	<span class="number">1</span>	<span class="comment">/**&lt; Msg is auto determined by the engine */</span>
+<a name="54"></a></span><span class="preprocessor">#define <span class="identifier">MOTDPANEL_TYPE_URL</span>		<span class="number">2</span>	<span class="comment">/**&lt; Treat msg as an URL link */</span>
+<a name="55"></a></span><span class="preprocessor">#define <span class="identifier">MOTDPANEL_TYPE_FILE</span>		<span class="number">3</span>	<span class="comment">/**&lt; Treat msg as a filename to be openned */</span>
+<a name="56"></a></span>
+<a name="57"></a><span class="keyword">enum</span> <span class="identifier">DialogType</span>
+<a name="58"></a>{
+<a name="59"></a>	<span class="identifier">DialogType_Msg</span> = <span class="number">0</span>,		<span class="comment">/**&lt; just an on screen message */</span>
+<a name="60"></a>	<span class="identifier">DialogType_Menu</span>, 		<span class="comment">/**&lt; an options menu */</span>
+<a name="61"></a>	<span class="identifier">DialogType_Text</span>, 		<span class="comment">/**&lt; a richtext dialog */</span>
+<a name="62"></a>	<span class="identifier">DialogType_Entry</span>, 		<span class="comment">/**&lt; an entry box */</span>
+<a name="63"></a>	<span class="identifier">DialogType_AskConnect</span>	<span class="comment">/**&lt; ask the client to connect to a specified IP */</span>
+<a name="64"></a>};
+<a name="65"></a>
+<a name="66"></a><span class="keyword">enum</span> <span class="identifier">EngineVersion</span>
+<a name="67"></a>{
+<a name="68"></a>	<span class="identifier">Engine_Unknown</span>,				<span class="comment">/**&lt; Could not determine the engine version */</span>
+<a name="69"></a>	<span class="identifier">Engine_Original</span>,				<span class="comment">/**&lt; Original Source Engine (used by The Ship) */</span>
+<a name="70"></a>	<span class="identifier">Engine_SourceSDK2006</span>,		<span class="comment">/**&lt; Episode 1 Source Engine (second major SDK) */</span>
+<a name="71"></a>	<span class="identifier">Engine_SourceSDK2007</span>,		<span class="comment">/**&lt; Orange Box Source Engine (third major SDK) */</span>
+<a name="72"></a>	<span class="identifier">Engine_Left4Dead</span>,			<span class="comment">/**&lt; Left 4 Dead */</span>
+<a name="73"></a>	<span class="identifier">Engine_DarkMessiah</span>,			<span class="comment">/**&lt; Dark Messiah Multiplayer (based on original engine) */</span>
+<a name="74"></a>	<span class="identifier">Engine_Left4Dead2</span> = <span class="number">7</span>,		<span class="comment">/**&lt; Left 4 Dead 2 */</span>
+<a name="75"></a>	<span class="identifier">Engine_AlienSwarm</span>,			<span class="comment">/**&lt; Alien Swarm (and Alien Swarm SDK) */</span>
+<a name="76"></a>	<span class="identifier">Engine_BloodyGoodTime</span>,		<span class="comment">/**&lt; Bloody Good Time */</span>
+<a name="77"></a>	<span class="identifier">Engine_EYE</span>,					<span class="comment">/**&lt; E.Y.E Divine Cybermancy */</span>
+<a name="78"></a>	<span class="identifier">Engine_Portal2</span>,				<span class="comment">/**&lt; Portal 2 */</span>
+<a name="79"></a>	<span class="identifier">Engine_CSGO</span>,				<span class="comment">/**&lt; Counter-Strike: Global Offensive */</span>
+<a name="80"></a>	<span class="identifier">Engine_CSS</span>,					<span class="comment">/**&lt; Counter-Strike: Source */</span>
+<a name="81"></a>	<span class="identifier">Engine_DOTA</span>,				<span class="comment">/**&lt; Dota 2 */</span>
+<a name="82"></a>	<span class="identifier">Engine_HL2DM</span>,				<span class="comment">/**&lt; Half-Life 2 Deathmatch */</span>
+<a name="83"></a>	<span class="identifier">Engine_DODS</span>,				<span class="comment">/**&lt; Day of Defeat: Source */</span>
+<a name="84"></a>	<span class="identifier">Engine_TF2</span>,					<span class="comment">/**&lt; Team Fortress 2 */</span>
+<a name="85"></a>	<span class="identifier">Engine_NuclearDawn</span>			<span class="comment">/**&lt; Nuclear Dawn */</span>
+<a name="86"></a>};
+<a name="87"></a>
+<a name="88"></a><span class="preprocessor">#define <span class="identifier">INVALID_ENT_REFERENCE</span> <span class="number">0xFFFFFFFF</span>
+<a name="89"></a></span>
+<a name="90"></a><span class="comment">/**
+<a name="91"></a> * Logs a generic message to the HL2 logs.
+<a name="92"></a> *
+<a name="93"></a> * <span class="doctag">@param</span> format		String format.
+<a name="94"></a> * <span class="doctag">@param</span> ...			Format arguments.
+<a name="95"></a> * <span class="doctag">@noreturn</span>
+<a name="96"></a> */</span>
+<a name="97"></a><span class="keyword">native</span> <span class="identifier">LogToGame</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="98"></a>
+<a name="99"></a><span class="comment">/**
+<a name="100"></a> * Sets the seed value for the global Half-Life 2 Random Stream.
+<a name="101"></a> *
+<a name="102"></a> * <span class="doctag">@param</span> seed			Seed value.
+<a name="103"></a> * <span class="doctag">@noreturn</span>	
+<a name="104"></a> */</span>
+<a name="105"></a><span class="keyword">native</span> <span class="identifier">SetRandomSeed</span>(<span class="identifier">seed</span>);
+<a name="106"></a>
+<a name="107"></a><span class="comment">/**
+<a name="108"></a> * Returns a random floating point number from the Half-Life 2 Random Stream.
+<a name="109"></a> *
+<a name="110"></a> * <span class="doctag">@param</span> fMin			Minimum random bound.
+<a name="111"></a> * <span class="doctag">@param</span> fMax			Maximum random bound.
+<a name="112"></a> * <span class="doctag">@return</span>				A random number between (inclusive) fMin and fMax.
+<a name="113"></a> */</span>
+<a name="114"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetRandomFloat</span>(<span class="keyword type">Float</span>:<span class="identifier">fMin</span>=<span class="number">0.0</span>, <span class="keyword type">Float</span>:<span class="identifier">fMax</span>=<span class="number">1.0</span>);
+<a name="115"></a>
+<a name="116"></a><span class="comment">/**
+<a name="117"></a> * Returns a random number from the Half-Life 2 Random Stream.
+<a name="118"></a> *
+<a name="119"></a> * <span class="doctag">@param</span> nmin			Minimum random bound.
+<a name="120"></a> * <span class="doctag">@param</span> nmax			Maximum random bound.
+<a name="121"></a> * <span class="doctag">@return</span>				A random number between (inclusive) nmin and nmax.
+<a name="122"></a> */</span>
+<a name="123"></a><span class="keyword">native</span> <span class="identifier">GetRandomInt</span>(<span class="identifier">nmin</span>, <span class="identifier">nmax</span>);
+<a name="124"></a>
+<a name="125"></a><span class="comment">/**
+<a name="126"></a> * Returns whether a map is valid or not.
+<a name="127"></a> * 
+<a name="128"></a> * <span class="doctag">@param</span> map 			Map name, excluding .bsp extension.
+<a name="129"></a> * <span class="doctag">@return</span>				True if valid, false otherwise.
+<a name="130"></a> */</span>
+<a name="131"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsMapValid</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">map</span>[]);
+<a name="132"></a>
+<a name="133"></a><span class="comment">/**
+<a name="134"></a> * Returns whether the server is dedicated.
+<a name="135"></a> *
+<a name="136"></a> * <span class="doctag">@return</span>				True if dedicated, false otherwise.
+<a name="137"></a> */</span>
+<a name="138"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsDedicatedServer</span>();
+<a name="139"></a>
+<a name="140"></a><span class="comment">/**
+<a name="141"></a> * Returns a high-precision time value for profiling the engine.
+<a name="142"></a> *
+<a name="143"></a> * <span class="doctag">@return</span>				A floating point time value.
+<a name="144"></a> */</span>
+<a name="145"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetEngineTime</span>();
+<a name="146"></a>
+<a name="147"></a><span class="comment">/** 
+<a name="148"></a> * Returns the game time based on the game tick.
+<a name="149"></a> *
+<a name="150"></a> * <span class="doctag">@return</span>				Game tick time.
+<a name="151"></a> */</span>
+<a name="152"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetGameTime</span>();
+<a name="153"></a>
+<a name="154"></a><span class="comment">/** 
+<a name="155"></a> * Returns the game's internal tick count.
+<a name="156"></a> *
+<a name="157"></a> * <span class="doctag">@return</span>				Game tick count.
+<a name="158"></a> */</span>
+<a name="159"></a><span class="keyword">native</span> <span class="identifier">GetGameTickCount</span>();
+<a name="160"></a>
+<a name="161"></a><span class="comment">/**
+<a name="162"></a> * Returns the game description from the mod.
+<a name="163"></a> *
+<a name="164"></a> * <span class="doctag">@param</span> buffer		Buffer to store the description.
+<a name="165"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the buffer.
+<a name="166"></a> * <span class="doctag">@param</span> original		If true, retrieves the original game description,
+<a name="167"></a> *						ignoring any potential hooks from plugins.
+<a name="168"></a> * <span class="doctag">@return</span>				Number of bytes written to the buffer (UTF-8 safe).
+<a name="169"></a> */</span>
+<a name="170"></a><span class="keyword">native</span> <span class="identifier">GetGameDescription</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, <span class="keyword type">bool</span>:<span class="identifier">original</span>=<span class="keyword literal">false</span>);
+<a name="171"></a>
+<a name="172"></a><span class="comment">/**
+<a name="173"></a> * Returns the name of the game's directory.
+<a name="174"></a> *
+<a name="175"></a> * <span class="doctag">@param</span> buffer		Buffer to store the directory name.
+<a name="176"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the buffer.
+<a name="177"></a> *
+<a name="178"></a> * return				Number of bytes written to the buffer (UTF-8 safe).
+<a name="179"></a> */</span>
+<a name="180"></a><span class="keyword">native</span> <span class="identifier">GetGameFolderName</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="181"></a>
+<a name="182"></a><span class="comment">/**
+<a name="183"></a> * Returns the current map name.
+<a name="184"></a> *
+<a name="185"></a> * <span class="doctag">@param</span> buffer		Buffer to store map name.
+<a name="186"></a> * <span class="doctag">@param</span> maxlength		Maximum length of buffer.
+<a name="187"></a> * <span class="doctag">@return</span>				Number of bytes written (UTF-8 safe).
+<a name="188"></a> */</span>
+<a name="189"></a><span class="keyword">native</span> <span class="identifier">GetCurrentMap</span>(<span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="190"></a>
+<a name="191"></a><span class="comment">/**
+<a name="192"></a> * Precaches a given model.
+<a name="193"></a> *
+<a name="194"></a> * <span class="doctag">@param</span> model			Name of the model to precache.
+<a name="195"></a> * <span class="doctag">@param</span> preload		If preload is true the file will be precached before level startup.
+<a name="196"></a> * <span class="doctag">@return</span>				Returns the model index, 0 for error.
+<a name="197"></a> */</span>
+<a name="198"></a><span class="keyword">native</span> <span class="identifier">PrecacheModel</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">model</span>[], <span class="keyword type">bool</span>:<span class="identifier">preload</span>=<span class="keyword literal">false</span>);
+<a name="199"></a>
+<a name="200"></a><span class="comment">/**
+<a name="201"></a> * Precaches a given sentence file.
+<a name="202"></a> *
+<a name="203"></a> * <span class="doctag">@param</span> file			Name of the sentence file to precache.
+<a name="204"></a> * <span class="doctag">@param</span> preload		If preload is true the file will be precached before level startup.
+<a name="205"></a> * <span class="doctag">@return</span>				Returns a sentence file index.
+<a name="206"></a> */</span>
+<a name="207"></a><span class="keyword">native</span> <span class="identifier">PrecacheSentenceFile</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">file</span>[], <span class="keyword type">bool</span>:<span class="identifier">preload</span>=<span class="keyword literal">false</span>);
+<a name="208"></a>
+<a name="209"></a><span class="comment">/**
+<a name="210"></a> * Precaches a given decal.
+<a name="211"></a> *
+<a name="212"></a> * <span class="doctag">@param</span> decal			Name of the decal to precache.
+<a name="213"></a> * <span class="doctag">@param</span> preload		If preload is true the file will be precached before level startup.
+<a name="214"></a> * <span class="doctag">@return</span>				Returns a decal index.
+<a name="215"></a> */</span>
+<a name="216"></a><span class="keyword">native</span> <span class="identifier">PrecacheDecal</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">decal</span>[], <span class="keyword type">bool</span>:<span class="identifier">preload</span>=<span class="keyword literal">false</span>);
+<a name="217"></a>
+<a name="218"></a><span class="comment">/**
+<a name="219"></a> * Precaches a given generic file.
+<a name="220"></a> *
+<a name="221"></a> * <span class="doctag">@param</span> generic		Name of the generic file to precache.
+<a name="222"></a> * <span class="doctag">@param</span> preload		If preload is true the file will be precached before level startup.
+<a name="223"></a> * <span class="doctag">@return</span>				Returns a generic file index.
+<a name="224"></a> */</span>
+<a name="225"></a><span class="keyword">native</span> <span class="identifier">PrecacheGeneric</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">generic</span>[], <span class="keyword type">bool</span>:<span class="identifier">preload</span>=<span class="keyword literal">false</span>);
+<a name="226"></a>
+<a name="227"></a><span class="comment">/**
+<a name="228"></a> * Returns if a given model is precached.
+<a name="229"></a> *
+<a name="230"></a> * <span class="doctag">@param</span> model			Name of the model to check.
+<a name="231"></a> * <span class="doctag">@return</span>				True if precached, false otherwise.
+<a name="232"></a> */</span>
+<a name="233"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsModelPrecached</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">model</span>[]);
+<a name="234"></a>
+<a name="235"></a><span class="comment">/**
+<a name="236"></a> * Returns if a given decal is precached.
+<a name="237"></a> *
+<a name="238"></a> * <span class="doctag">@param</span> decal			Name of the decal to check.
+<a name="239"></a> * <span class="doctag">@return</span>				True if precached, false otherwise.
+<a name="240"></a> */</span>
+<a name="241"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsDecalPrecached</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">decal</span>[]);
+<a name="242"></a>
+<a name="243"></a><span class="comment">/**
+<a name="244"></a> * Returns if a given generic file is precached.
+<a name="245"></a> *
+<a name="246"></a> * <span class="doctag">@param</span> generic		Name of the generic file to check.
+<a name="247"></a> * <span class="doctag">@return</span>				True if precached, false otherwise.
+<a name="248"></a> */</span>
+<a name="249"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsGenericPrecached</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">generic</span>[]);
+<a name="250"></a>
+<a name="251"></a><span class="comment">/**
+<a name="252"></a> * Precaches a given sound.
+<a name="253"></a> *
+<a name="254"></a> * <span class="doctag">@param</span> sound			Name of the sound to precache.
+<a name="255"></a> * <span class="doctag">@param</span> preload		If preload is true the file will be precached before level startup.
+<a name="256"></a> * <span class="doctag">@return</span>				True if successfully precached, false otherwise.
+<a name="257"></a> */</span>
+<a name="258"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">PrecacheSound</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">sound</span>[], <span class="keyword type">bool</span>:<span class="identifier">preload</span>=<span class="keyword literal">false</span>);
+<a name="259"></a>
+<a name="260"></a><span class="comment">/**
+<a name="261"></a> * Returns if a given sound is precached.
+<a name="262"></a> *
+<a name="263"></a> * <span class="doctag">@param</span> sound			Name of the sound to check.
+<a name="264"></a> * <span class="doctag">@return</span>				True if precached, false otherwise.
+<a name="265"></a> */</span>
+<a name="266"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsSoundPrecached</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">sound</span>[]);
+<a name="267"></a>
+<a name="268"></a><span class="comment">/**
+<a name="269"></a> * Creates different types of ingame messages.
+<a name="270"></a> *
+<a name="271"></a> * <span class="doctag">@param</span> client		Index of the client.
+<a name="272"></a> * <span class="doctag">@param</span> kv			KeyValues handle to set the menu keys and options. (Check iserverplugin.h for more information).
+<a name="273"></a> * <span class="doctag">@param</span> type			Message type to display ingame.
+<a name="274"></a> * <span class="doctag">@noreturn</span>
+<a name="275"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="276"></a> */</span>
+<a name="277"></a><span class="keyword">native</span> <span class="identifier">CreateDialog</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="identifier">DialogType</span>:<span class="identifier">type</span>);
+<a name="278"></a>
+<a name="279"></a><span class="comment">/**
+<a name="280"></a> * Guesses the SDK version a mod was compiled against.  If nothing 
+<a name="281"></a> * specific is known about the game, the engine version is used instead.
+<a name="282"></a> *
+<a name="283"></a> * The return values are guaranteed to increase chronologically (that is, 
+<a name="284"></a> * a later release will have a higher value).
+<a name="285"></a> *
+<a name="286"></a> * <span class="doctag">@return</span>				SOURCE_SDK version code.
+<a name="287"></a> */</span>
+<a name="288"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">See</span> <span class="identifier">GetEngineVersion</span>()
+<a name="289"></a></span><span class="keyword">native</span> <span class="identifier">GuessSDKVersion</span>();
+<a name="290"></a>
+<a name="291"></a><span class="comment">/**
+<a name="292"></a> * Gets the engine version that the currently-loaded SM core was compiled against.
+<a name="293"></a> *
+<a name="294"></a> * The engine version values are not guaranteed to be in any particular order,
+<a name="295"></a> * and should only be compared by (in)equality.
+<a name="296"></a> *
+<a name="297"></a> * <span class="doctag">@return</span>				An EngineVersion value.
+<a name="298"></a> */</span>
+<a name="299"></a><span class="keyword">native</span> <span class="identifier">EngineVersion</span>:<span class="identifier">GetEngineVersion</span>();
+<a name="300"></a>
+<a name="301"></a><span class="comment">/**
+<a name="302"></a> * Prints a message to a specific client in the chat area.
+<a name="303"></a> *
+<a name="304"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="305"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="306"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="307"></a> * <span class="doctag">@noreturn</span>
+<a name="308"></a> * <span class="doctag">@error</span>				If the client is not connected an error will be thrown.
+<a name="309"></a> */</span>
+<a name="310"></a><span class="keyword">native</span> <span class="identifier">PrintToChat</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="311"></a>
+<a name="312"></a><span class="comment">/**
+<a name="313"></a> * Prints a message to all clients in the chat area.
+<a name="314"></a> *
+<a name="315"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="316"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="317"></a> * <span class="doctag">@noreturn</span>
+<a name="318"></a> */</span>
+<a name="319"></a><span class="keyword">stock</span> <span class="identifier">PrintToChatAll</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...)
+<a name="320"></a>{
+<a name="321"></a>	<span class="identifier">decl</span> <span class="keyword type">String</span>:<span class="identifier">buffer</span>[<span class="number">192</span>];
+<a name="322"></a>	
+<a name="323"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span> = <span class="number">1</span>; <span class="identifier">i</span> &lt;= <span class="identifier">MaxClients</span>; <span class="identifier">i</span>++)
+<a name="324"></a>	{
+<a name="325"></a>		<span class="keyword statement">if</span> (<span class="identifier">IsClientInGame</span>(<span class="identifier">i</span>))
+<a name="326"></a>		{
+<a name="327"></a>			<span class="identifier">SetGlobalTransTarget</span>(<span class="identifier">i</span>);
+<a name="328"></a>			<span class="identifier">VFormat</span>(<span class="identifier">buffer</span>, <span class="keyword ">sizeof</span>(<span class="identifier">buffer</span>), <span class="identifier">format</span>, <span class="number">2</span>);
+<a name="329"></a>			<span class="identifier">PrintToChat</span>(<span class="identifier">i</span>, <span class="string">"%s"</span>, <span class="identifier">buffer</span>);
+<a name="330"></a>		}
+<a name="331"></a>	}
+<a name="332"></a>}
+<a name="333"></a>
+<a name="334"></a><span class="comment">/**
+<a name="335"></a> * Prints a message to a specific client in the center of the screen.
+<a name="336"></a> *
+<a name="337"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="338"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="339"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="340"></a> * <span class="doctag">@noreturn</span>
+<a name="341"></a> * <span class="doctag">@error</span>				If the client is not connected an error will be thrown.
+<a name="342"></a> */</span>
+<a name="343"></a><span class="keyword">native</span> <span class="identifier">PrintCenterText</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="344"></a>
+<a name="345"></a><span class="comment">/**
+<a name="346"></a> * Prints a message to all clients in the center of the screen.
+<a name="347"></a> *
+<a name="348"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="349"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="350"></a> * <span class="doctag">@noreturn</span>
+<a name="351"></a> */</span>
+<a name="352"></a><span class="keyword">stock</span> <span class="identifier">PrintCenterTextAll</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...)
+<a name="353"></a>{
+<a name="354"></a>	<span class="identifier">decl</span> <span class="keyword type">String</span>:<span class="identifier">buffer</span>[<span class="number">192</span>];
+<a name="355"></a>
+<a name="356"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span> = <span class="number">1</span>; <span class="identifier">i</span> &lt;= <span class="identifier">MaxClients</span>; <span class="identifier">i</span>++)
+<a name="357"></a>	{
+<a name="358"></a>		<span class="keyword statement">if</span> (<span class="identifier">IsClientInGame</span>(<span class="identifier">i</span>))
+<a name="359"></a>		{
+<a name="360"></a>			<span class="identifier">SetGlobalTransTarget</span>(<span class="identifier">i</span>);
+<a name="361"></a>			<span class="identifier">VFormat</span>(<span class="identifier">buffer</span>, <span class="keyword ">sizeof</span>(<span class="identifier">buffer</span>), <span class="identifier">format</span>, <span class="number">2</span>);
+<a name="362"></a>			<span class="identifier">PrintCenterText</span>(<span class="identifier">i</span>, <span class="string">"%s"</span>, <span class="identifier">buffer</span>);
+<a name="363"></a>		}
+<a name="364"></a>	}
+<a name="365"></a>}
+<a name="366"></a>
+<a name="367"></a><span class="comment">/**
+<a name="368"></a> * Prints a message to a specific client with a hint box.
+<a name="369"></a> *
+<a name="370"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="371"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="372"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="373"></a> * <span class="doctag">@noreturn</span>
+<a name="374"></a> * <span class="doctag">@error</span>				If the client is not connected an error will be thrown.
+<a name="375"></a> */</span>
+<a name="376"></a><span class="keyword">native</span> <span class="identifier">PrintHintText</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="377"></a>
+<a name="378"></a><span class="comment">/**
+<a name="379"></a> * Prints a message to all clients with a hint box.
+<a name="380"></a> *
+<a name="381"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="382"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="383"></a> * <span class="doctag">@noreturn</span>
+<a name="384"></a> */</span>
+<a name="385"></a><span class="keyword">stock</span> <span class="identifier">PrintHintTextToAll</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...)
+<a name="386"></a>{
+<a name="387"></a>	<span class="identifier">decl</span> <span class="keyword type">String</span>:<span class="identifier">buffer</span>[<span class="number">192</span>];
+<a name="388"></a>	
+<a name="389"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span> = <span class="number">1</span>; <span class="identifier">i</span> &lt;= <span class="identifier">MaxClients</span>; <span class="identifier">i</span>++)
+<a name="390"></a>	{
+<a name="391"></a>		<span class="keyword statement">if</span> (<span class="identifier">IsClientInGame</span>(<span class="identifier">i</span>))
+<a name="392"></a>		{
+<a name="393"></a>			<span class="identifier">SetGlobalTransTarget</span>(<span class="identifier">i</span>);
+<a name="394"></a>			<span class="identifier">VFormat</span>(<span class="identifier">buffer</span>, <span class="keyword ">sizeof</span>(<span class="identifier">buffer</span>), <span class="identifier">format</span>, <span class="number">2</span>);
+<a name="395"></a>			<span class="identifier">PrintHintText</span>(<span class="identifier">i</span>, <span class="string">"%s"</span>, <span class="identifier">buffer</span>);
+<a name="396"></a>		}
+<a name="397"></a>	}
+<a name="398"></a>}
+<a name="399"></a>
+<a name="400"></a><span class="comment">/**
+<a name="401"></a> * Shows a VGUI panel to a specific client.
+<a name="402"></a> *
+<a name="403"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="404"></a> * <span class="doctag">@param</span> name			Panel type name (Check viewport_panel_names.h to see a list of 
+<a name="405"></a> *						some panel names).
+<a name="406"></a> * <span class="doctag">@param</span> Kv			KeyValues handle with all the data for the panel setup (Depends 
+<a name="407"></a> *						on the panel type and may be unused).
+<a name="408"></a> * <span class="doctag">@param</span> show			True to show the panel, or false to remove it from the client screen.
+<a name="409"></a> * <span class="doctag">@noreturn</span>
+<a name="410"></a> * <span class="doctag">@error</span>				If the client is not connected an error will be thrown.
+<a name="411"></a> */</span>
+<a name="412"></a><span class="keyword">native</span> <span class="identifier">ShowVGUIPanel</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="keyword type">Handle</span>:<span class="identifier">Kv</span>=<span class="keyword core">INVALID_HANDLE</span>, <span class="keyword type">bool</span>:<span class="identifier">show</span>=<span class="keyword literal">true</span>);
+<a name="413"></a>
+<a name="414"></a><span class="comment">/**
+<a name="415"></a> * Creates a HUD synchronization object.  This object is used to automatically assign and 
+<a name="416"></a> * re-use channels for a set of messages.  
+<a name="417"></a> *
+<a name="418"></a> * The HUD has a hardcoded number of channels (usually 6) for displaying 
+<a name="419"></a> * text.  You can use any channel for any area of the screen.  Text on 
+<a name="420"></a> * different channels can overlap, but text on the same channel will 
+<a name="421"></a> * erase the old text first.  This overlapping and overwriting gets problematic.
+<a name="422"></a> *
+<a name="423"></a> * A HUD synchronization object automatically selects channels for you based on 
+<a name="424"></a> * the following heuristics:
+<a name="425"></a> *  - If channel X was last used by the object, and hasn't been modified again, 
+<a name="426"></a> *    channel X gets re-used.
+<a name="427"></a> *  - Otherwise, a new channel is chosen based on the least-recently-used channel.
+<a name="428"></a> *
+<a name="429"></a> * This ensures that if you display text on a sync object, that the previous text 
+<a name="430"></a> * displayed on it will always be cleared first.  This is because your new text 
+<a name="431"></a> * will either overwrite the old text on the same channel, or because another 
+<a name="432"></a> * channel has already erased your text.
+<a name="433"></a> *
+<a name="434"></a> * Note that messages can still overlap if they are on different synchronization 
+<a name="435"></a> * objects, or they are displayed to manual channels.
+<a name="436"></a> *
+<a name="437"></a> * These are particularly useful for displaying repeating or refreshing HUD text, in 
+<a name="438"></a> * addition to displaying multiple message sets in one area of the screen (for example, 
+<a name="439"></a> * center-say messages that may pop up randomly that you don't want to overlap each 
+<a name="440"></a> * other).
+<a name="441"></a> *
+<a name="442"></a> * <span class="doctag">@return</span>				New HUD synchronization object.
+<a name="443"></a> *						The Handle can be closed with CloseHandle().
+<a name="444"></a> *						If HUD text is not supported on this mod, then 
+<a name="445"></a> *						INVALID_HANDLE is returned.
+<a name="446"></a> */</span>
+<a name="447"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateHudSynchronizer</span>();
+<a name="448"></a>
+<a name="449"></a><span class="comment">/**
+<a name="450"></a> * Sets the HUD parameters for drawing text.  These parameters are stored 
+<a name="451"></a> * globally, although nothing other than this function and SetHudTextParamsEx 
+<a name="452"></a> * modify them.
+<a name="453"></a> *
+<a name="454"></a> * You must call this function before drawing text.  If you are drawing 
+<a name="455"></a> * text to multiple clients, you can set the parameters once, since 
+<a name="456"></a> * they won't be modified.  However, as soon as you pass control back 
+<a name="457"></a> * to other plugins, you must reset the parameters next time you draw.
+<a name="458"></a> *
+<a name="459"></a> * <span class="doctag">@param</span> x				x coordinate, from 0 to 1.  -1.0 is the center.
+<a name="460"></a> * <span class="doctag">@param</span> y				y coordinate, from 0 to 1.  -1.0 is the center.
+<a name="461"></a> * <span class="doctag">@param</span> holdTime		Number of seconds to hold the text.
+<a name="462"></a> * <span class="doctag">@param</span> r				Red color value.
+<a name="463"></a> * <span class="doctag">@param</span> g				Green color value.
+<a name="464"></a> * <span class="doctag">@param</span> b				Blue color value.
+<a name="465"></a> * <span class="doctag">@param</span> a				Alpha transparency value.
+<a name="466"></a> * <span class="doctag">@param</span> effect 		0/1 causes the text to fade in and fade out.
+<a name="467"></a> *						2 causes the text to flash[?].
+<a name="468"></a> * <span class="doctag">@param</span> fxTime		Duration of chosen effect (may not apply to all effects).
+<a name="469"></a> * <span class="doctag">@param</span> fadeIn		Number of seconds to spend fading in.
+<a name="470"></a> * <span class="doctag">@param</span> fadeOut		Number of seconds to spend fading out.
+<a name="471"></a> * <span class="doctag">@noreturn</span>
+<a name="472"></a> */</span>
+<a name="473"></a><span class="keyword">native</span> <span class="identifier">SetHudTextParams</span>(<span class="keyword type">Float</span>:<span class="identifier">x</span>, <span class="keyword type">Float</span>:<span class="identifier">y</span>, <span class="keyword type">Float</span>:<span class="identifier">holdTime</span>, <span class="identifier">r</span>, <span class="identifier">g</span>, <span class="identifier">b</span>, <span class="identifier">a</span>, <span class="identifier">effect</span> = <span class="number">0</span>,
+<a name="474"></a>						<span class="keyword type">Float</span>:<span class="identifier">fxTime</span>=<span class="number">6.0</span>, <span class="keyword type">Float</span>:<span class="identifier">fadeIn</span>=<span class="number">0.1</span>, <span class="keyword type">Float</span>:<span class="identifier">fadeOut</span>=<span class="number">0.2</span>);
+<a name="475"></a>						
+<a name="476"></a><span class="comment">/**
+<a name="477"></a> * Sets the HUD parameters for drawing text.  These parameters are stored 
+<a name="478"></a> * globally, although nothing other than this function and SetHudTextParams
+<a name="479"></a> * modify them.
+<a name="480"></a> *
+<a name="481"></a> * This is the same as SetHudTextParams(), except it lets you set the alternate 
+<a name="482"></a> * color for when effects require it.  
+<a name="483"></a> *
+<a name="484"></a> * <span class="doctag">@param</span> x				x coordinate, from 0 to 1.  -1.0 is the center.
+<a name="485"></a> * <span class="doctag">@param</span> y				y coordinate, from 0 to 1.  -1.0 is the center.
+<a name="486"></a> * <span class="doctag">@param</span> holdTime		Number of seconds to hold the text.
+<a name="487"></a> * <span class="doctag">@param</span> color1		First color set, array values being [red, green, blue, alpha]
+<a name="488"></a> * <span class="doctag">@param</span> color2		Second color set, array values being [red, green, blue, alpha]
+<a name="489"></a> * <span class="doctag">@param</span> effect 		0/1 causes the text to fade in and fade out.
+<a name="490"></a> *						2 causes the text to flash[?].
+<a name="491"></a> * <span class="doctag">@param</span> fxTime		Duration of chosen effect (may not apply to all effects).
+<a name="492"></a> * <span class="doctag">@param</span> fadeIn		Number of seconds to spend fading in.
+<a name="493"></a> * <span class="doctag">@param</span> fadeOut		Number of seconds to spend fading out.
+<a name="494"></a> * <span class="doctag">@noreturn</span>
+<a name="495"></a> */</span>
+<a name="496"></a><span class="keyword">native</span> <span class="identifier">SetHudTextParamsEx</span>(<span class="keyword type">Float</span>:<span class="identifier">x</span>, <span class="keyword type">Float</span>:<span class="identifier">y</span>, <span class="keyword type">Float</span>:<span class="identifier">holdTime</span>, <span class="identifier">color1</span>[<span class="number">4</span>], 
+<a name="497"></a>						  <span class="identifier">color2</span>[<span class="number">4</span>]={<span class="number">255</span>,<span class="number">255</span>,<span class="number">255</span>,<span class="number">0</span>}, <span class="identifier">effect</span> = <span class="number">0</span>, <span class="keyword type">Float</span>:<span class="identifier">fxTime</span>=<span class="number">6.0</span>, 
+<a name="498"></a>						  <span class="keyword type">Float</span>:<span class="identifier">fadeIn</span>=<span class="number">0.1</span>, <span class="keyword type">Float</span>:<span class="identifier">fadeOut</span>=<span class="number">0.2</span>);
+<a name="499"></a>
+<a name="500"></a><span class="comment">/**
+<a name="501"></a> * Shows a synchronized HUD message to a client.  
+<a name="502"></a> *
+<a name="503"></a> * As of this writing, only TF, HL2MP, and SourceForts support HUD Text.
+<a name="504"></a> *
+<a name="505"></a> * <span class="doctag">@param</span> client		Client index to send the message to.
+<a name="506"></a> * <span class="doctag">@param</span> sync			Synchronization object.
+<a name="507"></a> * <span class="doctag">@param</span> message		Message text or formatting rules.
+<a name="508"></a> * <span class="doctag">@param</span> ...			Message formatting parameters.
+<a name="509"></a> * <span class="doctag">@return</span>				-1 on failure, anything else on success.
+<a name="510"></a> *						This function fails if the mod does not support it.
+<a name="511"></a> * <span class="doctag">@error</span>				Client not in-game, or sync object not valid.
+<a name="512"></a> */</span>
+<a name="513"></a><span class="keyword">native</span> <span class="identifier">ShowSyncHudText</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">sync</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">message</span>[], <span class="keyword type">any</span>:...);
+<a name="514"></a>
+<a name="515"></a><span class="comment">/**
+<a name="516"></a> * Clears the text on a synchronized HUD channel. 
+<a name="517"></a> *
+<a name="518"></a> * This is not the same as sending "" because it guarantees that it won't 
+<a name="519"></a> * overwrite text on another channel.  For example, consider the scenario: 
+<a name="520"></a> *
+<a name="521"></a> * 1. Your synchronized message goes to channel 3.
+<a name="522"></a> * 2. Someone else's non-synchronized message goes to channel 3.
+<a name="523"></a> *
+<a name="524"></a> * If you were to simply send "" on your synchronized message, 
+<a name="525"></a> * then someone else's text could be overwritten.
+<a name="526"></a> *
+<a name="527"></a> * <span class="doctag">@param</span> client		Client index to send the message to.
+<a name="528"></a> * <span class="doctag">@param</span> sync			Synchronization object.
+<a name="529"></a> * <span class="doctag">@noreturn</span>
+<a name="530"></a> * <span class="doctag">@error</span>				Client not in-game, or sync object not valid.
+<a name="531"></a> */</span>
+<a name="532"></a><span class="keyword">native</span> <span class="identifier">ClearSyncHud</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">sync</span>);
+<a name="533"></a>
+<a name="534"></a><span class="comment">/**
+<a name="535"></a> * Shows a HUD message to a client on the given channel.
+<a name="536"></a> *
+<a name="537"></a> * As of this writing, only TF, HL2MP, and SourceForts support HUD Text.
+<a name="538"></a> * 
+<a name="539"></a> * <span class="doctag">@param</span> client		Client index to send the message to.
+<a name="540"></a> * <span class="doctag">@param</span> channel		A channel number.
+<a name="541"></a> *						If -1, then a channel will automatically be selected 
+<a name="542"></a> *						based on the least-recently-used channel.  If the 
+<a name="543"></a> *						channel is any other number, it will be modulo'd with 
+<a name="544"></a> *						the channel count to get a final channel number.
+<a name="545"></a> * <span class="doctag">@param</span> message		Message text or formatting rules.
+<a name="546"></a> * <span class="doctag">@param</span> ...			Message formatting parameters.
+<a name="547"></a> * <span class="doctag">@return</span>				-1 on failure (lack of mod support).
+<a name="548"></a> *						Any other return value is the channel number that was 
+<a name="549"></a> *						used to render the text.
+<a name="550"></a> */</span>
+<a name="551"></a><span class="keyword">native</span> <span class="identifier">ShowHudText</span>(<span class="identifier">client</span>, <span class="identifier">channel</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">message</span>[], <span class="keyword type">any</span>:...);
+<a name="552"></a>
+<a name="553"></a><span class="comment">/**
+<a name="554"></a> * Shows a MOTD panel to a specific client.
+<a name="555"></a> *
+<a name="556"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="557"></a> * <span class="doctag">@param</span> title			Title of the panel (printed on the top border of the window).
+<a name="558"></a> * <span class="doctag">@param</span> msg			Contents of the panel, it can be treated as an url, filename or plain text
+<a name="559"></a> *				 		depending on the type parameter (WARNING: msg has to be 192 bytes maximum!)
+<a name="560"></a> * <span class="doctag">@param</span> type			Determines the way to treat the message body of the panel.
+<a name="561"></a> * <span class="doctag">@noreturn</span>
+<a name="562"></a> * <span class="doctag">@error</span>				If the client is not connected an error will be thrown.
+<a name="563"></a> */</span>
+<a name="564"></a><span class="keyword">stock</span> <span class="identifier">ShowMOTDPanel</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">title</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">msg</span>[], <span class="identifier">type</span>=<span class="identifier">MOTDPANEL_TYPE_INDEX</span>)
+<a name="565"></a>{
+<a name="566"></a>	<span class="identifier">decl</span> <span class="keyword type">String</span>:<span class="identifier">num</span>[<span class="number">3</span>];
+<a name="567"></a>	<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">Kv</span> = <span class="identifier">CreateKeyValues</span>(<span class="string">"data"</span>);
+<a name="568"></a>	<span class="identifier">IntToString</span>(<span class="identifier">type</span>, <span class="identifier">num</span>, <span class="keyword ">sizeof</span>(<span class="identifier">num</span>));
+<a name="569"></a>
+<a name="570"></a>	<span class="identifier">KvSetString</span>(<span class="identifier">Kv</span>, <span class="string">"title"</span>, <span class="identifier">title</span>);
+<a name="571"></a>	<span class="identifier">KvSetString</span>(<span class="identifier">Kv</span>, <span class="string">"type"</span>, <span class="identifier">num</span>);
+<a name="572"></a>	<span class="identifier">KvSetString</span>(<span class="identifier">Kv</span>, <span class="string">"msg"</span>, <span class="identifier">msg</span>);
+<a name="573"></a>	<span class="identifier">ShowVGUIPanel</span>(<span class="identifier">client</span>, <span class="string">"info"</span>, <span class="identifier">Kv</span>);
+<a name="574"></a>	<span class="identifier">CloseHandle</span>(<span class="identifier">Kv</span>);
+<a name="575"></a>}
+<a name="576"></a>
+<a name="577"></a><span class="comment">/**
+<a name="578"></a> * Displays a panel asking the client to connect to a specified IP.
+<a name="579"></a> *
+<a name="580"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="581"></a> * <span class="doctag">@param</span> time			Duration to hold the panel on the client's screen.
+<a name="582"></a> * <span class="doctag">@param</span> ip			Destionation IP.
+<a name="583"></a> * <span class="doctag">@noreturn</span>
+<a name="584"></a> */</span>
+<a name="585"></a><span class="keyword">stock</span> <span class="identifier">DisplayAskConnectBox</span>(<span class="identifier">client</span>, <span class="keyword type">Float</span>:<span class="identifier">time</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">ip</span>[])
+<a name="586"></a>{
+<a name="587"></a>	<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">Kv</span> = <span class="identifier">CreateKeyValues</span>(<span class="string">"data"</span>);
+<a name="588"></a>	<span class="identifier">KvSetFloat</span>(<span class="identifier">Kv</span>, <span class="string">"time"</span>, <span class="identifier">time</span>);
+<a name="589"></a>	<span class="identifier">KvSetString</span>(<span class="identifier">Kv</span>, <span class="string">"title"</span>, <span class="identifier">ip</span>);
+<a name="590"></a>	<span class="identifier">CreateDialog</span>(<span class="identifier">client</span>, <span class="identifier">Kv</span>, <span class="identifier">DialogType_AskConnect</span>);
+<a name="591"></a>	<span class="identifier">CloseHandle</span>(<span class="identifier">Kv</span>);
+<a name="592"></a>}
+<a name="593"></a>
+<a name="594"></a><span class="comment">/**
+<a name="595"></a> * Converts an entity index into a serial encoded entity reference.
+<a name="596"></a> *
+<a name="597"></a> * <span class="doctag">@param</span> entity		Entity index.
+<a name="598"></a> * <span class="doctag">@return</span>				Entity reference.
+<a name="599"></a> */</span>
+<a name="600"></a><span class="keyword">native</span> <span class="identifier">EntIndexToEntRef</span>(<span class="identifier">entity</span>);
+<a name="601"></a>
+<a name="602"></a><span class="comment">/**
+<a name="603"></a> * Retrieves the entity index from a reference.
+<a name="604"></a> *
+<a name="605"></a> * <span class="doctag">@param</span> ref			Entity reference.
+<a name="606"></a> * <span class="doctag">@return</span>				Entity index.
+<a name="607"></a> */</span>
+<a name="608"></a><span class="keyword">native</span> <span class="identifier">EntRefToEntIndex</span>(<span class="identifier">ref</span>);
+<a name="609"></a>
+<a name="610"></a><span class="comment">/**
+<a name="611"></a> * Converts a reference into a backwards compatible version.
+<a name="612"></a> *
+<a name="613"></a> * <span class="doctag">@param</span> ref			Entity reference.
+<a name="614"></a> * <span class="doctag">@return</span>				Bcompat reference.
+<a name="615"></a> */</span>
+<a name="616"></a><span class="keyword">native</span> <span class="identifier">MakeCompatEntRef</span>(<span class="identifier">ref</span>);
+<a name="617"></a>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

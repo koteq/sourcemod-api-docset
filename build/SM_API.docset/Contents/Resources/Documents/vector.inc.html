@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<title>vector.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_vector_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_vector_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Calculates a vector's length.
+<a name="40"></a> *
+<a name="41"></a> * <span class="doctag">@param</span> vec		Vector.
+<a name="42"></a> * <span class="doctag">@param</span> squared	If true, the result will be squared (for optimization).
+<a name="43"></a> * <span class="doctag">@return</span>			Vector length (magnitude).			
+<a name="44"></a> */</span>
+<a name="45"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetVectorLength</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="keyword type">bool</span>:<span class="identifier">squared</span>=<span class="keyword literal">false</span>);
+<a name="46"></a>
+<a name="47"></a><span class="comment">/**
+<a name="48"></a> * Calculates the distance between two vectors.
+<a name="49"></a> *
+<a name="50"></a> * <span class="doctag">@param</span> vec1		First vector.
+<a name="51"></a> * <span class="doctag">@param</span> vec2		Second vector.
+<a name="52"></a> * <span class="doctag">@param</span> squared	If true, the result will be squared (for optimization).
+<a name="53"></a> * <span class="doctag">@return</span>			Vector distance.
+<a name="54"></a> */</span>
+<a name="55"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetVectorDistance</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec1</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec2</span>[<span class="number">3</span>], <span class="keyword type">bool</span>:<span class="identifier">squared</span>=<span class="keyword literal">false</span>);
+<a name="56"></a>
+<a name="57"></a><span class="comment">/**
+<a name="58"></a> * Calculates the dot product of two vectors.
+<a name="59"></a> *
+<a name="60"></a> * <span class="doctag">@param</span> vec1		First vector.
+<a name="61"></a> * <span class="doctag">@param</span> vec2		Second vector.
+<a name="62"></a> * <span class="doctag">@return</span>			Dot product of the two vectors.
+<a name="63"></a> */</span>
+<a name="64"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetVectorDotProduct</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec1</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec2</span>[<span class="number">3</span>]);
+<a name="65"></a>
+<a name="66"></a><span class="comment">/**
+<a name="67"></a> * Computes the cross product of two vectors.  Any input array can be the same 
+<a name="68"></a> * as the output array.
+<a name="69"></a> *
+<a name="70"></a> * <span class="doctag">@param</span> vec1		First vector.
+<a name="71"></a> * <span class="doctag">@param</span> vec2		Second vector.
+<a name="72"></a> * <span class="doctag">@param</span> result	Resultant vector.
+<a name="73"></a> * <span class="doctag">@noreturn</span>
+<a name="74"></a> */</span>
+<a name="75"></a><span class="keyword">native</span> <span class="identifier">GetVectorCrossProduct</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec1</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec2</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">result</span>[<span class="number">3</span>]);
+<a name="76"></a>
+<a name="77"></a><span class="comment">/**
+<a name="78"></a> * Normalizes a vector.  The input array can be the same as the output array.
+<a name="79"></a> *
+<a name="80"></a> * <span class="doctag">@param</span> vec		Vector.
+<a name="81"></a> * <span class="doctag">@param</span> result	Resultant vector.
+<a name="82"></a> * <span class="doctag">@return</span>			Vector length.
+<a name="83"></a> */</span>
+<a name="84"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">NormalizeVector</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">result</span>[<span class="number">3</span>]);
+<a name="85"></a>
+<a name="86"></a><span class="comment">/**
+<a name="87"></a> * Returns vectors in the direction of an angle.
+<a name="88"></a> *
+<a name="89"></a> * <span class="doctag">@param</span> angle		Angle.
+<a name="90"></a> * <span class="doctag">@param</span> fwd		Forward vector buffer or NULL_VECTOR.
+<a name="91"></a> * <span class="doctag">@param</span> right		Right vector buffer or NULL_VECTOR.
+<a name="92"></a> * <span class="doctag">@param</span> up		Up vector buffer or NULL_VECTOR.
+<a name="93"></a> * <span class="doctag">@noreturn</span>
+<a name="94"></a> */</span>
+<a name="95"></a><span class="keyword">native</span> <span class="identifier">GetAngleVectors</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">angle</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">fwd</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">right</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">up</span>[<span class="number">3</span>]);
+<a name="96"></a>
+<a name="97"></a><span class="comment">/**
+<a name="98"></a> * Returns angles from a vector.
+<a name="99"></a> *
+<a name="100"></a> * <span class="doctag">@param</span> vec		Vector.
+<a name="101"></a> * <span class="doctag">@param</span> angle		Angle buffer.
+<a name="102"></a> * <span class="doctag">@noreturn</span>
+<a name="103"></a> */</span>
+<a name="104"></a><span class="keyword">native</span> <span class="identifier">GetVectorAngles</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">angle</span>[<span class="number">3</span>]);
+<a name="105"></a>
+<a name="106"></a><span class="comment">/**
+<a name="107"></a> * Returns direction vectors from a vector.
+<a name="108"></a> *
+<a name="109"></a> * <span class="doctag">@param</span> vec		Vector.
+<a name="110"></a> * <span class="doctag">@param</span> right		Right vector buffer or NULL_VECTOR.
+<a name="111"></a> * <span class="doctag">@param</span> up		Up vector buffer or NULL_VECTOR.
+<a name="112"></a> * <span class="doctag">@noreturn</span>
+<a name="113"></a> */</span>
+<a name="114"></a><span class="keyword">native</span> <span class="identifier">GetVectorVectors</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">right</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">up</span>[<span class="number">3</span>]);
+<a name="115"></a>
+<a name="116"></a><span class="comment">/**
+<a name="117"></a> * Adds two vectors.  It is safe to use either input buffer as an output 
+<a name="118"></a> * buffer.
+<a name="119"></a> * 
+<a name="120"></a> * <span class="doctag">@param</span> vec1		First vector.
+<a name="121"></a> * <span class="doctag">@param</span> vec2		Second vector.
+<a name="122"></a> * <span class="doctag">@param</span> result	Result buffer.
+<a name="123"></a> * <span class="doctag">@noreturn</span>
+<a name="124"></a> */</span>
+<a name="125"></a><span class="keyword">stock</span> <span class="identifier">AddVectors</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec1</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec2</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">result</span>[<span class="number">3</span>])
+<a name="126"></a>{
+<a name="127"></a>	<span class="identifier">result</span>[<span class="number">0</span>] = <span class="identifier">vec1</span>[<span class="number">0</span>] + <span class="identifier">vec2</span>[<span class="number">0</span>];
+<a name="128"></a>	<span class="identifier">result</span>[<span class="number">1</span>] = <span class="identifier">vec1</span>[<span class="number">1</span>] + <span class="identifier">vec2</span>[<span class="number">1</span>];
+<a name="129"></a>	<span class="identifier">result</span>[<span class="number">2</span>] = <span class="identifier">vec1</span>[<span class="number">2</span>] + <span class="identifier">vec2</span>[<span class="number">2</span>];
+<a name="130"></a>}
+<a name="131"></a>
+<a name="132"></a><span class="comment">/**
+<a name="133"></a> * Subtracts a vector from another vector.  It is safe to use either input 
+<a name="134"></a> * buffer as an output buffer.
+<a name="135"></a> * 
+<a name="136"></a> * <span class="doctag">@param</span> vec1		First vector.
+<a name="137"></a> * <span class="doctag">@param</span> vec2		Second vector to subtract from first.
+<a name="138"></a> * <span class="doctag">@param</span> result	Result buffer.
+<a name="139"></a> * <span class="doctag">@noreturn</span>
+<a name="140"></a> */</span>
+<a name="141"></a><span class="keyword">stock</span> <span class="identifier">SubtractVectors</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec1</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">vec2</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">result</span>[<span class="number">3</span>])
+<a name="142"></a>{
+<a name="143"></a>	<span class="identifier">result</span>[<span class="number">0</span>] = <span class="identifier">vec1</span>[<span class="number">0</span>] - <span class="identifier">vec2</span>[<span class="number">0</span>];
+<a name="144"></a>	<span class="identifier">result</span>[<span class="number">1</span>] = <span class="identifier">vec1</span>[<span class="number">1</span>] - <span class="identifier">vec2</span>[<span class="number">1</span>];
+<a name="145"></a>	<span class="identifier">result</span>[<span class="number">2</span>] = <span class="identifier">vec1</span>[<span class="number">2</span>] - <span class="identifier">vec2</span>[<span class="number">2</span>];
+<a name="146"></a>}
+<a name="147"></a>
+<a name="148"></a><span class="comment">/**
+<a name="149"></a> * Scales a vector.
+<a name="150"></a> *
+<a name="151"></a> * <span class="doctag">@param</span> vec		Vector.
+<a name="152"></a> * <span class="doctag">@param</span> scale		Scale value.
+<a name="153"></a> * <span class="doctag">@noreturn</span>
+<a name="154"></a> */</span>
+<a name="155"></a><span class="keyword">stock</span> <span class="identifier">ScaleVector</span>(<span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">scale</span>)
+<a name="156"></a>{
+<a name="157"></a>	<span class="identifier">vec</span>[<span class="number">0</span>] *= <span class="identifier">scale</span>;
+<a name="158"></a>	<span class="identifier">vec</span>[<span class="number">1</span>] *= <span class="identifier">scale</span>;
+<a name="159"></a>	<span class="identifier">vec</span>[<span class="number">2</span>] *= <span class="identifier">scale</span>;
+<a name="160"></a>}
+<a name="161"></a>
+<a name="162"></a><span class="comment">/**
+<a name="163"></a> * Negatives a vector.
+<a name="164"></a> *
+<a name="165"></a> * <span class="doctag">@param</span> vec		Vector.
+<a name="166"></a> * <span class="doctag">@noreturn</span>
+<a name="167"></a> */</span>
+<a name="168"></a><span class="keyword">stock</span> <span class="identifier">NegateVector</span>(<span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>])
+<a name="169"></a>{
+<a name="170"></a>	<span class="identifier">vec</span>[<span class="number">0</span>] = -<span class="identifier">vec</span>[<span class="number">0</span>];
+<a name="171"></a>	<span class="identifier">vec</span>[<span class="number">1</span>] = -<span class="identifier">vec</span>[<span class="number">1</span>];
+<a name="172"></a>	<span class="identifier">vec</span>[<span class="number">2</span>] = -<span class="identifier">vec</span>[<span class="number">2</span>];
+<a name="173"></a>}
+<a name="174"></a>
+<a name="175"></a><span class="comment">/**
+<a name="176"></a> * Builds a vector from two points by subtracting the points.
+<a name="177"></a> *
+<a name="178"></a> * <span class="doctag">@param</span> pt1		First point (to be subtracted from the second).
+<a name="179"></a> * <span class="doctag">@param</span> pt2		Second point.
+<a name="180"></a> * <span class="doctag">@param</span> output	Output vector buffer.
+<a name="181"></a> * <span class="doctag">@noreturn</span>
+<a name="182"></a> */</span>
+<a name="183"></a><span class="keyword">stock</span> <span class="identifier">MakeVectorFromPoints</span>(<span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">pt1</span>[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword type">Float</span>:<span class="identifier">pt2</span>[<span class="number">3</span>], <span class="keyword type">Float</span>:<span class="identifier">output</span>[<span class="number">3</span>])
+<a name="184"></a>{
+<a name="185"></a>	<span class="identifier">output</span>[<span class="number">0</span>] = <span class="identifier">pt2</span>[<span class="number">0</span>] - <span class="identifier">pt1</span>[<span class="number">0</span>];
+<a name="186"></a>	<span class="identifier">output</span>[<span class="number">1</span>] = <span class="identifier">pt2</span>[<span class="number">1</span>] - <span class="identifier">pt1</span>[<span class="number">1</span>];
+<a name="187"></a>	<span class="identifier">output</span>[<span class="number">2</span>] = <span class="identifier">pt2</span>[<span class="number">2</span>] - <span class="identifier">pt1</span>[<span class="number">2</span>];
+<a name="188"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

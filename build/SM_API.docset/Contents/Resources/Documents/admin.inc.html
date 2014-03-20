@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<title>admin.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_admin_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_admin_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Access levels (flags) for admins.
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">enum</span> <span class="identifier">AdminFlag</span>
+<a name="42"></a>{
+<a name="43"></a>	<span class="identifier">Admin_Reservation</span> = <span class="number">0</span>,	<span class="comment">/**&lt; Reserved slot */</span>
+<a name="44"></a>	<span class="identifier">Admin_Generic</span>,			<span class="comment">/**&lt; Generic admin abilities */</span>
+<a name="45"></a>	<span class="identifier">Admin_Kick</span>,				<span class="comment">/**&lt; Kick another user */</span>
+<a name="46"></a>	<span class="identifier">Admin_Ban</span>,				<span class="comment">/**&lt; Ban another user */</span>
+<a name="47"></a>	<span class="identifier">Admin_Unban</span>,			<span class="comment">/**&lt; Unban another user */</span>
+<a name="48"></a>	<span class="identifier">Admin_Slay</span>,				<span class="comment">/**&lt; Slay/kill/damage another user */</span>
+<a name="49"></a>	<span class="identifier">Admin_Changemap</span>,		<span class="comment">/**&lt; Change the map */</span>
+<a name="50"></a>	<span class="identifier">Admin_Convars</span>,			<span class="comment">/**&lt; Change basic convars */</span>
+<a name="51"></a>	<span class="identifier">Admin_Config</span>,			<span class="comment">/**&lt; Change configuration */</span>
+<a name="52"></a>	<span class="identifier">Admin_Chat</span>,				<span class="comment">/**&lt; Special chat privileges */</span>
+<a name="53"></a>	<span class="identifier">Admin_Vote</span>,				<span class="comment">/**&lt; Special vote privileges */</span>
+<a name="54"></a>	<span class="identifier">Admin_Password</span>,			<span class="comment">/**&lt; Set a server password */</span>
+<a name="55"></a>	<span class="identifier">Admin_RCON</span>,				<span class="comment">/**&lt; Use RCON */</span>
+<a name="56"></a>	<span class="identifier">Admin_Cheats</span>,			<span class="comment">/**&lt; Change sv_cheats and use its commands */</span>
+<a name="57"></a>	<span class="identifier">Admin_Root</span>,				<span class="comment">/**&lt; All access by default */</span>
+<a name="58"></a>	<span class="identifier">Admin_Custom1</span>,			<span class="comment">/**&lt; First custom flag type */</span>
+<a name="59"></a>	<span class="identifier">Admin_Custom2</span>,			<span class="comment">/**&lt; Second custom flag type */</span>
+<a name="60"></a>	<span class="identifier">Admin_Custom3</span>,			<span class="comment">/**&lt; Third custom flag type */</span>
+<a name="61"></a>	<span class="identifier">Admin_Custom4</span>,			<span class="comment">/**&lt; Fourth custom flag type */</span>
+<a name="62"></a>	<span class="identifier">Admin_Custom5</span>,			<span class="comment">/**&lt; Fifth custom flag type */</span>
+<a name="63"></a>	<span class="identifier">Admin_Custom6</span>,			<span class="comment">/**&lt; Sixth custom flag type */</span>
+<a name="64"></a>	<span class="comment">/* --- */</span>
+<a name="65"></a>};
+<a name="66"></a>
+<a name="67"></a><span class="preprocessor">#define <span class="identifier">AdminFlags_TOTAL</span>	<span class="number">21</span>		<span class="comment">/**&lt; Total number of admin flags */</span>
+<a name="68"></a></span>
+<a name="69"></a><span class="comment">/**
+<a name="70"></a> * <span class="doctag">@section</span> Bitwise values definitions for admin flags.
+<a name="71"></a> */</span>
+<a name="72"></a><span class="preprocessor">#define <span class="identifier">ADMFLAG_RESERVATION</span>			(<span class="number">1</span>&lt;&lt;<span class="number">0</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Reservation as a FlagBit */</span>
+<a name="73"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_GENERIC</span>				(<span class="number">1</span>&lt;&lt;<span class="number">1</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Generic as a FlagBit */</span>
+<a name="74"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_KICK</span>				(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Kick as a FlagBit */</span>
+<a name="75"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_BAN</span>					(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Ban as a FlagBit */</span>
+<a name="76"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_UNBAN</span>				(<span class="number">1</span>&lt;&lt;<span class="number">4</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Unban as a FlagBit */</span>
+<a name="77"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_SLAY</span>				(<span class="number">1</span>&lt;&lt;<span class="number">5</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Slay as a FlagBit */</span>
+<a name="78"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CHANGEMAP</span>			(<span class="number">1</span>&lt;&lt;<span class="number">6</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Changemap as a FlagBit */</span>
+<a name="79"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CONVARS</span>				(<span class="number">1</span>&lt;&lt;<span class="number">7</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Convars as a FlagBit */</span>
+<a name="80"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CONFIG</span>				(<span class="number">1</span>&lt;&lt;<span class="number">8</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Config as a FlagBit */</span>
+<a name="81"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CHAT</span>				(<span class="number">1</span>&lt;&lt;<span class="number">9</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Chat as a FlagBit */</span>
+<a name="82"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_VOTE</span>				(<span class="number">1</span>&lt;&lt;<span class="number">10</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Vote as a FlagBit */</span>
+<a name="83"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_PASSWORD</span>			(<span class="number">1</span>&lt;&lt;<span class="number">11</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Password as a FlagBit */</span>
+<a name="84"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_RCON</span>				(<span class="number">1</span>&lt;&lt;<span class="number">12</span>)		<span class="comment">/**&lt; Convenience macro for Admin_RCON as a FlagBit */</span>
+<a name="85"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CHEATS</span>				(<span class="number">1</span>&lt;&lt;<span class="number">13</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Cheats as a FlagBit */</span>
+<a name="86"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_ROOT</span>				(<span class="number">1</span>&lt;&lt;<span class="number">14</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Root as a FlagBit */</span>
+<a name="87"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CUSTOM1</span>				(<span class="number">1</span>&lt;&lt;<span class="number">15</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Custom1 as a FlagBit */</span>
+<a name="88"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CUSTOM2</span>				(<span class="number">1</span>&lt;&lt;<span class="number">16</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Custom2 as a FlagBit */</span>
+<a name="89"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CUSTOM3</span>				(<span class="number">1</span>&lt;&lt;<span class="number">17</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Custom3 as a FlagBit */</span>
+<a name="90"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CUSTOM4</span>				(<span class="number">1</span>&lt;&lt;<span class="number">18</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Custom4 as a FlagBit */</span>
+<a name="91"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CUSTOM5</span>				(<span class="number">1</span>&lt;&lt;<span class="number">19</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Custom5 as a FlagBit */</span>
+<a name="92"></a></span><span class="preprocessor">#define <span class="identifier">ADMFLAG_CUSTOM6</span>				(<span class="number">1</span>&lt;&lt;<span class="number">20</span>)		<span class="comment">/**&lt; Convenience macro for Admin_Custom6 as a FlagBit */</span>
+<a name="93"></a></span>
+<a name="94"></a><span class="comment">/**
+<a name="95"></a> * <span class="doctag">@endsection</span>
+<a name="96"></a> */</span>
+<a name="97"></a>
+<a name="98"></a><span class="comment">/**
+<a name="99"></a> * <span class="doctag">@section</span> Hardcoded authentication methods 
+<a name="100"></a> */</span>
+<a name="101"></a><span class="preprocessor">#define <span class="identifier">AUTHMETHOD_STEAM</span>			<span class="string">"steam"</span>		<span class="comment">/**&lt; SteamID based authentication */</span>
+<a name="102"></a></span><span class="preprocessor">#define <span class="identifier">AUTHMETHOD_IP</span>				<span class="string">"ip"</span>		<span class="comment">/**&lt; IP based authentication */</span>
+<a name="103"></a></span><span class="preprocessor">#define <span class="identifier">AUTHMETHOD_NAME</span>				<span class="string">"name"</span>		<span class="comment">/**&lt; Name based authentication */</span>
+<a name="104"></a></span>
+<a name="105"></a><span class="comment">/**
+<a name="106"></a> * <span class="doctag">@endsection</span>
+<a name="107"></a> */</span>
+<a name="108"></a>
+<a name="109"></a><span class="comment">/**
+<a name="110"></a> * Access override types.
+<a name="111"></a> */</span>
+<a name="112"></a><span class="keyword">enum</span> <span class="identifier">OverrideType</span>
+<a name="113"></a>{
+<a name="114"></a>	<span class="identifier">Override_Command</span> = <span class="number">1</span>,	<span class="comment">/**&lt; Command */</span>
+<a name="115"></a>	<span class="identifier">Override_CommandGroup</span>,	<span class="comment">/**&lt; Command group */</span>
+<a name="116"></a>};
+<a name="117"></a>
+<a name="118"></a><span class="comment">/**
+<a name="119"></a> * Access override rules.
+<a name="120"></a> */</span>
+<a name="121"></a><span class="keyword">enum</span> <span class="identifier">OverrideRule</span>
+<a name="122"></a>{
+<a name="123"></a>	<span class="identifier">Command_Deny</span> = <span class="number">0</span>,
+<a name="124"></a>	<span class="identifier">Command_Allow</span> = <span class="number">1</span>,
+<a name="125"></a>};
+<a name="126"></a>
+<a name="127"></a><span class="comment">/**
+<a name="128"></a> * DEPRECATED, do not use.
+<a name="129"></a> */</span>
+<a name="130"></a><span class="keyword">enum</span> <span class="identifier">ImmunityType</span>
+<a name="131"></a>{
+<a name="132"></a>	<span class="identifier">Immunity_Default</span> = <span class="number">1</span>,	<span class="comment">/**&lt; Deprecated. */</span>
+<a name="133"></a>	<span class="identifier">Immunity_Global</span>,		<span class="comment">/**&lt; Deprecated. */</span>
+<a name="134"></a>};
+<a name="135"></a>
+<a name="136"></a><span class="comment">/** 
+<a name="137"></a> * Identifies a unique entry in the group permissions cache.  These are not Handles.
+<a name="138"></a> */</span>
+<a name="139"></a><span class="keyword">enum</span> <span class="identifier">GroupId</span>
+<a name="140"></a>{
+<a name="141"></a>	<span class="identifier">INVALID_GROUP_ID</span> = -<span class="number">1</span>,	<span class="comment">/**&lt; An invalid/non-existent group */</span>
+<a name="142"></a>};
+<a name="143"></a>
+<a name="144"></a><span class="comment">/** 
+<a name="145"></a> * Identifies a unique entry in the admin permissions cache.  These are not Handles.
+<a name="146"></a> */</span>
+<a name="147"></a><span class="keyword">enum</span> <span class="identifier">AdminId</span>
+<a name="148"></a>{
+<a name="149"></a>	<span class="identifier">INVALID_ADMIN_ID</span> = -<span class="number">1</span>,	<span class="comment">/**&lt; An invalid/non-existent admin */</span>
+<a name="150"></a>};
+<a name="151"></a>
+<a name="152"></a><span class="comment">/**
+<a name="153"></a> * Methods of computing access permissions.
+<a name="154"></a> */</span>
+<a name="155"></a><span class="keyword">enum</span> <span class="identifier">AdmAccessMode</span>
+<a name="156"></a>{
+<a name="157"></a>	<span class="identifier">Access_Real</span>,		<span class="comment">/**&lt; Access the user has inherently */</span>
+<a name="158"></a>	<span class="identifier">Access_Effective</span>,	<span class="comment">/**&lt; Access the user has from their groups */</span>
+<a name="159"></a>};
+<a name="160"></a>
+<a name="161"></a><span class="comment">/**
+<a name="162"></a> * Represents the various cache regions.
+<a name="163"></a> */</span>
+<a name="164"></a><span class="keyword">enum</span> <span class="identifier">AdminCachePart</span>
+<a name="165"></a>{
+<a name="166"></a>	<span class="identifier">AdminCache_Overrides</span> = <span class="number">0</span>,		<span class="comment">/**&lt; Global overrides */</span>
+<a name="167"></a>	<span class="identifier">AdminCache_Groups</span> = <span class="number">1</span>,			<span class="comment">/**&lt; All groups (automatically invalidates admins too) */</span>
+<a name="168"></a>	<span class="identifier">AdminCache_Admins</span> = <span class="number">2</span>,			<span class="comment">/**&lt; All admins */</span>
+<a name="169"></a>};
+<a name="170"></a>
+<a name="171"></a><span class="comment">/**
+<a name="172"></a> * Called when part of the cache needs to be rebuilt.
+<a name="173"></a> *
+<a name="174"></a> * <span class="doctag">@param</span> part			Part of the admin cache to rebuild.
+<a name="175"></a> */</span>
+<a name="176"></a><span class="keyword">forward</span> <span class="identifier">OnRebuildAdminCache</span>(<span class="identifier">AdminCachePart</span>:<span class="identifier">part</span>);
+<a name="177"></a>
+<a name="178"></a><span class="comment">/**
+<a name="179"></a> * Tells the admin system to dump a portion of the cache.
+<a name="180"></a> *
+<a name="181"></a> * <span class="doctag">@param</span> part			Part of the cache to dump.  Specifying groups also dumps admins.
+<a name="182"></a> * <span class="doctag">@param</span> rebuild		If true, the rebuild forwards will fire.
+<a name="183"></a> * <span class="doctag">@noreturn</span>
+<a name="184"></a> */</span>
+<a name="185"></a><span class="keyword">native</span> <span class="identifier">DumpAdminCache</span>(<span class="identifier">AdminCachePart</span>:<span class="identifier">part</span>, <span class="keyword type">bool</span>:<span class="identifier">rebuild</span>);
+<a name="186"></a>
+<a name="187"></a><span class="comment">/**
+<a name="188"></a> * Adds a global command flag override.  Any command registered with this name
+<a name="189"></a> * will assume the new flag.  This is applied retroactively as well.
+<a name="190"></a> *
+<a name="191"></a> * <span class="doctag">@param</span> cmd			String containing command name (case sensitive).
+<a name="192"></a> * <span class="doctag">@param</span> type			Override type (specific command or group).
+<a name="193"></a> * <span class="doctag">@param</span> flags			New admin flag.
+<a name="194"></a> * <span class="doctag">@noreturn</span>
+<a name="195"></a> */</span>
+<a name="196"></a><span class="keyword">native</span> <span class="identifier">AddCommandOverride</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cmd</span>[], <span class="identifier">OverrideType</span>:<span class="identifier">type</span>, <span class="identifier">flags</span>);
+<a name="197"></a>
+<a name="198"></a><span class="comment">/**
+<a name="199"></a> * Returns a command override.
+<a name="200"></a> *
+<a name="201"></a> * <span class="doctag">@param</span> cmd			String containing command name (case sensitive).
+<a name="202"></a> * <span class="doctag">@param</span> type			Override type (specific command or group).
+<a name="203"></a> * <span class="doctag">@param</span> flags			By-reference cell to store the flag (undefined if not found).
+<a name="204"></a> * <span class="doctag">@return</span>				True if there is an override, false otherwise.
+<a name="205"></a> */</span>
+<a name="206"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetCommandOverride</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cmd</span>[], <span class="identifier">OverrideType</span>:<span class="identifier">type</span>, &amp;<span class="identifier">flags</span>);
+<a name="207"></a>
+<a name="208"></a><span class="comment">/**
+<a name="209"></a> * Unsets a command override.
+<a name="210"></a> *
+<a name="211"></a> * <span class="doctag">@param</span> cmd			String containing command name (case sensitive).
+<a name="212"></a> * <span class="doctag">@param</span> type			Override type (specific command or group).
+<a name="213"></a> * <span class="doctag">@noreturn</span>
+<a name="214"></a> */</span>
+<a name="215"></a><span class="keyword">native</span> <span class="identifier">UnsetCommandOverride</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cmd</span>[], <span class="identifier">OverrideType</span>:<span class="identifier">type</span>);
+<a name="216"></a>
+<a name="217"></a><span class="comment">/**
+<a name="218"></a> * Adds a new group.  Name must be unique.
+<a name="219"></a> *
+<a name="220"></a> * <span class="doctag">@param</span> group_name	String containing the group name.
+<a name="221"></a> * <span class="doctag">@return</span>				A new group id, INVALID_GROUP_ID if it already exists.
+<a name="222"></a> */</span>
+<a name="223"></a><span class="keyword">native</span> <span class="identifier">GroupId</span>:<span class="identifier">CreateAdmGroup</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">group_name</span>[]);
+<a name="224"></a>
+<a name="225"></a><span class="comment">/**
+<a name="226"></a> * Finds a group by name.
+<a name="227"></a> *
+<a name="228"></a> * <span class="doctag">@param</span> group_name	String containing the group name.
+<a name="229"></a> * <span class="doctag">@return</span>				A group id, or INVALID_GROUP_ID if not found.
+<a name="230"></a> */</span>
+<a name="231"></a><span class="keyword">native</span> <span class="identifier">GroupId</span>:<span class="identifier">FindAdmGroup</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">group_name</span>[]);
+<a name="232"></a>
+<a name="233"></a><span class="comment">/**
+<a name="234"></a> * Adds or removes a flag from a group's flag set.
+<a name="235"></a> * <span class="doctag">@note</span> These are called "add flags" because they add to a user's flags.
+<a name="236"></a> *
+<a name="237"></a> * <span class="doctag">@param</span> id			Group id.
+<a name="238"></a> * <span class="doctag">@param</span> flag			Admin flag to toggle.
+<a name="239"></a> * <span class="doctag">@param</span> enabled		True to set the flag, false to unset/disable.
+<a name="240"></a> * <span class="doctag">@noreturn</span>
+<a name="241"></a> */</span>
+<a name="242"></a><span class="keyword">native</span> <span class="identifier">SetAdmGroupAddFlag</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>, <span class="keyword type">bool</span>:<span class="identifier">enabled</span>);
+<a name="243"></a>
+<a name="244"></a><span class="comment">/**
+<a name="245"></a> * Gets the set value of an add flag on a group's flag set.
+<a name="246"></a> * <span class="doctag">@note</span> These are called "add flags" because they add to a user's flags.
+<a name="247"></a> *
+<a name="248"></a> * <span class="doctag">@param</span> id			Group id.
+<a name="249"></a> * <span class="doctag">@param</span> flag			Admin flag to retrieve.
+<a name="250"></a> * <span class="doctag">@return</span>				True if enabled, false otherwise,
+<a name="251"></a> */</span>
+<a name="252"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetAdmGroupAddFlag</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>);
+<a name="253"></a>
+<a name="254"></a><span class="comment">/**
+<a name="255"></a> * Returns the flag set that is added to a user from their group.
+<a name="256"></a> * <span class="doctag">@note</span> These are called "add flags" because they add to a user's flags.
+<a name="257"></a> *
+<a name="258"></a> * <span class="doctag">@param</span> id			GroupId of the group.
+<a name="259"></a> * <span class="doctag">@return</span>				Bitstring containing the flags enabled.
+<a name="260"></a> */</span>
+<a name="261"></a><span class="keyword">native</span> <span class="identifier">GetAdmGroupAddFlags</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>);
+<a name="262"></a>
+<a name="263"></a><span class="comment">/**
+<a name="264"></a> * <span class="doctag">@deprecated</span>			Functionality removed.
+<a name="265"></a> */</span>
+<a name="266"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">SetAdmGroupImmunityLevel</span>() <span class="identifier">instead</span>.
+<a name="267"></a></span><span class="keyword">native</span> <span class="identifier">SetAdmGroupImmunity</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="identifier">ImmunityType</span>:<span class="identifier">type</span>, <span class="keyword type">bool</span>:<span class="identifier">enabled</span>);
+<a name="268"></a>
+<a name="269"></a><span class="comment">/**
+<a name="270"></a> * <span class="doctag">@deprecated</span>			Functionality removed.
+<a name="271"></a> */</span>
+<a name="272"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">GetAdmGroupImmunityLevel</span>() <span class="identifier">instead</span>.
+<a name="273"></a></span><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetAdmGroupImmunity</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="identifier">ImmunityType</span>:<span class="identifier">type</span>);
+<a name="274"></a>
+<a name="275"></a><span class="comment">/**
+<a name="276"></a> * Adds immunity to a specific group.
+<a name="277"></a> *
+<a name="278"></a> * <span class="doctag">@param</span> id			Group id.
+<a name="279"></a> * <span class="doctag">@param</span> other_id		Group id to receive immunity to.
+<a name="280"></a> * <span class="doctag">@noreturn</span>
+<a name="281"></a> */</span>
+<a name="282"></a><span class="keyword">native</span> <span class="identifier">SetAdmGroupImmuneFrom</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="identifier">GroupId</span>:<span class="identifier">other_id</span>);
+<a name="283"></a>
+<a name="284"></a><span class="comment">/**
+<a name="285"></a> * Returns the number of specific group immunities.
+<a name="286"></a> *
+<a name="287"></a> * <span class="doctag">@param</span> id			Group id.
+<a name="288"></a> * <span class="doctag">@return</span>				Number of group immunities.
+<a name="289"></a> */</span>
+<a name="290"></a><span class="keyword">native</span> <span class="identifier">GetAdmGroupImmuneCount</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>);
+<a name="291"></a>
+<a name="292"></a><span class="comment">/**
+<a name="293"></a> * Returns a group that this group is immune to given an index.
+<a name="294"></a> *
+<a name="295"></a> * <span class="doctag">@param</span> id			Group id.
+<a name="296"></a> * <span class="doctag">@param</span> number		Index from 0 to N-1, from GetAdmGroupImmuneCount().
+<a name="297"></a> * <span class="doctag">@return</span>				GroupId that this group is immune to, or INVALID_GROUP_ID on failure.
+<a name="298"></a> */</span>
+<a name="299"></a><span class="keyword">native</span> <span class="identifier">GroupId</span>:<span class="identifier">GetAdmGroupImmuneFrom</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="identifier">number</span>); 
+<a name="300"></a>
+<a name="301"></a><span class="comment">/**
+<a name="302"></a> * Adds a group-specific override type.
+<a name="303"></a> *
+<a name="304"></a> * <span class="doctag">@param</span> id			Group id.
+<a name="305"></a> * <span class="doctag">@param</span> name			String containing command name (case sensitive).
+<a name="306"></a> * <span class="doctag">@param</span> type			Override type (specific command or group).
+<a name="307"></a> * <span class="doctag">@param</span> rule			Override allow/deny setting.
+<a name="308"></a> * <span class="doctag">@noreturn</span>
+<a name="309"></a> */</span>
+<a name="310"></a><span class="keyword">native</span> <span class="identifier">AddAdmGroupCmdOverride</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">OverrideType</span>:<span class="identifier">type</span>, <span class="identifier">OverrideRule</span>:<span class="identifier">rule</span>);
+<a name="311"></a>
+<a name="312"></a><span class="comment">/**
+<a name="313"></a> * Retrieves a group-specific command override.
+<a name="314"></a> *
+<a name="315"></a> * <span class="doctag">@param</span> id			Group id.
+<a name="316"></a> * <span class="doctag">@param</span> name			String containing command name (case sensitive).
+<a name="317"></a> * <span class="doctag">@param</span> type			Override type (specific command or group).
+<a name="318"></a> * <span class="doctag">@param</span> rule			Optional pointer to store allow/deny setting.
+<a name="319"></a> * <span class="doctag">@return</span>				True if an override exists, false otherwise.
+<a name="320"></a> */</span>
+<a name="321"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetAdmGroupCmdOverride</span>(<span class="identifier">GroupId</span>:<span class="identifier">id</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">OverrideType</span>:<span class="identifier">type</span>, &amp;<span class="identifier">OverrideRule</span>:<span class="identifier">rule</span>);
+<a name="322"></a>
+<a name="323"></a><span class="comment">/**
+<a name="324"></a> * Registers an authentication identity type.  You normally never need to call this except for 
+<a name="325"></a> * very specific systems.
+<a name="326"></a> *
+<a name="327"></a> * <span class="doctag">@param</span> name		Codename to use for your authentication type.
+<a name="328"></a> * <span class="doctag">@noreturn</span>
+<a name="329"></a> */</span>
+<a name="330"></a><span class="keyword">native</span> <span class="identifier">RegisterAuthIdentType</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="331"></a>
+<a name="332"></a><span class="comment">/**
+<a name="333"></a> * Creates a new admin entry in the permissions cache.
+<a name="334"></a> *
+<a name="335"></a> * <span class="doctag">@param</span> name			Name for this entry (does not have to be unique).
+<a name="336"></a> * 						Specify an empty string for an anonymous admin.
+<a name="337"></a> */</span>
+<a name="338"></a><span class="keyword">native</span> <span class="identifier">AdminId</span>:<span class="identifier">CreateAdmin</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]=<span class="string">""</span>);
+<a name="339"></a>
+<a name="340"></a><span class="comment">/**
+<a name="341"></a> * Retrieves an admin's user name as made with CreateAdmin().
+<a name="342"></a> *
+<a name="343"></a> * <span class="doctag">@note</span> This function can return UTF-8 strings, and will safely chop UTF-8 strings.
+<a name="344"></a> *
+<a name="345"></a> * <span class="doctag">@param</span> id			AdminId of the admin.
+<a name="346"></a> * <span class="doctag">@param</span> name			String buffer to store name.
+<a name="347"></a> * <span class="doctag">@param</span> maxlength		Maximum size of string buffer.
+<a name="348"></a> * <span class="doctag">@return</span>				Number of bytes written.
+<a name="349"></a> */</span>
+<a name="350"></a><span class="keyword">native</span> <span class="identifier">GetAdminUsername</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlength</span>);
+<a name="351"></a>
+<a name="352"></a><span class="comment">/**
+<a name="353"></a> * Binds an admin to an identity for fast lookup later on.  The bind must be unique.
+<a name="354"></a> *
+<a name="355"></a> * <span class="doctag">@param</span> id			AdminId of the admin.
+<a name="356"></a> * <span class="doctag">@param</span> auth			Auth method to use, predefined or from RegisterAuthIdentType().
+<a name="357"></a> * <span class="doctag">@param</span> ident			String containing the arbitrary, unique identity.
+<a name="358"></a> * <span class="doctag">@return</span>				True on success, false if the auth method was not found,
+<a name="359"></a> *						or ident was already taken.
+<a name="360"></a> */</span>
+<a name="361"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">BindAdminIdentity</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">auth</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">ident</span>[]);
+<a name="362"></a>
+<a name="363"></a><span class="comment">/**
+<a name="364"></a> * Sets whether or not a flag is enabled on an admin.
+<a name="365"></a> *
+<a name="366"></a> * <span class="doctag">@param</span> id			AdminId index of the admin.
+<a name="367"></a> * <span class="doctag">@param</span> flag			Admin flag to use.
+<a name="368"></a> * <span class="doctag">@param</span> enabled		True to enable, false to disable.
+<a name="369"></a> * <span class="doctag">@noreturn</span>
+<a name="370"></a> */</span>
+<a name="371"></a><span class="keyword">native</span> <span class="identifier">SetAdminFlag</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>, <span class="keyword type">bool</span>:<span class="identifier">enabled</span>);
+<a name="372"></a>
+<a name="373"></a><span class="comment">/**
+<a name="374"></a> * Returns whether or not a flag is enabled on an admin.
+<a name="375"></a> *
+<a name="376"></a> * <span class="doctag">@param</span> id			AdminId index of the admin.
+<a name="377"></a> * <span class="doctag">@param</span> flag			Admin flag to use.
+<a name="378"></a> * <span class="doctag">@param</span> mode			Access mode to check.
+<a name="379"></a> * <span class="doctag">@return</span>				True if enabled, false otherwise.
+<a name="380"></a> */</span>
+<a name="381"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetAdminFlag</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>, <span class="identifier">AdmAccessMode</span>:<span class="identifier">mode</span>=<span class="identifier">Access_Effective</span>);
+<a name="382"></a>
+<a name="383"></a><span class="comment">/**
+<a name="384"></a> * Returns the bitstring of access flags on an admin.
+<a name="385"></a> *
+<a name="386"></a> * <span class="doctag">@param</span> id			AdminId index of the admin.
+<a name="387"></a> * <span class="doctag">@param</span> mode			Access mode to use.
+<a name="388"></a> * <span class="doctag">@return</span>				A bitstring containing which flags are enabled.
+<a name="389"></a> */</span>
+<a name="390"></a><span class="keyword">native</span> <span class="identifier">GetAdminFlags</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="identifier">AdmAccessMode</span>:<span class="identifier">mode</span>);
+<a name="391"></a>
+<a name="392"></a><span class="comment">/**
+<a name="393"></a> * Adds a group to an admin's inherited group list.  Any flags the group has 
+<a name="394"></a> * will be added to the admin's effective flags.
+<a name="395"></a> *
+<a name="396"></a> * <span class="doctag">@param</span> id			AdminId index of the admin.
+<a name="397"></a> * <span class="doctag">@param</span> gid			GroupId index of the group.
+<a name="398"></a> * <span class="doctag">@return</span>				True on success, false on invalid input or duplicate membership.
+<a name="399"></a> */</span>
+<a name="400"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">AdminInheritGroup</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="identifier">GroupId</span>:<span class="identifier">gid</span>);
+<a name="401"></a>
+<a name="402"></a><span class="comment">/**
+<a name="403"></a> * Returns the number of groups this admin is a member of.
+<a name="404"></a> * 
+<a name="405"></a> * <span class="doctag">@param</span> id			AdminId index of the admin.
+<a name="406"></a> * <span class="doctag">@return</span>				Number of groups this admin is a member of.
+<a name="407"></a> */</span>
+<a name="408"></a><span class="keyword">native</span> <span class="identifier">GetAdminGroupCount</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>);
+<a name="409"></a>
+<a name="410"></a><span class="comment">/**
+<a name="411"></a> * Returns group information from an admin.
+<a name="412"></a> *
+<a name="413"></a> * <span class="doctag">@param</span> id        	AdminId index of the admin.
+<a name="414"></a> * <span class="doctag">@param</span> index			Group number to retrieve, from 0 to N-1, where N
+<a name="415"></a> *						is the value of GetAdminGroupCount(id).
+<a name="416"></a> * <span class="doctag">@param</span> name			Buffer to store the group's name.
+<a name="417"></a> *						Note: This will safely chop UTF-8 strings.
+<a name="418"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the output name buffer.
+<a name="419"></a> * <span class="doctag">@return</span>				A GroupId index and a name pointer, or
+<a name="420"></a> *						INVALID_GROUP_ID and NULL if an error occurred.
+<a name="421"></a>*/</span>
+<a name="422"></a><span class="keyword">native</span> <span class="identifier">GroupId</span>:<span class="identifier">GetAdminGroup</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="identifier">index</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlength</span>);
+<a name="423"></a>
+<a name="424"></a><span class="comment">/**
+<a name="425"></a> * Sets a password on an admin.
+<a name="426"></a> *
+<a name="427"></a> * <span class="doctag">@param</span> id			AdminId index of the admin.
+<a name="428"></a> * <span class="doctag">@param</span> password		String containing the password.
+<a name="429"></a> * <span class="doctag">@noreturn</span>
+<a name="430"></a> */</span>
+<a name="431"></a><span class="keyword">native</span> <span class="identifier">SetAdminPassword</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">password</span>[]);
+<a name="432"></a>
+<a name="433"></a><span class="comment">/**
+<a name="434"></a> * Gets an admin's password.
+<a name="435"></a> *
+<a name="436"></a> * <span class="doctag">@param</span> id			AdminId index of the admin.
+<a name="437"></a> * <span class="doctag">@param</span> buffer			Optional buffer to store the admin's password.
+<a name="438"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the output name buffer.
+<a name="439"></a> *						Note: This will safely chop UTF-8 strings.
+<a name="440"></a> * <span class="doctag">@return</span>				True if there was a password set, false otherwise.
+<a name="441"></a> */</span>
+<a name="442"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetAdminPassword</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[]=<span class="string">""</span>, <span class="identifier">maxlength</span>=<span class="number">0</span>);
+<a name="443"></a>
+<a name="444"></a><span class="comment">/**
+<a name="445"></a> * Attempts to find an admin by an auth method and an identity.
+<a name="446"></a> *
+<a name="447"></a> * <span class="doctag">@param</span> auth			Auth method to try.
+<a name="448"></a> * <span class="doctag">@param</span> identity		Identity string to look up.
+<a name="449"></a> * <span class="doctag">@return</span>				An AdminId index if found, INVALID_ADMIN_ID otherwise.
+<a name="450"></a> */</span>
+<a name="451"></a><span class="keyword">native</span> <span class="identifier">AdminId</span>:<span class="identifier">FindAdminByIdentity</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">auth</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">identity</span>[]);
+<a name="452"></a>
+<a name="453"></a><span class="comment">/**
+<a name="454"></a> * Removes an admin entry from the cache.
+<a name="455"></a> *
+<a name="456"></a> * <span class="doctag">@note</span> This will remove any bindings to a specific user.
+<a name="457"></a> *
+<a name="458"></a> * <span class="doctag">@param</span> id			AdminId index to remove/invalidate.
+<a name="459"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="460"></a> */</span>
+<a name="461"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RemoveAdmin</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>);
+<a name="462"></a>
+<a name="463"></a><span class="comment">/**
+<a name="464"></a> * Converts a flag bit string to a bit array.
+<a name="465"></a> *
+<a name="466"></a> * <span class="doctag">@param</span> bits			Bit string containing the flags.
+<a name="467"></a> * <span class="doctag">@param</span> array			Array to write the flags to.  Enabled flags will be 'true'.
+<a name="468"></a> * <span class="doctag">@param</span> maxSize		Maximum number of flags the array can store.
+<a name="469"></a> * <span class="doctag">@return</span>				Number of flags written.
+<a name="470"></a> */</span>
+<a name="471"></a><span class="keyword">native</span> <span class="identifier">FlagBitsToBitArray</span>(<span class="identifier">bits</span>, <span class="keyword type">bool</span>:<span class="identifier">array</span>[], <span class="identifier">maxSize</span>);
+<a name="472"></a>
+<a name="473"></a><span class="comment">/**
+<a name="474"></a> * Converts a flag array to a bit string.
+<a name="475"></a> *
+<a name="476"></a> * <span class="doctag">@param</span> array			Array containing true or false for each AdminFlag.
+<a name="477"></a> * <span class="doctag">@param</span> maxSize		Maximum size of the flag array.
+<a name="478"></a> * <span class="doctag">@return</span>				A bit string composed of the array bits.
+<a name="479"></a> */</span>
+<a name="480"></a><span class="keyword">native</span> <span class="identifier">FlagBitArrayToBits</span>(<span class="keyword">const</span> <span class="keyword type">bool</span>:<span class="identifier">array</span>[], <span class="identifier">maxSize</span>);
+<a name="481"></a>
+<a name="482"></a><span class="comment">/**
+<a name="483"></a> * Converts an array of flags to bits.
+<a name="484"></a> *
+<a name="485"></a> * <span class="doctag">@param</span> array			Array containing flags that are enabled.
+<a name="486"></a> * <span class="doctag">@param</span> numFlags		Number of flags in the array.
+<a name="487"></a> * <span class="doctag">@return</span>				A bit string composed of the array flags.
+<a name="488"></a> */</span>
+<a name="489"></a><span class="keyword">native</span> <span class="identifier">FlagArrayToBits</span>(<span class="keyword">const</span> <span class="identifier">AdminFlag</span>:<span class="identifier">array</span>[], <span class="identifier">numFlags</span>);
+<a name="490"></a>
+<a name="491"></a><span class="comment">/**
+<a name="492"></a> * Converts a bit string to an array of flags.
+<a name="493"></a> *
+<a name="494"></a> * <span class="doctag">@param</span> bits			Bit string containing the flags.
+<a name="495"></a> * <span class="doctag">@param</span> array			Output array to write flags.
+<a name="496"></a> * <span class="doctag">@param</span> maxSize		Maximum size of the flag array.
+<a name="497"></a> * <span class="doctag">@return</span>				Number of flags written.
+<a name="498"></a> */</span>
+<a name="499"></a><span class="keyword">native</span> <span class="identifier">FlagBitsToArray</span>(<span class="identifier">bits</span>, <span class="identifier">AdminFlag</span>:<span class="identifier">array</span>[], <span class="identifier">maxSize</span>);
+<a name="500"></a>
+<a name="501"></a><span class="comment">/**
+<a name="502"></a> * Finds a flag by its string name.
+<a name="503"></a> *
+<a name="504"></a> * <span class="doctag">@param</span> name			Flag name (like "kick"), case sensitive.
+<a name="505"></a> * <span class="doctag">@param</span> flag			Variable to store flag in.
+<a name="506"></a> * <span class="doctag">@return</span>				True on success, false if not found.
+<a name="507"></a> */</span>
+<a name="508"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">FindFlagByName</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], &amp;<span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>);
+<a name="509"></a>
+<a name="510"></a><span class="comment">/**
+<a name="511"></a> * Finds a flag by a given character.
+<a name="512"></a> *
+<a name="513"></a> * <span class="doctag">@param</span> c				Flag ASCII character/token.
+<a name="514"></a> * <span class="doctag">@param</span> flag			Variable to store flag in.
+<a name="515"></a> * <span class="doctag">@return</span>				True on success, false if not found.
+<a name="516"></a> */</span>
+<a name="517"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">FindFlagByChar</span>(<span class="identifier">c</span>, &amp;<span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>);
+<a name="518"></a>
+<a name="519"></a><span class="comment">/**
+<a name="520"></a> * Finds a flag char by a gived admin flag.
+<a name="521"></a> *
+<a name="522"></a> * <span class="doctag">@param</span> flag                 Flag to look up.
+<a name="523"></a> * <span class="doctag">@param</span> c                    Variable to store flag char.
+<a name="524"></a> * <span class="doctag">@return</span>                     True on success, false if not found.
+<a name="525"></a> */</span>
+<a name="526"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">FindFlagChar</span>(<span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>, &amp;<span class="identifier">c</span>);
+<a name="527"></a>
+<a name="528"></a><span class="comment">/**
+<a name="529"></a> * Converts a string of flag characters to a bit string.
+<a name="530"></a> *
+<a name="531"></a> * <span class="doctag">@param</span> flags			Flag ASCII string.
+<a name="532"></a> * <span class="doctag">@param</span> numchars		Optional variable to store the number of bytes read.
+<a name="533"></a> * <span class="doctag">@return</span>				Bit string of ADMFLAG values.
+<a name="534"></a> */</span>
+<a name="535"></a><span class="keyword">native</span> <span class="identifier">ReadFlagString</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">flags</span>[], &amp;<span class="identifier">numchars</span>=<span class="number">0</span>);
+<a name="536"></a>
+<a name="537"></a><span class="comment">/**
+<a name="538"></a> * Tests whether one admin can target another.
+<a name="539"></a> *
+<a name="540"></a> * The heuristics for this check are as follows:
+<a name="541"></a> * 0. If the targeting AdminId is INVALID_ADMIN_ID, targeting fails.
+<a name="542"></a> * 1. If the targeted AdminId is INVALID_ADMIN_ID, targeting succeeds.
+<a name="543"></a> * 2. If the targeted AdminId is the same as the targeting AdminId,
+<a name="544"></a> *    (self) targeting succeeds.
+<a name="545"></a> * 3. If the targeting admin is root, targeting succeeds.
+<a name="546"></a> * 4. If the targeted admin has access higher (as interpreted by 
+<a name="547"></a> *    (sm_immunity_mode) than the targeting admin, then targeting fails.
+<a name="548"></a> * 5. If the targeted admin has specific immunity from the
+<a name="549"></a> *    targeting admin via group immunities, targeting fails.
+<a name="550"></a> * 6. Targeting succeeds.
+<a name="551"></a> *
+<a name="552"></a> * <span class="doctag">@param</span> admin			Admin doing the targetting (may be INVALID_ADMIN_ID).
+<a name="553"></a> * <span class="doctag">@param</span> target		Target admin (may be INVALID_ADMIN_ID).
+<a name="554"></a> * <span class="doctag">@return</span>				True if targetable, false if immune.
+<a name="555"></a> */</span>
+<a name="556"></a><span class="keyword">native</span> <span class="identifier">CanAdminTarget</span>(<span class="identifier">AdminId</span>:<span class="identifier">admin</span>, <span class="identifier">AdminId</span>:<span class="identifier">target</span>);
+<a name="557"></a>
+<a name="558"></a><span class="comment">/**
+<a name="559"></a> * Creates an admin auth method.  This does not need to be called more than once
+<a name="560"></a> * per method, ever.
+<a name="561"></a> *
+<a name="562"></a> * <span class="doctag">@param</span> method		Name of the authentication method.
+<a name="563"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="564"></a> */</span>
+<a name="565"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">CreateAuthMethod</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">method</span>[]);
+<a name="566"></a>
+<a name="567"></a><span class="comment">/**
+<a name="568"></a> * Sets a group's immunity level.
+<a name="569"></a> *
+<a name="570"></a> * <span class="doctag">@param</span> gid			Group Id.
+<a name="571"></a> * <span class="doctag">@param</span> level			Immunity level value.
+<a name="572"></a> * <span class="doctag">@return</span>				Old immunity level value.
+<a name="573"></a> */</span>
+<a name="574"></a><span class="keyword">native</span> <span class="identifier">SetAdmGroupImmunityLevel</span>(<span class="identifier">GroupId</span>:<span class="identifier">gid</span>, <span class="identifier">level</span>);
+<a name="575"></a>
+<a name="576"></a><span class="comment">/**
+<a name="577"></a> * Gets a group's immunity level (defaults to 0).
+<a name="578"></a> *
+<a name="579"></a> * <span class="doctag">@param</span> gid			Group Id.
+<a name="580"></a> * <span class="doctag">@return</span>				Immunity level value.
+<a name="581"></a> */</span>
+<a name="582"></a><span class="keyword">native</span> <span class="identifier">GetAdmGroupImmunityLevel</span>(<span class="identifier">GroupId</span>:<span class="identifier">gid</span>);
+<a name="583"></a>
+<a name="584"></a><span class="comment">/**
+<a name="585"></a> * Sets an admin's immunity level.
+<a name="586"></a> *
+<a name="587"></a> * <span class="doctag">@param</span> id			Admin Id.
+<a name="588"></a> * <span class="doctag">@param</span> level			Immunity level value.
+<a name="589"></a> * <span class="doctag">@return</span>				Old immunity level value.
+<a name="590"></a> */</span>
+<a name="591"></a><span class="keyword">native</span> <span class="identifier">SetAdminImmunityLevel</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="identifier">level</span>);
+<a name="592"></a>
+<a name="593"></a><span class="comment">/**
+<a name="594"></a> * Gets an admin's immunity level.
+<a name="595"></a> *
+<a name="596"></a> * <span class="doctag">@param</span> id			Admin Id.
+<a name="597"></a> * <span class="doctag">@return</span>				Immunity level value.
+<a name="598"></a> */</span>
+<a name="599"></a><span class="keyword">native</span> <span class="identifier">GetAdminImmunityLevel</span>(<span class="identifier">AdminId</span>:<span class="identifier">id</span>);
+<a name="600"></a>
+<a name="601"></a><span class="comment">/**
+<a name="602"></a> * Converts a flag to its single bit.
+<a name="603"></a> * 
+<a name="604"></a> * <span class="doctag">@param</span> flag			Flag to convert.
+<a name="605"></a> * <span class="doctag">@return</span>				Bit representation of the flag.
+<a name="606"></a> */</span>
+<a name="607"></a><span class="keyword">stock</span> <span class="identifier">FlagToBit</span>(<span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>)
+<a name="608"></a>{
+<a name="609"></a>	<span class="keyword statement">return</span> (<span class="number">1</span>&lt;&lt;<span class="identifier">_</span>:<span class="identifier">flag</span>);
+<a name="610"></a>}
+<a name="611"></a>
+<a name="612"></a><span class="comment">/**
+<a name="613"></a> * Converts a bit to an AdminFlag.
+<a name="614"></a> *
+<a name="615"></a> * <span class="doctag">@param</span> bit			Bit to convert.
+<a name="616"></a> * <span class="doctag">@param</span> flag			Stores the converted flag by reference.
+<a name="617"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="618"></a> */</span>
+<a name="619"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">BitToFlag</span>(<span class="identifier">bit</span>, &amp;<span class="identifier">AdminFlag</span>:<span class="identifier">flag</span>)
+<a name="620"></a>{
+<a name="621"></a>	<span class="keyword">new</span> <span class="identifier">AdminFlag</span>:<span class="identifier">array</span>[<span class="number">1</span>];
+<a name="622"></a>	
+<a name="623"></a>	<span class="keyword statement">if</span> (<span class="identifier">FlagBitsToArray</span>(<span class="identifier">bit</span>, <span class="identifier">array</span>, <span class="number">1</span>))
+<a name="624"></a>	{
+<a name="625"></a>		<span class="identifier">flag</span> = <span class="identifier">array</span>[<span class="number">0</span>];
+<a name="626"></a>		<span class="keyword statement">return</span> <span class="keyword literal">true</span>;
+<a name="627"></a>	}
+<a name="628"></a>	
+<a name="629"></a>	<span class="keyword statement">return</span> <span class="keyword literal">false</span>;
+<a name="630"></a>}
+<a name="631"></a>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

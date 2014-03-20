@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<title>files.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_files_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_files_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * <span class="doctag">@global</span> All paths in SourceMod natives are relative to the mod folder 
+<a name="40"></a> * unless otherwise noted.
+<a name="41"></a> *
+<a name="42"></a> * Most functions in SourceMod (at least, ones that deal with direct 
+<a name="43"></a> * file manipulation) will support an alternate path specification.
+<a name="44"></a> *
+<a name="45"></a> * If the path starts with the string "file://" and the PathType is 
+<a name="46"></a> * not relative, then the "file://" portion is stripped off, and the 
+<a name="47"></a> * rest of the path is used without any modification (except for 
+<a name="48"></a> * correcting slashes).  This can be used to override the path 
+<a name="49"></a> * builder to supply alternate absolute paths.  Examples:
+<a name="50"></a> *
+<a name="51"></a> * file://C:/Temp/file.txt
+<a name="52"></a> * file:///tmp/file.txt
+<a name="53"></a> */</span>
+<a name="54"></a>
+<a name="55"></a><span class="comment">/**
+<a name="56"></a> * File inode types.
+<a name="57"></a> */</span>
+<a name="58"></a><span class="keyword">enum</span> <span class="identifier">FileType</span>
+<a name="59"></a>{
+<a name="60"></a>	<span class="identifier">FileType_Unknown</span> = <span class="number">0</span>,	<span class="comment">/* Unknown file type (device/socket) */</span>
+<a name="61"></a>	<span class="identifier">FileType_Directory</span> = <span class="number">1</span>,	<span class="comment">/* File is a directory */</span>
+<a name="62"></a>	<span class="identifier">FileType_File</span> = <span class="number">2</span>,		<span class="comment">/* File is a file */</span>
+<a name="63"></a>};
+<a name="64"></a>
+<a name="65"></a><span class="comment">/**
+<a name="66"></a> * File time modes.
+<a name="67"></a> */</span>
+<a name="68"></a><span class="keyword">enum</span> <span class="identifier">FileTimeMode</span>
+<a name="69"></a>{
+<a name="70"></a>	<span class="identifier">FileTime_LastAccess</span> = <span class="number">0</span>,	<span class="comment">/* Last access (does not work on FAT) */</span>
+<a name="71"></a>	<span class="identifier">FileTime_Created</span> = <span class="number">1</span>,		<span class="comment">/* Creation (does not work on FAT) */</span>
+<a name="72"></a>	<span class="identifier">FileTime_LastChange</span> = <span class="number">2</span>,	<span class="comment">/* Last modification */</span>
+<a name="73"></a>};
+<a name="74"></a>
+<a name="75"></a><span class="preprocessor">#define <span class="identifier">PLATFORM_MAX_PATH</span>		<span class="number">256</span>		<span class="comment">/**&lt; Maximum path length. */</span>
+<a name="76"></a></span>
+<a name="77"></a><span class="preprocessor">#define <span class="identifier">SEEK_SET</span> <span class="number">0</span>						<span class="comment">/**&lt; Seek from start. */</span>
+<a name="78"></a></span><span class="preprocessor">#define <span class="identifier">SEEK_CUR</span> <span class="number">1</span>						<span class="comment">/**&lt; Seek from current position. */</span>
+<a name="79"></a></span><span class="preprocessor">#define <span class="identifier">SEEK_END</span> <span class="number">2</span>						<span class="comment">/**&lt; Seek from end position. */</span>
+<a name="80"></a></span>
+<a name="81"></a><span class="comment">/**
+<a name="82"></a> * Path types.
+<a name="83"></a> */</span>
+<a name="84"></a><span class="keyword">enum</span> <span class="identifier">PathType</span>
+<a name="85"></a>{
+<a name="86"></a>	<span class="identifier">Path_SM</span>,		<span class="comment">/**&lt; SourceMod root folder */</span>	
+<a name="87"></a>};
+<a name="88"></a>
+<a name="89"></a><span class="comment">/**
+<a name="90"></a> * Builds a path relative to the SourceMod folder.  This should be used instead of 
+<a name="91"></a> * directly referencing addons/sourcemod, in case users change the name of their 
+<a name="92"></a> * folder layout.
+<a name="93"></a> *
+<a name="94"></a> * <span class="doctag">@param</span> type			Type of path to build as the base.
+<a name="95"></a> * <span class="doctag">@param</span> buffer		Buffer to store the path.
+<a name="96"></a> * <span class="doctag">@param</span> maxlength		Maximum length of buffer.
+<a name="97"></a> * <span class="doctag">@param</span> fmt			Format string.
+<a name="98"></a> * <span class="doctag">@param</span> ...			Format arguments.
+<a name="99"></a> * <span class="doctag">@return</span>				Number of bytes written to buffer (not including null terminator).
+<a name="100"></a> */</span>
+<a name="101"></a><span class="keyword">native</span> <span class="identifier">BuildPath</span>(<span class="identifier">PathType</span>:<span class="identifier">type</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">fmt</span>[], <span class="keyword type">any</span>:...);
+<a name="102"></a>
+<a name="103"></a><span class="comment">/**
+<a name="104"></a> * Opens a directory/folder for contents enumeration.
+<a name="105"></a> *
+<a name="106"></a> * <span class="doctag">@note</span> Directories are closed with CloseHandle().
+<a name="107"></a> * <span class="doctag">@note</span> Directories Handles can be cloned.
+<a name="108"></a> * <span class="doctag">@note</span> OpenDirectory() supports the "file://" notation.
+<a name="109"></a> *
+<a name="110"></a> * <span class="doctag">@param</span> path			Path to open.
+<a name="111"></a> * <span class="doctag">@return</span>				A Handle to the directory, INVALID_HANDLE on open error.
+<a name="112"></a> */</span>
+<a name="113"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">OpenDirectory</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">path</span>[]);
+<a name="114"></a>
+<a name="115"></a><span class="comment">/**
+<a name="116"></a> * Reads the current directory entry as a local filename, then moves to the next file.
+<a name="117"></a> *
+<a name="118"></a> * <span class="doctag">@note</span> Contents of buffers are undefined when returning false.
+<a name="119"></a> * <span class="doctag">@note</span> Both the '.' and '..' automatic directory entries will be retrieved for Windows and Linux.
+<a name="120"></a> * 
+<a name="121"></a> * <span class="doctag">@param</span> dir			Handle to a directory.
+<a name="122"></a> * <span class="doctag">@param</span> buffer		String buffer to hold directory name.
+<a name="123"></a> * <span class="doctag">@param</span> maxlength		Maximum size of string buffer.
+<a name="124"></a> * <span class="doctag">@param</span> type			Optional variable to store the file type.
+<a name="125"></a> * <span class="doctag">@return</span>				True on success, false if there are no more files to read.
+<a name="126"></a> * <span class="doctag">@error</span>				Invalid or corrupt Handle. 
+<a name="127"></a> */</span>
+<a name="128"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">ReadDirEntry</span>(<span class="keyword type">Handle</span>:<span class="identifier">dir</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, &amp;<span class="identifier">FileType</span>:<span class="identifier">type</span>=<span class="identifier">FileType_Unknown</span>);
+<a name="129"></a>
+<a name="130"></a><span class="comment">/**
+<a name="131"></a> * Opens a file.
+<a name="132"></a> *
+<a name="133"></a> * <span class="doctag">@note</span> Files are closed with CloseHandle().
+<a name="134"></a> * <span class="doctag">@note</span> File Handles can be cloned.
+<a name="135"></a> * <span class="doctag">@note</span> OpenFile() supports the "file://" notation.
+<a name="136"></a> *
+<a name="137"></a> * <span class="doctag">@param</span> file			File to open.
+<a name="138"></a> * <span class="doctag">@param</span> mode			Open mode.
+<a name="139"></a> * <span class="doctag">@return</span>				A Handle to the file, INVALID_HANDLE on open error.
+<a name="140"></a> */</span>
+<a name="141"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">OpenFile</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">file</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">mode</span>[]);
+<a name="142"></a>
+<a name="143"></a><span class="comment">/**
+<a name="144"></a> * Deletes a file.
+<a name="145"></a> *
+<a name="146"></a> * <span class="doctag">@param</span> path			Path of the file to delete.
+<a name="147"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="148"></a> */</span>
+<a name="149"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DeleteFile</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">path</span>[]);
+<a name="150"></a>
+<a name="151"></a><span class="comment">/**
+<a name="152"></a> * Reads a line from a text file.
+<a name="153"></a> *
+<a name="154"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="155"></a> * <span class="doctag">@param</span> buffer		String buffer to hold the line.
+<a name="156"></a> * <span class="doctag">@param</span> maxlength		Maximum size of string buffer.	
+<a name="157"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="158"></a> */</span>
+<a name="159"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">ReadFileLine</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="160"></a>
+<a name="161"></a><span class="comment">/**
+<a name="162"></a> * Reads binary data from a file.
+<a name="163"></a> *
+<a name="164"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="165"></a> * <span class="doctag">@param</span> items			Array to store each item read.  
+<a name="166"></a> * <span class="doctag">@param</span> num_items		Number of items to read into the array.
+<a name="167"></a> * <span class="doctag">@param</span> size			Size of each element, in bytes, to be read.
+<a name="168"></a> *						Valid sizes are 1, 2, or 4.
+<a name="169"></a> * <span class="doctag">@return</span>				Number of elements read, or -1 on error.
+<a name="170"></a> */</span>
+<a name="171"></a><span class="keyword">native</span> <span class="identifier">ReadFile</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="identifier">items</span>[], <span class="identifier">num_items</span>, <span class="identifier">size</span>);
+<a name="172"></a>
+<a name="173"></a><span class="comment">/**
+<a name="174"></a> * Reads a UTF8 or ANSI string from a file.
+<a name="175"></a> *
+<a name="176"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="177"></a> * <span class="doctag">@param</span> buffer		Buffer to store the string.
+<a name="178"></a> * <span class="doctag">@param</span> max_size		Maximum size of the string buffer.
+<a name="179"></a> * <span class="doctag">@param</span> read_count	If -1, reads until a null terminator is encountered in 
+<a name="180"></a> *						the file.  Otherwise, read_count bytes are read 
+<a name="181"></a> *						into the buffer provided.  In this case the buffer 
+<a name="182"></a> *						is not explicitly null terminated, and the buffer 
+<a name="183"></a> *						will contain any null terminators read from the file.
+<a name="184"></a> * <span class="doctag">@return</span>				Number of characters written to the buffer, or -1 
+<a name="185"></a> *						if an error was encountered.
+<a name="186"></a> * <span class="doctag">@error</span>				Invalid Handle, or read_count &gt; max_size.
+<a name="187"></a> */</span>
+<a name="188"></a><span class="keyword">native</span> <span class="identifier">ReadFileString</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">max_size</span>, <span class="identifier">read_count</span>=-<span class="number">1</span>);
+<a name="189"></a>
+<a name="190"></a><span class="comment">/**
+<a name="191"></a> * Writes binary data to a file.
+<a name="192"></a> *
+<a name="193"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="194"></a> * <span class="doctag">@param</span> items			Array of items to write.  The data is read directly. 
+<a name="195"></a> *						That is, in 1 or 2-byte mode, the lower byte(s) in 
+<a name="196"></a> *						each cell are used directly, rather than performing 
+<a name="197"></a> *						any casts from a 4-byte number to a smaller number.
+<a name="198"></a> * <span class="doctag">@param</span> num_items		Number of items in the array.
+<a name="199"></a> * <span class="doctag">@param</span> size			Size of each item in the array in bytes.  
+<a name="200"></a> *						Valid sizes are 1, 2, or 4.
+<a name="201"></a> * <span class="doctag">@return</span>				True on success, false on error.
+<a name="202"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="203"></a> */</span>
+<a name="204"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">WriteFile</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword">const</span> <span class="identifier">items</span>[], <span class="identifier">num_items</span>, <span class="identifier">size</span>);
+<a name="205"></a>
+<a name="206"></a><span class="comment">/**
+<a name="207"></a> * Writes a binary string to a file.
+<a name="208"></a> *
+<a name="209"></a> * <span class="doctag">@param</span> hndl			Handle to th efile.
+<a name="210"></a> * <span class="doctag">@param</span> buffer		String to write.
+<a name="211"></a> * <span class="doctag">@param</span> term			True to append NUL terminator, false otherwise.
+<a name="212"></a> * <span class="doctag">@return</span>				True on success, false on error.
+<a name="213"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="214"></a> */</span>
+<a name="215"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">WriteFileString</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="keyword type">bool</span>:<span class="identifier">term</span>);
+<a name="216"></a>
+<a name="217"></a><span class="comment">/**
+<a name="218"></a> * Writes a line of text to a text file.  A newline is automatically appended.
+<a name="219"></a> *
+<a name="220"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="221"></a> * <span class="doctag">@param</span> format		Formatting rules.
+<a name="222"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="223"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="224"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="225"></a> */</span>
+<a name="226"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">WriteFileLine</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[], <span class="keyword type">any</span>:...);
+<a name="227"></a>
+<a name="228"></a><span class="comment">/**
+<a name="229"></a> * Reads a single binary cell from a file.
+<a name="230"></a> *
+<a name="231"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="232"></a> * <span class="doctag">@param</span> data			Variable to store the data read.
+<a name="233"></a> * <span class="doctag">@param</span> size			Size of the data to read in bytes.  Valid 
+<a name="234"></a> *						sizes are 1, 2, or 4 bytes.
+<a name="235"></a> * <span class="doctag">@return</span>				Number of elements read (max 1), or -1 on error.
+<a name="236"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="237"></a> */</span>
+<a name="238"></a><span class="keyword">stock</span> <span class="identifier">ReadFileCell</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, &amp;<span class="identifier">data</span>, <span class="identifier">size</span>)
+<a name="239"></a>{
+<a name="240"></a>	<span class="keyword">new</span> <span class="identifier">array</span>[<span class="number">1</span>], <span class="identifier">ret</span>;
+<a name="241"></a>	
+<a name="242"></a>	<span class="keyword statement">if</span> ((<span class="identifier">ret</span> = <span class="identifier">ReadFile</span>(<span class="identifier">hndl</span>, <span class="identifier">array</span>, <span class="number">1</span>, <span class="identifier">size</span>)) == <span class="number">1</span>)
+<a name="243"></a>	{
+<a name="244"></a>		<span class="identifier">data</span> = <span class="identifier">array</span>[<span class="number">0</span>];
+<a name="245"></a>	}
+<a name="246"></a>	
+<a name="247"></a>	<span class="keyword statement">return</span> <span class="identifier">ret</span>;
+<a name="248"></a>}
+<a name="249"></a>
+<a name="250"></a><span class="comment">/**
+<a name="251"></a> * Writes a single binary cell to a file.
+<a name="252"></a> *
+<a name="253"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="254"></a> * <span class="doctag">@param</span> data			Cell to write to the file.
+<a name="255"></a> * <span class="doctag">@param</span> size			Size of the data to read in bytes.  Valid 
+<a name="256"></a> *						sizes are 1, 2, or 4 bytes.  If the size 
+<a name="257"></a> *						is less than 4 bytes, the data is truncated 
+<a name="258"></a> *						rather than casted.  That is, only the lower 
+<a name="259"></a> *						bits will be read.
+<a name="260"></a> * <span class="doctag">@return</span>				True on success, false on error.
+<a name="261"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="262"></a> */</span>
+<a name="263"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">WriteFileCell</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="identifier">data</span>, <span class="identifier">size</span>)
+<a name="264"></a>{
+<a name="265"></a>	<span class="keyword">new</span> <span class="identifier">array</span>[<span class="number">1</span>];
+<a name="266"></a>	
+<a name="267"></a>	<span class="identifier">array</span>[<span class="number">0</span>] = <span class="identifier">data</span>;
+<a name="268"></a>	
+<a name="269"></a>	<span class="keyword statement">return</span> <span class="identifier">WriteFile</span>(<span class="identifier">hndl</span>, <span class="identifier">array</span>, <span class="number">1</span>, <span class="identifier">size</span>);
+<a name="270"></a>}
+<a name="271"></a> 
+<a name="272"></a><span class="comment">/**
+<a name="273"></a> * Tests if the end of file has been reached.
+<a name="274"></a> *
+<a name="275"></a> * <span class="doctag">@param</span> file			Handle to the file.
+<a name="276"></a> * <span class="doctag">@return</span>				True if end of file has been reached, false otherwise.
+<a name="277"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="278"></a> */</span>
+<a name="279"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsEndOfFile</span>(<span class="keyword type">Handle</span>:<span class="identifier">file</span>);
+<a name="280"></a>
+<a name="281"></a><span class="comment">/**
+<a name="282"></a> * Sets the file position indicator.
+<a name="283"></a> *
+<a name="284"></a> * <span class="doctag">@param</span> file			Handle to the file.
+<a name="285"></a> * <span class="doctag">@param</span> position		Position relative to what is specified in whence.
+<a name="286"></a> * <span class="doctag">@param</span> where			SEEK_ constant value of where to see from.
+<a name="287"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="288"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="289"></a> */</span>
+<a name="290"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">FileSeek</span>(<span class="keyword type">Handle</span>:<span class="identifier">file</span>, <span class="identifier">position</span>, <span class="identifier">where</span>);
+<a name="291"></a>
+<a name="292"></a><span class="comment">/**
+<a name="293"></a> * Get current position in the file.
+<a name="294"></a> *
+<a name="295"></a> * <span class="doctag">@param</span> file			Handle to the file.
+<a name="296"></a> * <span class="doctag">@return</span>				Value for the file position indicator.
+<a name="297"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="298"></a> */</span>
+<a name="299"></a><span class="keyword">native</span> <span class="identifier">FilePosition</span>(<span class="keyword type">Handle</span>:<span class="identifier">file</span>);
+<a name="300"></a>
+<a name="301"></a><span class="comment">/**
+<a name="302"></a> * Checks if a file exists.
+<a name="303"></a> *
+<a name="304"></a> * <span class="doctag">@param</span> path			Path to the file.
+<a name="305"></a> * <span class="doctag">@param</span> use_valve_fs	If true, the Valve file system will be used instead.
+<a name="306"></a> *						This can be used to check for the existance of files 
+<a name="307"></a> *						inside GCFs or the game cache, rather than solely files 
+<a name="308"></a> *						that are on disk.
+<a name="309"></a> * <span class="doctag">@return</span>				True if the file exists, false otherwise.
+<a name="310"></a> */</span>
+<a name="311"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">FileExists</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">path</span>[], <span class="keyword type">bool</span>:<span class="identifier">use_valve_fs</span>=<span class="keyword literal">false</span>);
+<a name="312"></a>
+<a name="313"></a><span class="comment">/**
+<a name="314"></a> * Renames a file.
+<a name="315"></a> *
+<a name="316"></a> * <span class="doctag">@param</span> newpath		New path to the file.
+<a name="317"></a> * <span class="doctag">@param</span> oldpath		Path to the existing file.
+<a name="318"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="319"></a> */</span>
+<a name="320"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RenameFile</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">newpath</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">oldpath</span>[]);
+<a name="321"></a>
+<a name="322"></a><span class="comment">/**
+<a name="323"></a> * Checks if a directory exists.
+<a name="324"></a> *
+<a name="325"></a> * <span class="doctag">@param</span> path			Path to the directory.
+<a name="326"></a> * <span class="doctag">@return</span>				True if the directory exists, false otherwise.
+<a name="327"></a> */</span>
+<a name="328"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">DirExists</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">path</span>[]);
+<a name="329"></a>
+<a name="330"></a><span class="comment">/**
+<a name="331"></a> * Get the file size in bytes.
+<a name="332"></a> *
+<a name="333"></a> * <span class="doctag">@param</span> path			Path to the file.
+<a name="334"></a> * <span class="doctag">@return</span>				File size in bytes, -1 if file not found.
+<a name="335"></a> */</span>
+<a name="336"></a><span class="keyword">native</span> <span class="identifier">FileSize</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">path</span>[]);
+<a name="337"></a>
+<a name="338"></a><span class="comment">/**
+<a name="339"></a> * Flushes a file's buffered output; any buffered output
+<a name="340"></a> * is immediately written to the file.
+<a name="341"></a> *
+<a name="342"></a> * <span class="doctag">@param</span> file			Handle to the file.
+<a name="343"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="344"></a> */</span>
+<a name="345"></a><span class="keyword">native</span> <span class="identifier">FlushFile</span>(<span class="keyword type">Handle</span>:<span class="identifier">file</span>);
+<a name="346"></a>
+<a name="347"></a><span class="comment">/**
+<a name="348"></a> * Removes a directory.
+<a name="349"></a> * <span class="doctag">@note</span> On most Operating Systems you cannot remove a directory which has files inside it.
+<a name="350"></a> *
+<a name="351"></a> * <span class="doctag">@param</span> path			Path to the directory.
+<a name="352"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="353"></a> */</span>
+<a name="354"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RemoveDir</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">path</span>[]);
+<a name="355"></a>
+<a name="356"></a><span class="preprocessor">#define <span class="identifier">FPERM_U_READ</span>		<span class="number">0x0100</span>	<span class="comment">/* User can read. */</span>
+<a name="357"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_U_WRITE</span>		<span class="number">0x0080</span>	<span class="comment">/* User can write. */</span>
+<a name="358"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_U_EXEC</span>		<span class="number">0x0040</span>	<span class="comment">/* User can exec. */</span>
+<a name="359"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_G_READ</span>		<span class="number">0x0020</span>	<span class="comment">/* Group can read. */</span>
+<a name="360"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_G_WRITE</span>		<span class="number">0x0010</span>	<span class="comment">/* Group can write. */</span>
+<a name="361"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_G_EXEC</span>		<span class="number">0x0008</span>	<span class="comment">/* Group can exec. */</span>
+<a name="362"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_O_READ</span>		<span class="number">0x0004</span>	<span class="comment">/* Anyone can read. */</span>
+<a name="363"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_O_WRITE</span>		<span class="number">0x0002</span>	<span class="comment">/* Anyone can write. */</span>
+<a name="364"></a></span><span class="preprocessor">#define <span class="identifier">FPERM_O_EXEC</span>		<span class="number">0x0001</span>	<span class="comment">/* Anyone can exec. */</span>
+<a name="365"></a></span>
+<a name="366"></a><span class="comment">/**
+<a name="367"></a> * Creates a directory.
+<a name="368"></a> *
+<a name="369"></a> * <span class="doctag">@param</span> path			Path to create.
+<a name="370"></a> * <span class="doctag">@param</span> mode			Permissions (default is o=rx,g=rx,u=rwx).  Note that folders must have 
+<a name="371"></a> *						the execute bit set on Linux.  On Windows, the mode is ignored.
+<a name="372"></a> */</span>
+<a name="373"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">CreateDirectory</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">path</span>[], <span class="identifier">mode</span>);
+<a name="374"></a>
+<a name="375"></a><span class="comment">/**
+<a name="376"></a> * Returns a file timestamp as a unix timestamp.
+<a name="377"></a> *
+<a name="378"></a> * <span class="doctag">@param</span> file			File name.
+<a name="379"></a> * <span class="doctag">@param</span> tmode			Time mode.
+<a name="380"></a> * <span class="doctag">@return</span>				Time value, or -1 on failure.
+<a name="381"></a> */</span>
+<a name="382"></a><span class="keyword">native</span> <span class="identifier">GetFileTime</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">file</span>[], <span class="identifier">FileTimeMode</span>:<span class="identifier">tmode</span>);
+<a name="383"></a>
+<a name="384"></a><span class="comment">/**
+<a name="385"></a> * Same as LogToFile(), except uses an open file Handle.  The file must 
+<a name="386"></a> * be opened in text appending mode.
+<a name="387"></a> *
+<a name="388"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="389"></a> * <span class="doctag">@param</span> message		Message format.
+<a name="390"></a> * <span class="doctag">@param</span> ...			Message format parameters.
+<a name="391"></a> * <span class="doctag">@noreturn</span>
+<a name="392"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="393"></a> */</span>
+<a name="394"></a><span class="keyword">native</span> <span class="identifier">LogToOpenFile</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">message</span>[], <span class="keyword type">any</span>:...);
+<a name="395"></a>
+<a name="396"></a><span class="comment">/**
+<a name="397"></a> * Same as LogToFileEx(), except uses an open file Handle.  The file must 
+<a name="398"></a> * be opened in text appending mode.
+<a name="399"></a> *
+<a name="400"></a> * <span class="doctag">@param</span> hndl			Handle to the file.
+<a name="401"></a> * <span class="doctag">@param</span> message		Message format.
+<a name="402"></a> * <span class="doctag">@param</span> ...			Message format parameters.
+<a name="403"></a> * <span class="doctag">@noreturn</span>
+<a name="404"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="405"></a> */</span>
+<a name="406"></a><span class="keyword">native</span> <span class="identifier">LogToOpenFileEx</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">message</span>[], <span class="keyword type">any</span>:...);
+<a name="407"></a>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

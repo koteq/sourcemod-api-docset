@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<title>usermessages.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_eventsmsgs_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_eventsmsgs_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * UserMsg helper values.
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">enum</span> <span class="identifier">UserMsg</span>
+<a name="42"></a>{
+<a name="43"></a>	<span class="identifier">INVALID_MESSAGE_ID</span> = -<span class="number">1</span>,
+<a name="44"></a>};
+<a name="45"></a>
+<a name="46"></a><span class="comment">/**
+<a name="47"></a> * UserMsg message serialization formats
+<a name="48"></a> */</span>
+<a name="49"></a><span class="keyword">enum</span> <span class="identifier">UserMessageType</span>
+<a name="50"></a>{
+<a name="51"></a>	<span class="identifier">UM_BitBuf</span> = <span class="number">0</span>,
+<a name="52"></a>	<span class="identifier">UM_Protobuf</span>,
+<a name="53"></a>};
+<a name="54"></a>
+<a name="55"></a><span class="comment">/**
+<a name="56"></a> * <span class="doctag">@section</span> Message Flags.
+<a name="57"></a> */</span>
+<a name="58"></a><span class="preprocessor">#define <span class="identifier">USERMSG_RELIABLE</span>		(<span class="number">1</span>&lt;&lt;<span class="number">2</span>)		<span class="comment">/**&lt; Message will be set on the reliable stream */</span>
+<a name="59"></a></span><span class="preprocessor">#define <span class="identifier">USERMSG_INITMSG</span>			(<span class="number">1</span>&lt;&lt;<span class="number">3</span>)		<span class="comment">/**&lt; Message will be considered to be an initmsg */</span>
+<a name="60"></a></span><span class="preprocessor">#define <span class="identifier">USERMSG_BLOCKHOOKS</span>		(<span class="number">1</span>&lt;&lt;<span class="number">7</span>)		<span class="comment">/**&lt; Prevents the message from triggering SourceMod and Metamod hooks */</span>
+<a name="61"></a></span>
+<a name="62"></a><span class="comment">/**
+<a name="63"></a> * <span class="doctag">@endsection</span>
+<a name="64"></a> */</span>
+<a name="65"></a>
+<a name="66"></a><span class="comment">/**
+<a name="67"></a> * Returns usermessage serialization type used for the current engine
+<a name="68"></a> *
+<a name="69"></a> * <span class="doctag">@return</span>				The supported usermessage type.
+<a name="70"></a> */</span>
+<a name="71"></a><span class="keyword">native</span> <span class="identifier">UserMessageType</span>:<span class="identifier">GetUserMessageType</span>();
+<a name="72"></a>
+<a name="73"></a><span class="comment">/**
+<a name="74"></a> * Returns the ID of a given message, or -1 on failure.
+<a name="75"></a> *
+<a name="76"></a> * <span class="doctag">@param</span> msg			String containing message name (case sensitive).
+<a name="77"></a> * <span class="doctag">@return</span>				A message index, or INVALID_MESSAGE_ID on failure.
+<a name="78"></a> */</span>
+<a name="79"></a><span class="keyword">native</span> <span class="identifier">UserMsg</span>:<span class="identifier">GetUserMessageId</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">msg</span>[]);
+<a name="80"></a>
+<a name="81"></a><span class="comment">/**
+<a name="82"></a> * Retrieves the name of a message by ID.
+<a name="83"></a> *
+<a name="84"></a> * <span class="doctag">@param</span> msg_id		Message index.
+<a name="85"></a> * <span class="doctag">@param</span> msg			Buffer to store the name of the message.
+<a name="86"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="87"></a> * <span class="doctag">@return</span>				True if message index is valid, false otherwise.
+<a name="88"></a> */</span>
+<a name="89"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetUserMessageName</span>(<span class="identifier">UserMsg</span>:<span class="identifier">msg_id</span>, <span class="keyword type">String</span>:<span class="identifier">msg</span>[], <span class="identifier">maxlength</span>);
+<a name="90"></a>
+<a name="91"></a><span class="comment">/**
+<a name="92"></a> * Starts a usermessage (network message).
+<a name="93"></a> * <span class="doctag">@note</span> Only one message can be active at a time.
+<a name="94"></a> * <span class="doctag">@note</span> It is illegal to send any message while a non-intercept hook is in progress.
+<a name="95"></a> *
+<a name="96"></a> * <span class="doctag">@param</span> msgname		Message name to start.
+<a name="97"></a> * <span class="doctag">@param</span> clients		Array containing player indexes to broadcast to.
+<a name="98"></a> * <span class="doctag">@param</span> numClients	Number of players in the array.
+<a name="99"></a> * <span class="doctag">@param</span> flags			Optional flags to set.
+<a name="100"></a> * <span class="doctag">@return</span>				A handle to a bf_write bit packing structure, or
+<a name="101"></a> *						INVALID_HANDLE on failure.
+<a name="102"></a> * <span class="doctag">@error</span>				Invalid message name, unable to start a message, invalid client,
+<a name="103"></a> *						or client not connected.
+<a name="104"></a> */</span>
+<a name="105"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">StartMessage</span>(<span class="keyword type">String</span>:<span class="identifier">msgname</span>[], <span class="identifier">clients</span>[], <span class="identifier">numClients</span>, <span class="identifier">flags</span>=<span class="number">0</span>);
+<a name="106"></a>
+<a name="107"></a><span class="comment">/**
+<a name="108"></a> * Starts a usermessage (network message).
+<a name="109"></a> * <span class="doctag">@note</span> Only one message can be active at a time.
+<a name="110"></a> * <span class="doctag">@note</span> It is illegal to send any message while a non-intercept hook is in progress.
+<a name="111"></a> *
+<a name="112"></a> * <span class="doctag">@param</span> msg			Message index to start.
+<a name="113"></a> * <span class="doctag">@param</span> clients		Array containing player indexes to broadcast to.
+<a name="114"></a> * <span class="doctag">@param</span> numClients	Number of players in the array.
+<a name="115"></a> * <span class="doctag">@param</span> flags			Optional flags to set.
+<a name="116"></a> * <span class="doctag">@return</span>				A handle to a bf_write bit packing structure, or
+<a name="117"></a> *						INVALID_HANDLE on failure.
+<a name="118"></a> * <span class="doctag">@error</span>				Invalid message name, unable to start a message, invalid client,
+<a name="119"></a> *						or client not connected.
+<a name="120"></a> */</span>
+<a name="121"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">StartMessageEx</span>(<span class="identifier">UserMsg</span>:<span class="identifier">msg</span>, <span class="identifier">clients</span>[], <span class="identifier">numClients</span>, <span class="identifier">flags</span>=<span class="number">0</span>);
+<a name="122"></a>
+<a name="123"></a><span class="comment">/**
+<a name="124"></a> * Ends a previously started user message (network message).
+<a name="125"></a> *
+<a name="126"></a> * <span class="doctag">@noreturn</span>
+<a name="127"></a> */</span>
+<a name="128"></a><span class="keyword">native</span> <span class="identifier">EndMessage</span>();
+<a name="129"></a>
+<a name="130"></a><span class="comment">/**
+<a name="131"></a> * Called when a message is hooked
+<a name="132"></a> *
+<a name="133"></a> * <span class="doctag">@param</span> msg_id		Message index.
+<a name="134"></a> * <span class="doctag">@param</span> msg			Handle to the input bit buffer or protobuf.
+<a name="135"></a> * <span class="doctag">@param</span> players		Array containing player indexes.
+<a name="136"></a> * <span class="doctag">@param</span> playersNum	Number of players in the array.
+<a name="137"></a> * <span class="doctag">@param</span> reliable		True if message is reliable, false otherwise.
+<a name="138"></a> * <span class="doctag">@param</span> init			True if message is an initmsg, false otherwise.
+<a name="139"></a> * <span class="doctag">@return</span>				Ignored for normal hooks.  For intercept hooks, Plugin_Handled 
+<a name="140"></a> *						blocks the message from being sent, and Plugin_Continue 
+<a name="141"></a> *						resumes normal functionality.
+<a name="142"></a> */</span>
+<a name="143"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">Action</span>:<span class="identifier">MsgHook</span>(<span class="identifier">UserMsg</span>:<span class="identifier">msg_id</span>, <span class="keyword type">Handle</span>:<span class="identifier">msg</span>, <span class="keyword">const</span> <span class="identifier">players</span>[], <span class="identifier">playersNum</span>, <span class="keyword type">bool</span>:<span class="identifier">reliable</span>, <span class="keyword type">bool</span>:<span class="identifier">init</span>);
+<a name="144"></a>
+<a name="145"></a><span class="comment">/**
+<a name="146"></a> * Called when a message hook has completed.
+<a name="147"></a> *
+<a name="148"></a> * <span class="doctag">@param</span> msg_id		Message index.
+<a name="149"></a> * <span class="doctag">@param</span> sent			True if message was sent, false if blocked.
+<a name="150"></a> */</span>
+<a name="151"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">MsgPostHook</span>(<span class="identifier">UserMsg</span>:<span class="identifier">msg_id</span>, <span class="keyword type">bool</span>:<span class="identifier">sent</span>);
+<a name="152"></a>
+<a name="153"></a><span class="comment">/**
+<a name="154"></a> * Hooks a user message.
+<a name="155"></a> *
+<a name="156"></a> * <span class="doctag">@param</span> msg_id		Message index.
+<a name="157"></a> * <span class="doctag">@param</span> hook			Function to use as a hook.
+<a name="158"></a> * <span class="doctag">@param</span> intercept		If intercept is true, message will be fully intercepted,
+<a name="159"></a> * 						allowing the user to block the message.  Otherwise,
+<a name="160"></a> *						the hook is normal and ignores the return value.
+<a name="161"></a> * <span class="doctag">@param</span> post		Notification function.
+<a name="162"></a> * <span class="doctag">@noreturn</span>
+<a name="163"></a> * <span class="doctag">@error</span>				Invalid message index.
+<a name="164"></a> */</span>
+<a name="165"></a><span class="keyword">native</span> <span class="identifier">HookUserMessage</span>(<span class="identifier">UserMsg</span>:<span class="identifier">msg_id</span>, <span class="identifier">MsgHook</span>:<span class="identifier">hook</span>, <span class="keyword type">bool</span>:<span class="identifier">intercept</span>=<span class="keyword literal">false</span>, <span class="identifier">MsgPostHook</span>:<span class="identifier">post</span>=<span class="identifier">MsgPostHook</span>:-<span class="number">1</span>);
+<a name="166"></a>
+<a name="167"></a><span class="comment">/**
+<a name="168"></a> * Removes one usermessage hook.
+<a name="169"></a> *
+<a name="170"></a> * <span class="doctag">@param</span> msg_id		Message index.
+<a name="171"></a> * <span class="doctag">@param</span> hook			Function used for the hook.
+<a name="172"></a> * <span class="doctag">@param</span> intercept		Specifies whether the hook was an intercept hook or not.
+<a name="173"></a> * <span class="doctag">@noreturn</span>
+<a name="174"></a> * <span class="doctag">@error</span>				Invalid message index.
+<a name="175"></a> */</span>
+<a name="176"></a><span class="keyword">native</span> <span class="identifier">UnhookUserMessage</span>(<span class="identifier">UserMsg</span>:<span class="identifier">msg_id</span>, <span class="identifier">MsgHook</span>:<span class="identifier">hook</span>, <span class="keyword type">bool</span>:<span class="identifier">intercept</span>=<span class="keyword literal">false</span>);
+<a name="177"></a>
+<a name="178"></a><span class="comment">/**
+<a name="179"></a> * Starts a usermessage (network message) that broadcasts to all clients.
+<a name="180"></a> * <span class="doctag">@note</span> See StartMessage or StartMessageEx().
+<a name="181"></a> *
+<a name="182"></a> * <span class="doctag">@param</span> msgname		Message name to start.
+<a name="183"></a> * <span class="doctag">@param</span> flags			Optional flags to set.
+<a name="184"></a> * <span class="doctag">@return</span>				A handle to a bf_write bit packing structure, or
+<a name="185"></a> *						INVALID_HANDLE on failure.
+<a name="186"></a> */</span>
+<a name="187"></a><span class="keyword">stock</span> <span class="keyword type">Handle</span>:<span class="identifier">StartMessageAll</span>(<span class="keyword type">String</span>:<span class="identifier">msgname</span>[], <span class="identifier">flags</span>=<span class="number">0</span>)
+<a name="188"></a>{
+<a name="189"></a>	<span class="keyword">new</span> <span class="identifier">total</span> = <span class="number">0</span>;
+<a name="190"></a>	<span class="keyword">new</span> <span class="identifier">clients</span>[<span class="identifier">MaxClients</span>];
+<a name="191"></a>	<span class="keyword statement">for</span> (<span class="keyword">new</span> <span class="identifier">i</span>=<span class="number">1</span>; <span class="identifier">i</span>&lt;=<span class="identifier">MaxClients</span>; <span class="identifier">i</span>++)
+<a name="192"></a>	{
+<a name="193"></a>		<span class="keyword statement">if</span> (<span class="identifier">IsClientConnected</span>(<span class="identifier">i</span>))
+<a name="194"></a>		{
+<a name="195"></a>			<span class="identifier">clients</span>[<span class="identifier">total</span>++] = <span class="identifier">i</span>;
+<a name="196"></a>		}
+<a name="197"></a>	}
+<a name="198"></a>	<span class="keyword statement">return</span> <span class="identifier">StartMessage</span>(<span class="identifier">msgname</span>, <span class="identifier">clients</span>, <span class="identifier">total</span>, <span class="identifier">flags</span>);
+<a name="199"></a>}
+<a name="200"></a>
+<a name="201"></a><span class="comment">/**
+<a name="202"></a> * Starts a simpler usermessage (network message) for one client.
+<a name="203"></a> * <span class="doctag">@note</span> See StartMessage or StartMessageEx().
+<a name="204"></a> *
+<a name="205"></a> * <span class="doctag">@param</span> msgname		Message name to start.
+<a name="206"></a> * <span class="doctag">@param</span> client		Client to send to.
+<a name="207"></a> * <span class="doctag">@param</span> flags			Optional flags to set.
+<a name="208"></a> * <span class="doctag">@return</span>				A handle to a bf_write bit packing structure, or
+<a name="209"></a> *						INVALID_HANDLE on failure.
+<a name="210"></a> */</span>
+<a name="211"></a><span class="keyword">stock</span> <span class="keyword type">Handle</span>:<span class="identifier">StartMessageOne</span>(<span class="keyword type">String</span>:<span class="identifier">msgname</span>[], <span class="identifier">client</span>, <span class="identifier">flags</span>=<span class="number">0</span>)
+<a name="212"></a>{
+<a name="213"></a>	<span class="keyword">new</span> <span class="identifier">players</span>[<span class="number">1</span>];
+<a name="214"></a>	
+<a name="215"></a>	<span class="identifier">players</span>[<span class="number">0</span>] = <span class="identifier">client</span>;
+<a name="216"></a>	
+<a name="217"></a>	<span class="keyword statement">return</span> <span class="identifier">StartMessage</span>(<span class="identifier">msgname</span>, <span class="identifier">players</span>, <span class="number">1</span>, <span class="identifier">flags</span>);
+<a name="218"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

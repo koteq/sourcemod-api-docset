@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<title>clientprefs.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2011 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_clientprefs_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_clientprefs_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Cookie access types for client viewing
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">enum</span> <span class="identifier">CookieAccess</span>
+<a name="42"></a>{
+<a name="43"></a>	<span class="identifier">CookieAccess_Public</span>,			<span class="comment">/**&lt; Visible and Changeable by users */</span>
+<a name="44"></a>	<span class="identifier">CookieAccess_Protected</span>,			<span class="comment">/**&lt; Read only to users */</span>
+<a name="45"></a>	<span class="identifier">CookieAccess_Private</span>,			<span class="comment">/**&lt; Completely hidden cookie */</span>
+<a name="46"></a>};
+<a name="47"></a>
+<a name="48"></a><span class="comment">/**
+<a name="49"></a> * Cookie Prefab menu types
+<a name="50"></a> */</span>
+<a name="51"></a><span class="keyword">enum</span> <span class="identifier">CookieMenu</span>
+<a name="52"></a>{
+<a name="53"></a>	<span class="identifier">CookieMenu_YesNo</span>,			<span class="comment">/**&lt; Yes/No menu with "yes"/"no" results saved into the cookie */</span>
+<a name="54"></a>	<span class="identifier">CookieMenu_YesNo_Int</span>,		<span class="comment">/**&lt; Yes/No menu with 1/0 saved into the cookie */</span>
+<a name="55"></a>	<span class="identifier">CookieMenu_OnOff</span>,			<span class="comment">/**&lt; On/Off menu with "on"/"off" results saved into the cookie */</span>
+<a name="56"></a>	<span class="identifier">CookieMenu_OnOff_Int</span>,		<span class="comment">/**&lt; On/Off menu with 1/0 saved into the cookie */</span>
+<a name="57"></a>};
+<a name="58"></a>
+<a name="59"></a><span class="keyword">enum</span> <span class="identifier">CookieMenuAction</span>
+<a name="60"></a>{
+<a name="61"></a>	<span class="comment">/**
+<a name="62"></a>	 * An option is being drawn for a menu.
+<a name="63"></a>	 *
+<a name="64"></a>	 * INPUT : Client index and data if available.
+<a name="65"></a>	 * OUTPUT: Buffer for rendering, maxlength of buffer.
+<a name="66"></a>	 */</span>
+<a name="67"></a>	<span class="identifier">CookieMenuAction_DisplayOption</span> = <span class="number">0</span>,
+<a name="68"></a>	
+<a name="69"></a>	<span class="comment">/**
+<a name="70"></a>	 * A menu option has been selected.
+<a name="71"></a>	 *
+<a name="72"></a>	 * INPUT : Client index and any data if available.
+<a name="73"></a>	 */</span>
+<a name="74"></a>	<span class="identifier">CookieMenuAction_SelectOption</span> = <span class="number">1</span>,
+<a name="75"></a>};
+<a name="76"></a>
+<a name="77"></a><span class="comment">/**
+<a name="78"></a> * Note:
+<a name="79"></a> * 
+<a name="80"></a> * A successful return value/result on any client prefs native only guarantees that the local cache has been updated.
+<a name="81"></a> * Database connection problems can still prevent the data from being permanently saved. Connection problems will be logged as
+<a name="82"></a> * errors by the clientprefs extension.
+<a name="83"></a> */</span>
+<a name="84"></a>
+<a name="85"></a><span class="comment">/**
+<a name="86"></a> * Creates a new Client preference cookie.
+<a name="87"></a> *
+<a name="88"></a> * Handles returned by RegClientCookie can be closed via CloseHandle() when
+<a name="89"></a> * no longer needed.
+<a name="90"></a> *
+<a name="91"></a> * <span class="doctag">@param</span> name			Name of the new preference cookie.
+<a name="92"></a> * <span class="doctag">@param</span> description	Optional description of the preference cookie.
+<a name="93"></a> * <span class="doctag">@param</span> access		What CookieAccess level to assign to this cookie.
+<a name="94"></a> * <span class="doctag">@return</span>				A handle to the newly created cookie. If the cookie already
+<a name="95"></a> *                      exists, a handle to it will still be returned.
+<a name="96"></a> * <span class="doctag">@error</span>				Cookie name is blank.
+<a name="97"></a> */</span>
+<a name="98"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">RegClientCookie</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">description</span>[], <span class="identifier">CookieAccess</span>:<span class="identifier">access</span>);
+<a name="99"></a>
+<a name="100"></a><span class="comment">/**
+<a name="101"></a> * Searches for a Client preference cookie.
+<a name="102"></a> *
+<a name="103"></a> * Handles returned by FindClientCookie can be closed via CloseHandle() when
+<a name="104"></a> * no longer needed.
+<a name="105"></a> *
+<a name="106"></a> * <span class="doctag">@param</span> name			Name of cookie to find.
+<a name="107"></a> * <span class="doctag">@return</span>				A handle to the cookie if it is found. INVALID_HANDLE otherwise.
+<a name="108"></a> */</span>
+<a name="109"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">FindClientCookie</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="110"></a>
+<a name="111"></a><span class="comment">/**
+<a name="112"></a> * Set the value of a Client preference cookie.
+<a name="113"></a> *
+<a name="114"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="115"></a> * <span class="doctag">@param</span> cookie		Client preference cookie handle.
+<a name="116"></a> * <span class="doctag">@param</span> value			String value to set.
+<a name="117"></a> * <span class="doctag">@noreturn</span>			
+<a name="118"></a> * <span class="doctag">@error</span>				Invalid cookie handle or invalid client index.
+<a name="119"></a> */</span>
+<a name="120"></a><span class="keyword">native</span> <span class="identifier">SetClientCookie</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">cookie</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="121"></a>
+<a name="122"></a><span class="comment">/**
+<a name="123"></a> * Retrieve the value of a Client preference cookie.
+<a name="124"></a> *
+<a name="125"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="126"></a> * <span class="doctag">@param</span> cookie		Client preference cookie handle.
+<a name="127"></a> * <span class="doctag">@param</span> buffer		Copyback buffer for value.
+<a name="128"></a> * <span class="doctag">@param</span> maxlen		Maximum length of the buffer.
+<a name="129"></a> * <span class="doctag">@noreturn</span>
+<a name="130"></a> * <span class="doctag">@error</span>				Invalid cookie handle or invalid client index.
+<a name="131"></a> */</span>
+<a name="132"></a><span class="keyword">native</span> <span class="identifier">GetClientCookie</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">cookie</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>);
+<a name="133"></a>
+<a name="134"></a><span class="comment">/**
+<a name="135"></a> * Sets the value of a Client preference cookie based on an authID string.
+<a name="136"></a> *
+<a name="137"></a> * <span class="doctag">@param</span> authID		String Auth/STEAM ID of player to set.
+<a name="138"></a> * <span class="doctag">@param</span> cookie		Client preference cookie handle.
+<a name="139"></a> * <span class="doctag">@param</span> value			String value to set.
+<a name="140"></a> * <span class="doctag">@noreturn</span>
+<a name="141"></a> * <span class="doctag">@error</span>			Invalid cookie handle.
+<a name="142"></a> */</span>
+<a name="143"></a><span class="keyword">native</span> <span class="identifier">SetAuthIdCookie</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">authID</span>[], <span class="keyword type">Handle</span>:<span class="identifier">cookie</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="144"></a>
+<a name="145"></a><span class="comment">/**
+<a name="146"></a> * Checks if a clients cookies have been loaded from the database.
+<a name="147"></a> *
+<a name="148"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="149"></a> * <span class="doctag">@return</span> 				True if loaded, false otherwise.
+<a name="150"></a> * <span class="doctag">@error</span>				Invalid client index.
+<a name="151"></a> */</span>
+<a name="152"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">AreClientCookiesCached</span>(<span class="identifier">client</span>);
+<a name="153"></a>
+<a name="154"></a><span class="comment">/**
+<a name="155"></a> * Called once a client's saved cookies have been loaded from the database.
+<a name="156"></a> *
+<a name="157"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="158"></a> */</span>
+<a name="159"></a><span class="keyword">forward</span> <span class="identifier">OnClientCookiesCached</span>(<span class="identifier">client</span>);
+<a name="160"></a>
+<a name="161"></a><span class="comment">/**
+<a name="162"></a> * Cookie Menu Callback prototype
+<a name="163"></a> *
+<a name="164"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="165"></a> * <span class="doctag">@param</span> action		CookieMenuAction being performed.
+<a name="166"></a> * <span class="doctag">@param</span> info			Info data passed.
+<a name="167"></a> * <span class="doctag">@param</span> buffer		Outbut buffer.
+<a name="168"></a> * <span class="doctag">@param</span> maxlen		Max length of the output buffer.			
+<a name="169"></a> */</span>
+<a name="170"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">CookieMenuHandler</span>(<span class="identifier">client</span>, <span class="identifier">CookieMenuAction</span>:<span class="identifier">action</span>, <span class="keyword type">any</span>:<span class="identifier">info</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlen</span>);
+<a name="171"></a>
+<a name="172"></a><span class="comment">/**
+<a name="173"></a> * Add a new prefab item to the client cookie settings menu.
+<a name="174"></a> *
+<a name="175"></a> * Note: This handles everything automatically and does not require a callback
+<a name="176"></a> *
+<a name="177"></a> * <span class="doctag">@param</span> cookie		Client preference cookie handle.
+<a name="178"></a> * <span class="doctag">@param</span> type			A CookieMenu prefab menu type.
+<a name="179"></a> * <span class="doctag">@param</span> display		Text to show on the menu.
+<a name="180"></a> * <span class="doctag">@param</span> handler		Optional handler callback for translations and output on selection
+<a name="181"></a> * <span class="doctag">@param</span> info			Info data to pass to the callback.
+<a name="182"></a> * <span class="doctag">@noreturn</span>
+<a name="183"></a> * <span class="doctag">@error</span>				Invalid cookie handle.
+<a name="184"></a> */</span>
+<a name="185"></a><span class="keyword">native</span> <span class="identifier">SetCookiePrefabMenu</span>(<span class="keyword type">Handle</span>:<span class="identifier">cookie</span>, <span class="identifier">CookieMenu</span>:<span class="identifier">type</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">display</span>[], <span class="identifier">CookieMenuHandler</span>:<span class="identifier">handler</span>=<span class="identifier">CookieMenuHandler</span>:-<span class="number">1</span>, <span class="identifier">info</span>=<span class="number">0</span>);
+<a name="186"></a>
+<a name="187"></a><span class="comment">/**
+<a name="188"></a> * Adds a new item to the client cookie settings menu.
+<a name="189"></a> *
+<a name="190"></a> * Note: This only adds the top level menu item. You need to handle any submenus from the callback.
+<a name="191"></a> *
+<a name="192"></a> * <span class="doctag">@param</span> handler		A MenuHandler callback function.
+<a name="193"></a> * <span class="doctag">@param</span> info			Data to pass to the callback.
+<a name="194"></a> * <span class="doctag">@param</span> display		Text to show on the menu.
+<a name="195"></a> * <span class="doctag">@noreturn</span>
+<a name="196"></a> * <span class="doctag">@error</span>				Invalid cookie handle.
+<a name="197"></a> */</span>
+<a name="198"></a><span class="keyword">native</span> <span class="identifier">SetCookieMenuItem</span>(<span class="identifier">CookieMenuHandler</span>:<span class="identifier">handler</span>, <span class="keyword type">any</span>:<span class="identifier">info</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">display</span>[]);
+<a name="199"></a>
+<a name="200"></a><span class="comment">/**
+<a name="201"></a> * Displays the settings menu to a client.
+<a name="202"></a> *
+<a name="203"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="204"></a> * <span class="doctag">@noreturn</span>
+<a name="205"></a> */</span>
+<a name="206"></a><span class="keyword">native</span> <span class="identifier">ShowCookieMenu</span>(<span class="identifier">client</span>);
+<a name="207"></a>
+<a name="208"></a><span class="comment">/**
+<a name="209"></a> * Gets a cookie iterator.  Must be freed with CloseHandle().
+<a name="210"></a> *
+<a name="211"></a> * <span class="doctag">@return</span>				A new cookie iterator.
+<a name="212"></a> */</span>
+<a name="213"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">GetCookieIterator</span>();
+<a name="214"></a>
+<a name="215"></a><span class="comment">/**
+<a name="216"></a> * Reads a cookie iterator, then advances to the next cookie if any.
+<a name="217"></a> *
+<a name="218"></a> * <span class="doctag">@param</span> iter			Cookie iterator Handle.
+<a name="219"></a> * <span class="doctag">@param</span> name			Name buffer.
+<a name="220"></a> * <span class="doctag">@param</span> nameLen		Name buffer size.
+<a name="221"></a> * <span class="doctag">@param</span> access		Access level of the cookie.
+<a name="222"></a> * <span class="doctag">@param</span> desc			Cookie description buffer.
+<a name="223"></a> * <span class="doctag">@param</span> descLen		Cookie description buffer size.
+<a name="224"></a> * <span class="doctag">@return</span>				True on success, false if there are no more commands.
+<a name="225"></a> */</span>
+<a name="226"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">ReadCookieIterator</span>(<span class="keyword type">Handle</span>:<span class="identifier">iter</span>, 
+<a name="227"></a>								<span class="keyword type">String</span>:<span class="identifier">name</span>[], 
+<a name="228"></a>								<span class="identifier">nameLen</span>,
+<a name="229"></a>								&amp;<span class="identifier">CookieAccess</span>:<span class="identifier">access</span>, 
+<a name="230"></a>								<span class="keyword type">String</span>:<span class="identifier">desc</span>[]=<span class="string">""</span>, 
+<a name="231"></a>								<span class="identifier">descLen</span>=<span class="number">0</span>);
+<a name="232"></a>								
+<a name="233"></a><span class="comment">/**
+<a name="234"></a> * Returns the access level of a cookie
+<a name="235"></a> *
+<a name="236"></a> * <span class="doctag">@param</span> cookie		Client preference cookie handle.
+<a name="237"></a> * <span class="doctag">@return</span>				CookieAccess access level.
+<a name="238"></a> * <span class="doctag">@error</span>				Invalid cookie handle.	
+<a name="239"></a> */</span>
+<a name="240"></a><span class="keyword">native</span> <span class="identifier">CookieAccess</span>:<span class="identifier">GetCookieAccess</span>(<span class="keyword type">Handle</span>:<span class="identifier">cookie</span>);
+<a name="241"></a>
+<a name="242"></a><span class="comment">/**
+<a name="243"></a> * Returns the last updated timestamp for a client cookie
+<a name="244"></a> *
+<a name="245"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="246"></a> * <span class="doctag">@param</span> cookie		Cookie handle.
+<a name="247"></a> * <span class="doctag">@return</span>			Last updated timestamp.
+<a name="248"></a> */</span>
+<a name="249"></a><span class="keyword">native</span> <span class="identifier">GetClientCookieTime</span>(<span class="identifier">client</span>, <span class="keyword type">Handle</span>:<span class="identifier">cookie</span>);
+<a name="250"></a>
+<a name="251"></a><span class="comment">/**
+<a name="252"></a> * Do not edit below this line!
+<a name="253"></a> */</span>
+<a name="254"></a><span class="keyword">public</span> <span class="identifier">Extension</span>:<span class="identifier">__ext_cprefs</span> = 
+<a name="255"></a>{
+<a name="256"></a>	<span class="identifier">name</span> = <span class="string">"Client Preferences"</span>,
+<a name="257"></a>	<span class="identifier">file</span> = <span class="string">"clientprefs.ext"</span>,
+<a name="258"></a>	<span class="identifier">autoload</span> = <span class="number">1</span>,
+<a name="259"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">REQUIRE_EXTENSIONS</span>
+<a name="260"></a></span>	<span class="identifier">required</span> = <span class="number">1</span>,
+<a name="261"></a><span class="preprocessor">#else
+<a name="262"></a></span>	<span class="identifier">required</span> = <span class="number">0</span>,
+<a name="263"></a><span class="preprocessor">#endif
+<a name="264"></a></span>};
+<a name="265"></a>
+<a name="266"></a><span class="preprocessor">#if !<span class="identifier">defined</span> <span class="identifier">REQUIRE_EXTENSIONS</span>
+<a name="267"></a></span><span class="keyword">public</span> <span class="identifier">__ext_cprefs_SetNTVOptional</span>()
+<a name="268"></a>{
+<a name="269"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"RegClientCookie"</span>);
+<a name="270"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"FindClientCookie"</span>);
+<a name="271"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"SetClientCookie"</span>);
+<a name="272"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"GetClientCookie"</span>);
+<a name="273"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"AreClientCookiesCached"</span>);
+<a name="274"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"SetCookiePrefabMenu"</span>);
+<a name="275"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"SetCookieMenuItem"</span>);
+<a name="276"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"ShowCookieMenu"</span>);
+<a name="277"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"GetCookieIterator"</span>);
+<a name="278"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"ReadCookieIterator"</span>);
+<a name="279"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"GetCookieAccess"</span>);
+<a name="280"></a>	<span class="identifier">MarkNativeAsOptional</span>(<span class="string">"GetClientCookieTime"</span>);
+<a name="281"></a>}
+<a name="282"></a><span class="preprocessor">#endif
+<a name="283"></a></span><!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

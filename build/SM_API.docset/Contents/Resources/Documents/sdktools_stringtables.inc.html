@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<title>sdktools_stringtables.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_sdktools_stringtables_included</span>
+<a name="34"></a></span>  <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_sdktools_stringtables_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="preprocessor">#define <span class="identifier">INVALID_STRING_TABLE</span> -<span class="number">1</span>		<span class="comment">/**&lt; An invalid string table index */</span>
+<a name="39"></a></span><span class="preprocessor">#define <span class="identifier">INVALID_STRING_INDEX</span> -<span class="number">1</span>		<span class="comment">/**&lt; An invalid string index in a table */</span>
+<a name="40"></a></span>
+<a name="41"></a><span class="comment">/**
+<a name="42"></a> * Searches for a string table.
+<a name="43"></a> *
+<a name="44"></a> * <span class="doctag">@param</span> name			Name of string table to find.
+<a name="45"></a> * <span class="doctag">@return</span>				A string table index number if found, INVALID_STRING_TABLE otherwise.
+<a name="46"></a> */</span>
+<a name="47"></a><span class="keyword">native</span> <span class="identifier">FindStringTable</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="48"></a>
+<a name="49"></a><span class="comment">/**
+<a name="50"></a> * Returns the number of string tables that currently exist.
+<a name="51"></a> *
+<a name="52"></a> * <span class="doctag">@return</span>				Number of string tables that currently exist.
+<a name="53"></a> */</span>
+<a name="54"></a><span class="keyword">native</span> <span class="identifier">GetNumStringTables</span>();
+<a name="55"></a>
+<a name="56"></a><span class="comment">/**
+<a name="57"></a> * Returns the number of strings that currently exist in a given string table.
+<a name="58"></a> *
+<a name="59"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="60"></a> * <span class="doctag">@return</span>				Number of strings that currently exist.
+<a name="61"></a> * <span class="doctag">@error</span>				Invalid string table index.
+<a name="62"></a> */</span>
+<a name="63"></a><span class="keyword">native</span> <span class="identifier">GetStringTableNumStrings</span>(<span class="identifier">tableidx</span>);
+<a name="64"></a>
+<a name="65"></a><span class="comment">/**
+<a name="66"></a> * Returns the maximum number of strings that are allowed in a given string table.
+<a name="67"></a> *
+<a name="68"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="69"></a> * <span class="doctag">@return</span>				Maximum number of strings allowed.
+<a name="70"></a> * <span class="doctag">@error</span>				Invalid string table index.
+<a name="71"></a> */</span>
+<a name="72"></a><span class="keyword">native</span> <span class="identifier">GetStringTableMaxStrings</span>(<span class="identifier">tableidx</span>);
+<a name="73"></a>
+<a name="74"></a><span class="comment">/**
+<a name="75"></a> * Retrieves the name of a string table.
+<a name="76"></a> *
+<a name="77"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="78"></a> * <span class="doctag">@param</span> name			Buffer to store the name of the string table.
+<a name="79"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="80"></a> * <span class="doctag">@return</span>				Number of bytes written to the buffer (UTF-8 safe).
+<a name="81"></a> * <span class="doctag">@error</span>				Invalid string table index.
+<a name="82"></a> */</span>
+<a name="83"></a><span class="keyword">native</span> <span class="identifier">GetStringTableName</span>(<span class="identifier">tableidx</span>, <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlength</span>);
+<a name="84"></a>
+<a name="85"></a><span class="comment">/**
+<a name="86"></a> * Searches for the index of a given string in a string table.
+<a name="87"></a> *
+<a name="88"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="89"></a> * <span class="doctag">@param</span> str		String to find.
+<a name="90"></a> * <span class="doctag">@return</span>				String index if found, INVALID_STRING_INDEX otherwise.
+<a name="91"></a> * <span class="doctag">@error</span>				Invalid string table index.
+<a name="92"></a> */</span>
+<a name="93"></a><span class="keyword">native</span> <span class="identifier">FindStringIndex</span>(<span class="identifier">tableidx</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[]);
+<a name="94"></a>
+<a name="95"></a><span class="comment">/**
+<a name="96"></a> * Retrieves the string at a given index of a string table.
+<a name="97"></a> *
+<a name="98"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="99"></a> * <span class="doctag">@param</span> stringidx		A string index.
+<a name="100"></a> * <span class="doctag">@param</span> str			Buffer to store the string value.
+<a name="101"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="102"></a> * <span class="doctag">@return</span>				Number of bytes written to the buffer (UTF-8 safe).
+<a name="103"></a> * <span class="doctag">@error</span>				Invalid string table index or string index.
+<a name="104"></a> */</span>
+<a name="105"></a><span class="keyword">native</span> <span class="identifier">ReadStringTable</span>(<span class="identifier">tableidx</span>, <span class="identifier">stringidx</span>, <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="identifier">maxlength</span>);
+<a name="106"></a>
+<a name="107"></a><span class="comment">/**
+<a name="108"></a> * Returns the length of the user data associated with a given string index.
+<a name="109"></a> *
+<a name="110"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="111"></a> * <span class="doctag">@param</span> stringidx		A string index.
+<a name="112"></a> * <span class="doctag">@return</span>				Length of user data. This will be 0 if there is no user data.
+<a name="113"></a> * <span class="doctag">@error</span>				Invalid string table index or string index.
+<a name="114"></a> */</span>
+<a name="115"></a><span class="keyword">native</span> <span class="identifier">GetStringTableDataLength</span>(<span class="identifier">tableidx</span>, <span class="identifier">stringidx</span>);
+<a name="116"></a>
+<a name="117"></a><span class="comment">/**
+<a name="118"></a> * Retrieves the user data associated with a given string index.
+<a name="119"></a> *
+<a name="120"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="121"></a> * <span class="doctag">@param</span> stringidx		A string index.
+<a name="122"></a> * <span class="doctag">@param</span> userdata		Buffer to store the user data. This will be set to "" if there is no user data.
+<a name="123"></a> * <span class="doctag">@param</span> maxlength		Maximum length of string buffer.
+<a name="124"></a> * <span class="doctag">@return</span>				Number of bytes written to the buffer (UTF-8 safe).
+<a name="125"></a> * <span class="doctag">@error</span>				Invalid string table index or string index.
+<a name="126"></a> */</span>
+<a name="127"></a><span class="keyword">native</span> <span class="identifier">GetStringTableData</span>(<span class="identifier">tableidx</span>, <span class="identifier">stringidx</span>, <span class="keyword type">String</span>:<span class="identifier">userdata</span>[], <span class="identifier">maxlength</span>);
+<a name="128"></a>
+<a name="129"></a><span class="comment">/**
+<a name="130"></a> * Sets the user data associated with a given string index.
+<a name="131"></a> *
+<a name="132"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="133"></a> * <span class="doctag">@param</span> stringidx		A string index.
+<a name="134"></a> * <span class="doctag">@param</span> userdata		User data string that will be set.
+<a name="135"></a> * <span class="doctag">@param</span> length		Length of user data string. This should include the null terminator.
+<a name="136"></a> * <span class="doctag">@return</span>				Number of bytes written to the buffer (UTF-8 safe).
+<a name="137"></a> * <span class="doctag">@error</span>				Invalid string table index or string index.
+<a name="138"></a> */</span>
+<a name="139"></a><span class="keyword">native</span> <span class="identifier">SetStringTableData</span>(<span class="identifier">tableidx</span>, <span class="identifier">stringidx</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">userdata</span>[], <span class="identifier">length</span>);
+<a name="140"></a>
+<a name="141"></a><span class="comment">/**
+<a name="142"></a> * Adds a string to a given string table.
+<a name="143"></a> *
+<a name="144"></a> * <span class="doctag">@param</span> tableidx		A string table index.
+<a name="145"></a> * <span class="doctag">@param</span> str		String to add.
+<a name="146"></a> * <span class="doctag">@param</span> userdata		An optional user data string.
+<a name="147"></a> * <span class="doctag">@param</span> length		Length of user data string. This should include the null terminator.
+<a name="148"></a> *						If set to -1, then user data will be not be altered if the specified string
+<a name="149"></a> *						already exists in the string table.
+<a name="150"></a> */</span>
+<a name="151"></a><span class="keyword">native</span> <span class="identifier">AddToStringTable</span>(<span class="identifier">tableidx</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">str</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">userdata</span>[]=<span class="string">""</span>, <span class="identifier">length</span>=-<span class="number">1</span>);
+<a name="152"></a>
+<a name="153"></a><span class="comment">/**
+<a name="154"></a> * Locks or unlocks the network string tables.
+<a name="155"></a> *
+<a name="156"></a> * <span class="doctag">@param</span> lock			Determines whether network string tables should be locked.
+<a name="157"></a> *						True means the tables should be locked for writing; false means unlocked.
+<a name="158"></a> * <span class="doctag">@return</span>				Previous lock state.
+<a name="159"></a> */</span>
+<a name="160"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">LockStringTables</span>(<span class="keyword type">bool</span>:<span class="identifier">lock</span>);
+<a name="161"></a>
+<a name="162"></a><span class="comment">/**
+<a name="163"></a> * Adds a file to the downloadables network string table.
+<a name="164"></a> * This forces a client to download the file if they do not already have it.
+<a name="165"></a> *
+<a name="166"></a> * <span class="doctag">@param</span> filename		File that will be added to downloadables table.
+<a name="167"></a> */</span>
+<a name="168"></a><span class="keyword">stock</span> <span class="identifier">AddFileToDownloadsTable</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">filename</span>[])
+<a name="169"></a>{
+<a name="170"></a>	<span class="keyword">static</span> <span class="identifier">table</span> = <span class="identifier">INVALID_STRING_TABLE</span>;
+<a name="171"></a>	
+<a name="172"></a>	<span class="keyword statement">if</span> (<span class="identifier">table</span> == <span class="identifier">INVALID_STRING_TABLE</span>)
+<a name="173"></a>	{
+<a name="174"></a>		<span class="identifier">table</span> = <span class="identifier">FindStringTable</span>(<span class="string">"downloadables"</span>);
+<a name="175"></a>	}
+<a name="176"></a>	
+<a name="177"></a>	<span class="keyword">new</span> <span class="keyword type">bool</span>:<span class="identifier">save</span> = <span class="identifier">LockStringTables</span>(<span class="keyword literal">false</span>);
+<a name="178"></a>	<span class="identifier">AddToStringTable</span>(<span class="identifier">table</span>, <span class="identifier">filename</span>);
+<a name="179"></a>	<span class="identifier">LockStringTables</span>(<span class="identifier">save</span>);
+<a name="180"></a>}
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

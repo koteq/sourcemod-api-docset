@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<title>adt_array.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_adt_array_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_adt_array_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Given a maximum string size (including the null terminator), 
+<a name="40"></a> * returns the number of cells required to fit that string.
+<a name="41"></a> *
+<a name="42"></a> * <span class="doctag">@param</span> size			Number of bytes.
+<a name="43"></a> * <span class="doctag">@return</span>				Minimum number of cells required to fit the byte count.
+<a name="44"></a> */</span>
+<a name="45"></a><span class="keyword">stock</span> <span class="identifier">ByteCountToCells</span>(<span class="identifier">size</span>)
+<a name="46"></a>{
+<a name="47"></a>	<span class="keyword statement">if</span> (!<span class="identifier">size</span>)
+<a name="48"></a>	{
+<a name="49"></a>		<span class="keyword statement">return</span> <span class="number">1</span>;
+<a name="50"></a>	}
+<a name="51"></a>	
+<a name="52"></a>	<span class="keyword statement">return</span> (<span class="identifier">size</span> + <span class="number">3</span>) / <span class="number">4</span>;
+<a name="53"></a>}
+<a name="54"></a>
+<a name="55"></a><span class="comment">/**
+<a name="56"></a> * Creates a dynamic global cell array.  While slower than a normal array,
+<a name="57"></a> * it can be used globally AND dynamically, which is otherwise impossible.
+<a name="58"></a> * 
+<a name="59"></a> * The contents of the array are uniform; i.e. storing a string at index X 
+<a name="60"></a> * and then retrieving it as an integer is NOT the same as StringToInt()!
+<a name="61"></a> * The "blocksize" determines how many cells each array slot has; it cannot
+<a name="62"></a> * be changed after creation.
+<a name="63"></a> *
+<a name="64"></a> * <span class="doctag">@param</span> blocksize		The number of cells each member of the array can 
+<a name="65"></a> *						hold.  For example, 32 cells is equivalent to:
+<a name="66"></a> *						new Array[X][32]
+<a name="67"></a> * <span class="doctag">@param</span> startsize		Initial size of the array.  Note that data will 
+<a name="68"></a> *						NOT be auto-intialized.
+<a name="69"></a> * <span class="doctag">@return</span>				New Handle to the array object.
+<a name="70"></a> */</span>
+<a name="71"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CreateArray</span>(<span class="identifier">blocksize</span>=<span class="number">1</span>, <span class="identifier">startsize</span>=<span class="number">0</span>);
+<a name="72"></a>
+<a name="73"></a><span class="comment">/**
+<a name="74"></a> * Clears an array of all entries.  This is the same as ResizeArray(0).
+<a name="75"></a> *
+<a name="76"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="77"></a> * <span class="doctag">@noreturn</span>
+<a name="78"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="79"></a> */</span>
+<a name="80"></a><span class="keyword">native</span> <span class="identifier">ClearArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>);
+<a name="81"></a>
+<a name="82"></a><span class="comment">/**
+<a name="83"></a> * Clones an array, returning a new handle with the same size and data. This should NOT
+<a name="84"></a> * be confused with CloneHandle. This is a completely new handle with the same data but
+<a name="85"></a> * no relation to the original. You MUST close it.
+<a name="86"></a> *
+<a name="87"></a> * <span class="doctag">@param</span> array			Array handle to be cloned
+<a name="88"></a> * <span class="doctag">@return</span>				New handle to the cloned array object
+<a name="89"></a> * <span class="doctag">@error</span>				Invalid Handle
+<a name="90"></a> */</span>
+<a name="91"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">CloneArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>);
+<a name="92"></a>
+<a name="93"></a><span class="comment">/**
+<a name="94"></a> * Resizes an array.  If the size is smaller than the current size,
+<a name="95"></a> * the array is truncated.
+<a name="96"></a> *
+<a name="97"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="98"></a> * <span class="doctag">@param</span> newsize		New size.
+<a name="99"></a> * <span class="doctag">@noreturn</span>
+<a name="100"></a> * <span class="doctag">@error</span>				Invalid Handle or out of memory.
+<a name="101"></a> */</span>
+<a name="102"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">ResizeArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">newsize</span>);
+<a name="103"></a>
+<a name="104"></a><span class="comment">/**
+<a name="105"></a> * Returns the array size.
+<a name="106"></a> *
+<a name="107"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="108"></a> * <span class="doctag">@return</span>				Number of elements in the array.
+<a name="109"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="110"></a> */</span>
+<a name="111"></a><span class="keyword">native</span> <span class="identifier">GetArraySize</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>);
+<a name="112"></a>
+<a name="113"></a><span class="comment">/**
+<a name="114"></a> * Pushes a value onto the end of an array, adding a new index.
+<a name="115"></a> *
+<a name="116"></a> * This may safely be used even if the array has a blocksize
+<a name="117"></a> * greater than 1.
+<a name="118"></a> *
+<a name="119"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="120"></a> * <span class="doctag">@param</span> value			Value to push.
+<a name="121"></a> * <span class="doctag">@return</span>				Index of the new entry.
+<a name="122"></a> * <span class="doctag">@error</span>				Invalid Handle or out of memory.
+<a name="123"></a> */</span>
+<a name="124"></a><span class="keyword">native</span> <span class="identifier">PushArrayCell</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="keyword type">any</span>:<span class="identifier">value</span>);
+<a name="125"></a>
+<a name="126"></a><span class="comment">/**
+<a name="127"></a> * Pushes a string onto the end of an array, truncating it
+<a name="128"></a> * if it is too big.
+<a name="129"></a> *
+<a name="130"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="131"></a> * <span class="doctag">@param</span> value			String to push.
+<a name="132"></a> * <span class="doctag">@return</span>				Index of the new entry.
+<a name="133"></a> * <span class="doctag">@error</span>				Invalid Handle or out of memory.
+<a name="134"></a> */</span>
+<a name="135"></a><span class="keyword">native</span> <span class="identifier">PushArrayString</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="136"></a>
+<a name="137"></a><span class="comment">/**
+<a name="138"></a> * Pushes an array of cells onto the end of an array.  The cells
+<a name="139"></a> * are pushed as a block (i.e. the entire array sits at the index),
+<a name="140"></a> * rather than pushing each cell individually.
+<a name="141"></a> *
+<a name="142"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="143"></a> * <span class="doctag">@param</span> values		Block of values to copy.
+<a name="144"></a> * <span class="doctag">@param</span> size			If not set, the number of elements copied from the array
+<a name="145"></a> *						will be equal to the blocksize.  If set higher than the 
+<a name="146"></a> *						blocksize, the operation will be truncated.
+<a name="147"></a> * <span class="doctag">@return</span>				Index of the new entry.
+<a name="148"></a> * <span class="doctag">@error</span>				Invalid Handle or out of memory.
+<a name="149"></a> */</span>
+<a name="150"></a><span class="keyword">native</span> <span class="identifier">PushArrayArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="keyword">const</span> <span class="keyword type">any</span>:<span class="identifier">values</span>[], <span class="identifier">size</span>=-<span class="number">1</span>);
+<a name="151"></a>
+<a name="152"></a><span class="comment">/**
+<a name="153"></a> * Retrieves a cell value from an array.
+<a name="154"></a> *
+<a name="155"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="156"></a> * <span class="doctag">@param</span> index			Index in the array.
+<a name="157"></a> * <span class="doctag">@param</span> block			Optionally specify which block to read from
+<a name="158"></a> *						(useful if the blocksize &gt; 0).
+<a name="159"></a> * <span class="doctag">@param</span> asChar		Optionally read as a byte instead of a cell.
+<a name="160"></a> * <span class="doctag">@return</span>				Value read.
+<a name="161"></a> * <span class="doctag">@error</span>				Invalid Handle, invalid index, or invalid block.
+<a name="162"></a> */</span>
+<a name="163"></a><span class="keyword">native</span> <span class="keyword type">any</span>:<span class="identifier">GetArrayCell</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>, <span class="identifier">block</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">asChar</span>=<span class="keyword literal">false</span>);
+<a name="164"></a>
+<a name="165"></a><span class="comment">/**
+<a name="166"></a> * Retrieves a string value from an array.
+<a name="167"></a> *
+<a name="168"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="169"></a> * <span class="doctag">@param</span> index			Index in the array.
+<a name="170"></a> * <span class="doctag">@param</span> buffer		Buffer to copy to.
+<a name="171"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the buffer.
+<a name="172"></a> * <span class="doctag">@return</span>				Number of characters copied.
+<a name="173"></a> * <span class="doctag">@error</span>				Invalid Handle or invalid index.
+<a name="174"></a> */</span>
+<a name="175"></a><span class="keyword">native</span> <span class="identifier">GetArrayString</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>);
+<a name="176"></a>
+<a name="177"></a><span class="comment">/**
+<a name="178"></a> * Retrieves an array of cells from an array.
+<a name="179"></a> *
+<a name="180"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="181"></a> * <span class="doctag">@param</span> index			Index in the array.
+<a name="182"></a> * <span class="doctag">@param</span> buffer		Buffer to store the array in.
+<a name="183"></a> * <span class="doctag">@param</span> size			If not set, assumes the buffer size is equal to the
+<a name="184"></a> *						blocksize.  Otherwise, the size passed is used.
+<a name="185"></a> * <span class="doctag">@return</span>				Number of cells copied.
+<a name="186"></a> * <span class="doctag">@error</span>				Invalid Handle or invalid index.
+<a name="187"></a> */</span>
+<a name="188"></a><span class="keyword">native</span> <span class="identifier">GetArrayArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>, <span class="keyword type">any</span>:<span class="identifier">buffer</span>[], <span class="identifier">size</span>=-<span class="number">1</span>);
+<a name="189"></a>
+<a name="190"></a><span class="comment">/**
+<a name="191"></a> * Sets a cell value in an array.
+<a name="192"></a> *
+<a name="193"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="194"></a> * <span class="doctag">@param</span> index			Index in the array.
+<a name="195"></a> * <span class="doctag">@param</span> value			Cell value to set.
+<a name="196"></a> * <span class="doctag">@param</span> block			Optionally specify which block to write to
+<a name="197"></a> *						(useful if the blocksize &gt; 0).
+<a name="198"></a> * <span class="doctag">@param</span> asChar		Optionally set as a byte instead of a cell.
+<a name="199"></a> * <span class="doctag">@noreturn</span>
+<a name="200"></a> * <span class="doctag">@error</span>				Invalid Handle, invalid index, or invalid block.
+<a name="201"></a> */</span>
+<a name="202"></a><span class="keyword">native</span> <span class="identifier">SetArrayCell</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>, <span class="keyword type">any</span>:<span class="identifier">value</span>, <span class="identifier">block</span>=<span class="number">0</span>, <span class="keyword type">bool</span>:<span class="identifier">asChar</span>=<span class="keyword literal">false</span>);
+<a name="203"></a>
+<a name="204"></a><span class="comment">/**
+<a name="205"></a> * Sets a string value in an array.
+<a name="206"></a> *
+<a name="207"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="208"></a> * <span class="doctag">@param</span> index			Index in the array.
+<a name="209"></a> * <span class="doctag">@param</span> value			String value to set.
+<a name="210"></a> * <span class="doctag">@return</span>				Number of characters copied.
+<a name="211"></a> * <span class="doctag">@error</span>				Invalid Handle or invalid index.
+<a name="212"></a> */</span>
+<a name="213"></a><span class="keyword">native</span> <span class="identifier">SetArrayString</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="214"></a>
+<a name="215"></a><span class="comment">/**
+<a name="216"></a> * Sets an array of cells in an array.
+<a name="217"></a> *
+<a name="218"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="219"></a> * <span class="doctag">@param</span> index			Index in the array.
+<a name="220"></a> * <span class="doctag">@param</span> values		Array to copy.
+<a name="221"></a> * <span class="doctag">@param</span> size			If not set, assumes the buffer size is equal to the
+<a name="222"></a> *						blocksize.  Otherwise, the size passed is used.
+<a name="223"></a> * <span class="doctag">@return</span>				Number of cells copied.
+<a name="224"></a> * <span class="doctag">@error</span>				Invalid Handle or invalid index.
+<a name="225"></a> */</span>
+<a name="226"></a><span class="keyword">native</span> <span class="identifier">SetArrayArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>, <span class="keyword">const</span> <span class="keyword type">any</span>:<span class="identifier">values</span>[], <span class="identifier">size</span>=-<span class="number">1</span>);
+<a name="227"></a>
+<a name="228"></a><span class="comment">/**
+<a name="229"></a> * Shifts an array up.  All array contents after and including the given 
+<a name="230"></a> * index are shifted up by one, and the given index is then "free."  
+<a name="231"></a> * After shifting, the contents of the given index is undefined.
+<a name="232"></a> *
+<a name="233"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="234"></a> * <span class="doctag">@param</span> index			Index in the array to shift up from.
+<a name="235"></a> * <span class="doctag">@noreturn</span>
+<a name="236"></a> * <span class="doctag">@error</span>				Invalid Handle or invalid index.
+<a name="237"></a> */</span>
+<a name="238"></a><span class="keyword">native</span> <span class="identifier">ShiftArrayUp</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>);
+<a name="239"></a>
+<a name="240"></a><span class="comment">/**
+<a name="241"></a> * Removes an array index, shifting the entire array down from that position 
+<a name="242"></a> * on.  For example, if item 8 of 10 is removed, the last 3 items will then be
+<a name="243"></a> * (6,7,8) instead of (7,8,9), and all indexes before 8 will remain unchanged.
+<a name="244"></a> *
+<a name="245"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="246"></a> * <span class="doctag">@param</span> index			Index in the array to remove at.
+<a name="247"></a> * <span class="doctag">@noreturn</span>
+<a name="248"></a> * <span class="doctag">@error</span>				Invalid Handle or invalid index.
+<a name="249"></a> */</span>
+<a name="250"></a><span class="keyword">native</span> <span class="identifier">RemoveFromArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index</span>);
+<a name="251"></a>
+<a name="252"></a><span class="comment">/**
+<a name="253"></a> * Swaps two items in the array.
+<a name="254"></a> *
+<a name="255"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="256"></a> * <span class="doctag">@param</span> index1		First index.
+<a name="257"></a> * <span class="doctag">@param</span> index2		Second index.
+<a name="258"></a> * <span class="doctag">@noreturn</span>
+<a name="259"></a> * <span class="doctag">@error</span>				Invalid Handle or invalid index.
+<a name="260"></a> */</span>
+<a name="261"></a><span class="keyword">native</span> <span class="identifier">SwapArrayItems</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="identifier">index1</span>, <span class="identifier">index2</span>);
+<a name="262"></a>
+<a name="263"></a><span class="comment">/**
+<a name="264"></a> * Returns the index for the first occurance of the provided string. If the string
+<a name="265"></a> * cannot be located, -1 will be returned.
+<a name="266"></a> *
+<a name="267"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="268"></a> * <span class="doctag">@param</span> item			String to search for
+<a name="269"></a> * <span class="doctag">@return</span>				Array index, or -1 on failure
+<a name="270"></a> * <span class="doctag">@error</span>				Invalid Handle
+<a name="271"></a> */</span>
+<a name="272"></a><span class="keyword">native</span> <span class="identifier">FindStringInArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">item</span>[]);
+<a name="273"></a> 
+<a name="274"></a><span class="comment">/**
+<a name="275"></a> * Returns the index for the first occurance of the provided value. If the value
+<a name="276"></a> * cannot be located, -1 will be returned.
+<a name="277"></a> *
+<a name="278"></a> * <span class="doctag">@param</span> array			Array Handle.
+<a name="279"></a> * <span class="doctag">@param</span> item			Value to search for
+<a name="280"></a> * <span class="doctag">@return</span>				Array index, or -1 on failure
+<a name="281"></a> * <span class="doctag">@error</span>				Invalid Handle
+<a name="282"></a> */</span>
+<a name="283"></a><span class="keyword">native</span> <span class="identifier">FindValueInArray</span>(<span class="keyword type">Handle</span>:<span class="identifier">array</span>, <span class="keyword type">any</span>:<span class="identifier">item</span>); 
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

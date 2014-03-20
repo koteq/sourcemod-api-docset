@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<title>clients.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a>
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_clients_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_clients_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * Network flow directions.
+<a name="40"></a> */</span>
+<a name="41"></a><span class="keyword">enum</span> <span class="identifier">NetFlow</span>
+<a name="42"></a>{
+<a name="43"></a>	<span class="identifier">NetFlow_Outgoing</span> = <span class="number">0</span>,	<span class="comment">/**&lt; Outgoing traffic */</span>
+<a name="44"></a>	<span class="identifier">NetFlow_Incoming</span>,		<span class="comment">/**&lt; Incoming traffic */</span>
+<a name="45"></a>	<span class="identifier">NetFlow_Both</span>,			<span class="comment">/**&lt; Both values added together */</span>
+<a name="46"></a>};
+<a name="47"></a>
+<a name="48"></a><span class="comment">/**
+<a name="49"></a> * MAXPLAYERS is not the same as MaxClients.
+<a name="50"></a> * MAXPLAYERS is a hardcoded value as an upper limit.  MaxClients changes based on the server.
+<a name="51"></a> *
+<a name="52"></a> * Both GetMaxClients() and MaxClients are only available once the map is loaded, and should 
+<a name="53"></a> * not be used in OnPluginStart().
+<a name="54"></a> */</span>
+<a name="55"></a>
+<a name="56"></a><span class="preprocessor">#define <span class="identifier">MAXPLAYERS</span>		<span class="number">65</span>	<span class="comment">/**&lt; Maximum number of players SourceMod supports */</span>
+<a name="57"></a></span><span class="preprocessor">#define <span class="identifier">MAX_NAME_LENGTH</span> <span class="number">32</span>	<span class="comment">/**&lt; Maximum buffer required to store a client name */</span>
+<a name="58"></a></span>
+<a name="59"></a><span class="keyword">public</span> <span class="keyword">const</span> <span class="identifier">MaxClients</span>;	<span class="comment">/**&lt; Maximum number of players the server supports (dynamic) */</span>
+<a name="60"></a>
+<a name="61"></a><span class="comment">/**
+<a name="62"></a> * Called on client connection.  If you return true, the client will be allowed in the server.
+<a name="63"></a> * If you return false (or return nothing), the client will be rejected.  If the client is 
+<a name="64"></a> * rejected by this forward or any other, OnClientDisconnect will not be called.
+<a name="65"></a> *
+<a name="66"></a> * Note: Do not write to rejectmsg if you plan on returning true.  If multiple plugins write
+<a name="67"></a> * to the string buffer, it is not defined which plugin's string will be shown to the client,
+<a name="68"></a> * but it is guaranteed one of them will.
+<a name="69"></a> *
+<a name="70"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="71"></a> * <span class="doctag">@param</span> rejectmsg		Buffer to store the rejection message when the connection is refused.
+<a name="72"></a> * <span class="doctag">@param</span> maxlen		Maximum number of characters for rejection buffer.
+<a name="73"></a> * <span class="doctag">@return</span>				True to validate client's connection, false to refuse it.
+<a name="74"></a> */</span>
+<a name="75"></a><span class="keyword">forward</span> <span class="keyword type">bool</span>:<span class="identifier">OnClientConnect</span>(<span class="identifier">client</span>, <span class="keyword type">String</span>:<span class="identifier">rejectmsg</span>[], <span class="identifier">maxlen</span>);
+<a name="76"></a>
+<a name="77"></a><span class="comment">/**
+<a name="78"></a> * Called once a client successfully connects.  This callback is paired with OnClientDisconnect.
+<a name="79"></a> *
+<a name="80"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="81"></a> * <span class="doctag">@noreturn</span>
+<a name="82"></a> */</span>
+<a name="83"></a><span class="keyword">forward</span> <span class="identifier">OnClientConnected</span>(<span class="identifier">client</span>);
+<a name="84"></a>
+<a name="85"></a><span class="comment">/**
+<a name="86"></a> * Called when a client is entering the game.
+<a name="87"></a> *
+<a name="88"></a> * Whether a client has a steamid is undefined until OnClientAuthorized
+<a name="89"></a> * is called, which may occur either before or after OnClientPutInServer.
+<a name="90"></a> * Similarly, use OnClientPostAdminCheck() if you need to verify whether 
+<a name="91"></a> * connecting players are admins.
+<a name="92"></a> *
+<a name="93"></a> * GetClientCount() will include clients as they are passed through this 
+<a name="94"></a> * function, as clients are already in game at this point.
+<a name="95"></a> *
+<a name="96"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="97"></a> * <span class="doctag">@noreturn</span>
+<a name="98"></a> */</span>
+<a name="99"></a><span class="keyword">forward</span> <span class="identifier">OnClientPutInServer</span>(<span class="identifier">client</span>);
+<a name="100"></a>
+<a name="101"></a><span class="comment">/**
+<a name="102"></a> * Called when a client is disconnecting from the server.
+<a name="103"></a> *
+<a name="104"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="105"></a> * <span class="doctag">@noreturn</span>
+<a name="106"></a> */</span>
+<a name="107"></a><span class="keyword">forward</span> <span class="identifier">OnClientDisconnect</span>(<span class="identifier">client</span>);
+<a name="108"></a>
+<a name="109"></a><span class="comment">/**
+<a name="110"></a> * Called when a client is disconnected from the server.
+<a name="111"></a> *
+<a name="112"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="113"></a> * <span class="doctag">@noreturn</span>
+<a name="114"></a> */</span>
+<a name="115"></a><span class="keyword">forward</span> <span class="identifier">OnClientDisconnect_Post</span>(<span class="identifier">client</span>);
+<a name="116"></a>
+<a name="117"></a><span class="comment">/**
+<a name="118"></a> * Called when a client is sending a command.
+<a name="119"></a> *
+<a name="120"></a> * As of SourceMod 1.3, the client is guaranteed to be in-game.
+<a name="121"></a> * Use command listeners (console.inc) for more advanced hooks.
+<a name="122"></a> *
+<a name="123"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="124"></a> * <span class="doctag">@param</span> args			Number of arguments.
+<a name="125"></a> * <span class="doctag">@noreturn</span>
+<a name="126"></a> */</span>
+<a name="127"></a><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">OnClientCommand</span>(<span class="identifier">client</span>, <span class="identifier">args</span>);
+<a name="128"></a>
+<a name="129"></a><span class="comment">/**
+<a name="130"></a> * Called whenever the client's settings are changed.
+<a name="131"></a> *
+<a name="132"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="133"></a> * <span class="doctag">@noreturn</span>
+<a name="134"></a> */</span>
+<a name="135"></a><span class="keyword">forward</span> <span class="identifier">OnClientSettingsChanged</span>(<span class="identifier">client</span>);
+<a name="136"></a>
+<a name="137"></a><span class="comment">/**
+<a name="138"></a> * Called when a client receives a Steam ID.  The state of a client's 
+<a name="139"></a> * authorization as an admin is not guaranteed here.  Use 
+<a name="140"></a> * OnClientPostAdminCheck() if you need a client's admin status.
+<a name="141"></a> *
+<a name="142"></a> * This is called by bots, but the ID will be "BOT".
+<a name="143"></a> *
+<a name="144"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="145"></a> * <span class="doctag">@param</span> auth			Client auth string.
+<a name="146"></a> * <span class="doctag">@noreturn</span>
+<a name="147"></a> */</span>
+<a name="148"></a><span class="keyword">forward</span> <span class="identifier">OnClientAuthorized</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">auth</span>[]);
+<a name="149"></a>
+<a name="150"></a><span class="comment">/**
+<a name="151"></a> * Called once a client is authorized and fully in-game, but 
+<a name="152"></a> * before admin checks are done.  This can be used to override 
+<a name="153"></a> * the default admin checks for a client.  You should only use 
+<a name="154"></a> * this for overriding; use OnClientPostAdminCheck() instead 
+<a name="155"></a> * if you want notification.
+<a name="156"></a> *
+<a name="157"></a> * Note: If handled/blocked, PostAdminCheck must be signalled 
+<a name="158"></a> * manually via NotifyPostAdminCheck().
+<a name="159"></a> *
+<a name="160"></a> * This callback is gauranteed to occur on all clients, and always 
+<a name="161"></a> * after each OnClientPutInServer() call.
+<a name="162"></a> *
+<a name="163"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="164"></a> * <span class="doctag">@return</span>				Plugin_Handled to block admin checks.
+<a name="165"></a> */</span>
+<a name="166"></a><span class="keyword">forward</span> <span class="identifier">Action</span>:<span class="identifier">OnClientPreAdminCheck</span>(<span class="identifier">client</span>);
+<a name="167"></a>
+<a name="168"></a><span class="comment">/**
+<a name="169"></a> * Called directly before OnClientPostAdminCheck() as a method to 
+<a name="170"></a> * alter administrative permissions before plugins perform final 
+<a name="171"></a> * post-connect operations.  
+<a name="172"></a> *
+<a name="173"></a> * In general, do not use this function unless you are specifically 
+<a name="174"></a> * attempting to change access permissions.  Use OnClientPostAdminCheck() 
+<a name="175"></a> * instead if you simply want to perform post-connect authorization 
+<a name="176"></a> * routines.
+<a name="177"></a> *
+<a name="178"></a> * See OnClientPostAdminCheck() for more information.
+<a name="179"></a> *
+<a name="180"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="181"></a> * <span class="doctag">@noreturn</span>
+<a name="182"></a> */</span>
+<a name="183"></a><span class="keyword">forward</span> <span class="identifier">OnClientPostAdminFilter</span>(<span class="identifier">client</span>);
+<a name="184"></a>
+<a name="185"></a><span class="comment">/**
+<a name="186"></a> * Called once a client is authorized and fully in-game, and 
+<a name="187"></a> * after all post-connection authorizations have been performed.  
+<a name="188"></a> *
+<a name="189"></a> * This callback is gauranteed to occur on all clients, and always 
+<a name="190"></a> * after each OnClientPutInServer() call.
+<a name="191"></a> *
+<a name="192"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="193"></a> * <span class="doctag">@noreturn</span>
+<a name="194"></a> */</span>
+<a name="195"></a><span class="keyword">forward</span> <span class="identifier">OnClientPostAdminCheck</span>(<span class="identifier">client</span>);
+<a name="196"></a>
+<a name="197"></a><span class="comment">/**
+<a name="198"></a> * This function will be deprecated in a future release.  Use the MaxClients variable instead.
+<a name="199"></a> *
+<a name="200"></a> * Returns the maximum number of clients allowed on the server.  This may 
+<a name="201"></a> * return 0 if called before OnMapStart(), and thus should not be called 
+<a name="202"></a> * in OnPluginStart().  
+<a name="203"></a> *
+<a name="204"></a> * You should not globally cache the value to GetMaxClients() because it can change from 
+<a name="205"></a> * SourceTV or TF2's arena mode.  Use the "MaxClients" dynamic variable documented at the 
+<a name="206"></a> * top of this file.
+<a name="207"></a> *
+<a name="208"></a> * <span class="doctag">@return</span>				Maximum number of clients allowed.
+<a name="209"></a> */</span>
+<a name="210"></a><span class="keyword">native</span> <span class="identifier">GetMaxClients</span>();
+<a name="211"></a>
+<a name="212"></a><span class="comment">/**
+<a name="213"></a> * Returns the maximum number of human players allowed on the server.  This is 
+<a name="214"></a> * a game-specific function used on newer games to limit the number of humans
+<a name="215"></a> * that can join a game and can be lower than MaxClients. It is the number often
+<a name="216"></a> * reflected in the server browser or when viewing the output of the status command.
+<a name="217"></a> * On unsupported games or modes without overrides, it will return the same value
+<a name="218"></a> * as MaxClients.
+<a name="219"></a> *
+<a name="220"></a> * You should not globally cache the value to GetMaxHumanPlayers() because it can change across
+<a name="221"></a> * game modes. You may still cache it locally.
+<a name="222"></a> *
+<a name="223"></a> * <span class="doctag">@return</span>				Maximum number of humans allowed.
+<a name="224"></a> */</span>
+<a name="225"></a><span class="keyword">native</span> <span class="identifier">GetMaxHumanPlayers</span>();
+<a name="226"></a>
+<a name="227"></a><span class="comment">/**
+<a name="228"></a> * Returns the client count put in the server.
+<a name="229"></a> *
+<a name="230"></a> * <span class="doctag">@param</span> inGameOnly	If false connecting players are also counted.
+<a name="231"></a> * <span class="doctag">@return</span>				Client count in the server.
+<a name="232"></a> */</span>
+<a name="233"></a><span class="keyword">native</span> <span class="identifier">GetClientCount</span>(<span class="keyword type">bool</span>:<span class="identifier">inGameOnly</span>=<span class="keyword literal">true</span>);
+<a name="234"></a>
+<a name="235"></a><span class="comment">/**
+<a name="236"></a> * Returns the client's name.
+<a name="237"></a> *
+<a name="238"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="239"></a> * <span class="doctag">@param</span> name			Buffer to store the client's name.
+<a name="240"></a> * <span class="doctag">@param</span> maxlen		Maximum length of string buffer (includes NULL terminator).
+<a name="241"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="242"></a> * <span class="doctag">@error</span>				If the client is not connected an error will be thrown.
+<a name="243"></a> */</span>
+<a name="244"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetClientName</span>(<span class="identifier">client</span>, <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlen</span>);
+<a name="245"></a>
+<a name="246"></a><span class="comment">/**
+<a name="247"></a> * Retrieves a client's IP address.
+<a name="248"></a> *
+<a name="249"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="250"></a> * <span class="doctag">@param</span> ip			Buffer to store the client's ip address.
+<a name="251"></a> * <span class="doctag">@param</span> maxlen		Maximum length of string buffer (includes NULL terminator).
+<a name="252"></a> * <span class="doctag">@param</span> remport		Remove client's port from the ip string (true by default).
+<a name="253"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="254"></a> * <span class="doctag">@error</span>				If the client is not connected or the index is invalid.
+<a name="255"></a> */</span>
+<a name="256"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetClientIP</span>(<span class="identifier">client</span>, <span class="keyword type">String</span>:<span class="identifier">ip</span>[], <span class="identifier">maxlen</span>, <span class="keyword type">bool</span>:<span class="identifier">remport</span>=<span class="keyword literal">true</span>);
+<a name="257"></a>
+<a name="258"></a><span class="comment">/**
+<a name="259"></a> * Retrieves a client's authentication string (SteamID).
+<a name="260"></a> *
+<a name="261"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="262"></a> * <span class="doctag">@param</span> auth			Buffer to store the client's auth string.
+<a name="263"></a> * <span class="doctag">@param</span> maxlen		Maximum length of string buffer (includes NULL terminator).
+<a name="264"></a> * <span class="doctag">@param</span> validate		Check backend validation status.
+<a name="265"></a> * 				DO NOT PASS FALSE UNLESS YOU UNDERSTAND THE CONSEQUENCES,
+<a name="266"></a> *			        You WILL KNOW if you need to use this, MOST WILL NOT.
+<a name="267"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="268"></a> * <span class="doctag">@error</span>				If the client is not connected or the index is invalid.
+<a name="269"></a> */</span>
+<a name="270"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetClientAuthString</span>(<span class="identifier">client</span>, <span class="keyword type">String</span>:<span class="identifier">auth</span>[], <span class="identifier">maxlen</span>, <span class="keyword type">bool</span>:<span class="identifier">validate</span>=<span class="keyword literal">true</span>);
+<a name="271"></a>
+<a name="272"></a><span class="comment">/**
+<a name="273"></a> * Returns the client's Steam account ID.
+<a name="274"></a> *
+<a name="275"></a> * <span class="doctag">@param</span> client		Client Index.
+<a name="276"></a> * <span class="doctag">@param</span> validate		Check backend validation status.
+<a name="277"></a> * 				DO NOT PASS FALSE UNLESS YOU UNDERSTAND THE CONSEQUENCES,
+<a name="278"></a> *			        You WILL KNOW if you need to use this, MOST WILL NOT.
+<a name="279"></a> * <span class="doctag">@return</span>				Steam account ID or 0 if not available.
+<a name="280"></a> * <span class="doctag">@error</span>				If the client is not connected or the index is invalid.
+<a name="281"></a> */</span>
+<a name="282"></a><span class="keyword">native</span> <span class="identifier">GetSteamAccountID</span>(<span class="identifier">client</span>, <span class="keyword type">bool</span>:<span class="identifier">validate</span>=<span class="keyword literal">true</span>);
+<a name="283"></a>
+<a name="284"></a><span class="comment">/**
+<a name="285"></a> * Retrieves a client's user id, which is an index incremented for every client
+<a name="286"></a> * that joins the server.
+<a name="287"></a> *
+<a name="288"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="289"></a> * <span class="doctag">@return</span>				User id of the client.
+<a name="290"></a> * <span class="doctag">@error</span> 				If the client is not connected or the index is invalid.
+<a name="291"></a> */</span>
+<a name="292"></a><span class="keyword">native</span> <span class="identifier">GetClientUserId</span>(<span class="identifier">client</span>);
+<a name="293"></a>
+<a name="294"></a><span class="comment">/**
+<a name="295"></a> * Returns if a certain player is connected.
+<a name="296"></a> *
+<a name="297"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="298"></a> * <span class="doctag">@return</span>				True if player is connected to the server, false otherwise.
+<a name="299"></a> */</span>
+<a name="300"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientConnected</span>(<span class="identifier">client</span>);
+<a name="301"></a>
+<a name="302"></a><span class="comment">/**
+<a name="303"></a> * Returns if a certain player has entered the game.
+<a name="304"></a> *
+<a name="305"></a> * <span class="doctag">@param</span> client		Player index (index does not have to be connected).
+<a name="306"></a> * <span class="doctag">@return</span>				True if player has entered the game, false otherwise.
+<a name="307"></a> * <span class="doctag">@error</span>				Invalid client index.
+<a name="308"></a> */</span>
+<a name="309"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientInGame</span>(<span class="identifier">client</span>);
+<a name="310"></a>
+<a name="311"></a><span class="comment">/**
+<a name="312"></a> * Returns if a client is in the "kick queue" (i.e. the client will be kicked 
+<a name="313"></a> * shortly and thus they should not appear as valid).
+<a name="314"></a> *
+<a name="315"></a> * <span class="doctag">@param</span> client		Player index (must be connected).
+<a name="316"></a> * <span class="doctag">@return</span>				True if in the kick queue, false otherwise.
+<a name="317"></a> * <span class="doctag">@error</span>				Invalid client index.
+<a name="318"></a> */</span>
+<a name="319"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientInKickQueue</span>(<span class="identifier">client</span>);
+<a name="320"></a>
+<a name="321"></a><span class="comment">/**
+<a name="322"></a> * Backwards compatibility stock - use IsClientInGame
+<a name="323"></a> * <span class="doctag">@deprecated</span>			Renamed to IsClientInGame
+<a name="324"></a> */</span>
+<a name="325"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">IsClientInGame</span>() <span class="identifier">instead</span>
+<a name="326"></a></span><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">IsPlayerInGame</span>(<span class="identifier">client</span>)
+<a name="327"></a>{
+<a name="328"></a>	<span class="keyword statement">return</span> <span class="identifier">IsClientInGame</span>(<span class="identifier">client</span>);
+<a name="329"></a>}
+<a name="330"></a>
+<a name="331"></a><span class="comment">/**
+<a name="332"></a> * Returns if a certain player has been authenticated.
+<a name="333"></a> *
+<a name="334"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="335"></a> * <span class="doctag">@return</span>				True if player has been authenticated, false otherwise.
+<a name="336"></a> */</span>
+<a name="337"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientAuthorized</span>(<span class="identifier">client</span>);
+<a name="338"></a>
+<a name="339"></a><span class="comment">/**
+<a name="340"></a> * Returns if a certain player is a fake client.
+<a name="341"></a> *
+<a name="342"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="343"></a> * <span class="doctag">@return</span>				True if player is a fake client, false otherwise.
+<a name="344"></a> */</span>
+<a name="345"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsFakeClient</span>(<span class="identifier">client</span>);
+<a name="346"></a>
+<a name="347"></a><span class="comment">/**
+<a name="348"></a> * Returns if a certain player is the SourceTV bot.
+<a name="349"></a> *
+<a name="350"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="351"></a> * <span class="doctag">@return</span>				True if player is the SourceTV bot, false otherwise.
+<a name="352"></a> */</span>
+<a name="353"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientSourceTV</span>(<span class="identifier">client</span>);
+<a name="354"></a>
+<a name="355"></a><span class="comment">/**
+<a name="356"></a> * Returns if a certain player is the Replay bot.
+<a name="357"></a> *
+<a name="358"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="359"></a> * <span class="doctag">@return</span>				True if player is the Replay bot, false otherwise.
+<a name="360"></a> */</span>
+<a name="361"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientReplay</span>(<span class="identifier">client</span>);
+<a name="362"></a>
+<a name="363"></a><span class="comment">/**
+<a name="364"></a> * Returns if a certain player is an observer/spectator.
+<a name="365"></a> *
+<a name="366"></a> * <span class="doctag">@param</span> client		Player index.
+<a name="367"></a> * <span class="doctag">@return</span>				True if player is an obverser, false otherwise.
+<a name="368"></a> */</span>
+<a name="369"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientObserver</span>(<span class="identifier">client</span>);
+<a name="370"></a>
+<a name="371"></a><span class="comment">/**
+<a name="372"></a> * Returns if the client is alive or dead.
+<a name="373"></a> *
+<a name="374"></a> * Note: This function was originally in SDKTools and was moved to core.
+<a name="375"></a> *
+<a name="376"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="377"></a> * <span class="doctag">@return</span>				True if the client is alive, false otherwise.
+<a name="378"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="379"></a> */</span>
+<a name="380"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsPlayerAlive</span>(<span class="identifier">client</span>);
+<a name="381"></a>
+<a name="382"></a><span class="comment">/**
+<a name="383"></a> * Retrieves values from client replicated keys.
+<a name="384"></a> *
+<a name="385"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="386"></a> * <span class="doctag">@param</span> key			Key string.
+<a name="387"></a> * <span class="doctag">@param</span> value			Buffer to store value.
+<a name="388"></a> * <span class="doctag">@param</span> maxlen		Maximum length of valve (UTF-8 safe).
+<a name="389"></a> * <span class="doctag">@return</span> 				True on success, false otherwise.
+<a name="390"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="391"></a> */</span>
+<a name="392"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">GetClientInfo</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">key</span>[], <span class="keyword type">String</span>:<span class="identifier">value</span>[], <span class="identifier">maxlen</span>);
+<a name="393"></a>
+<a name="394"></a><span class="comment">/**
+<a name="395"></a> * Retrieves a client's team index.
+<a name="396"></a> *
+<a name="397"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="398"></a> * <span class="doctag">@return</span>				Team index the client is on (mod specific).
+<a name="399"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="400"></a> */</span>
+<a name="401"></a><span class="keyword">native</span> <span class="identifier">GetClientTeam</span>(<span class="identifier">client</span>);
+<a name="402"></a> 
+<a name="403"></a><span class="comment">/**
+<a name="404"></a> * Sets a client's AdminId.  
+<a name="405"></a> *
+<a name="406"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="407"></a> * <span class="doctag">@param</span> id			AdminId to set.  INVALID_ADMIN_ID removes admin permissions.
+<a name="408"></a> * <span class="doctag">@param</span> temp			True if the id should be freed on disconnect.
+<a name="409"></a> * <span class="doctag">@noreturn</span>
+<a name="410"></a> * <span class="doctag">@error</span>				Invalid client index, client not connected, or bogus AdminId.
+<a name="411"></a> */</span>
+<a name="412"></a><span class="keyword">native</span> <span class="identifier">SetUserAdmin</span>(<span class="identifier">client</span>, <span class="identifier">AdminId</span>:<span class="identifier">id</span>, <span class="keyword type">bool</span>:<span class="identifier">temp</span>=<span class="keyword literal">false</span>);
+<a name="413"></a>
+<a name="414"></a><span class="comment">/**
+<a name="415"></a> * Retrieves a client's AdminId.
+<a name="416"></a> *
+<a name="417"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="418"></a> * <span class="doctag">@return</span>				AdminId of the client, or INVALID_ADMIN_ID if none.
+<a name="419"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="420"></a> */</span>
+<a name="421"></a><span class="keyword">native</span> <span class="identifier">AdminId</span>:<span class="identifier">GetUserAdmin</span>(<span class="identifier">client</span>);
+<a name="422"></a>
+<a name="423"></a><span class="comment">/**
+<a name="424"></a> * Sets access flags on a client.  If the client is not an admin,
+<a name="425"></a> * a temporary, anonymous AdminId is given.
+<a name="426"></a> *
+<a name="427"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="428"></a> * <span class="doctag">@param</span> ...			Flags to set on the client.
+<a name="429"></a> * <span class="doctag">@noreturn</span>
+<a name="430"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="431"></a> */</span>
+<a name="432"></a><span class="keyword">native</span> <span class="identifier">AddUserFlags</span>(<span class="identifier">client</span>, <span class="identifier">AdminFlag</span>:...);
+<a name="433"></a>
+<a name="434"></a><span class="comment">/**
+<a name="435"></a> * Removes flags from a client.  If the client is not an admin,
+<a name="436"></a> * this has no effect.
+<a name="437"></a> *
+<a name="438"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="439"></a> * <span class="doctag">@param</span> ...			Flags to remove from the client.
+<a name="440"></a> * <span class="doctag">@noreturn</span>
+<a name="441"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="442"></a> */</span>
+<a name="443"></a><span class="keyword">native</span> <span class="identifier">RemoveUserFlags</span>(<span class="identifier">client</span>, <span class="identifier">AdminFlag</span>:...);
+<a name="444"></a>
+<a name="445"></a><span class="comment">/** 
+<a name="446"></a> * Sets access flags on a client using bits instead of flags.  If the
+<a name="447"></a> * client is not an admin, and flags not 0, a temporary, anonymous AdminId is given.
+<a name="448"></a> *
+<a name="449"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="450"></a> * <span class="doctag">@param</span> flags			Bitstring of flags to set on client.
+<a name="451"></a> * <span class="doctag">@noreturn</span>
+<a name="452"></a> */</span>
+<a name="453"></a><span class="keyword">native</span> <span class="identifier">SetUserFlagBits</span>(<span class="identifier">client</span>, <span class="identifier">flags</span>);
+<a name="454"></a>
+<a name="455"></a><span class="comment">/**
+<a name="456"></a> * Returns client access flags.  If the client is not an admin,
+<a name="457"></a> * the result is always 0.
+<a name="458"></a> * 
+<a name="459"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="460"></a> * <span class="doctag">@return</span>				Flags
+<a name="461"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="462"></a> */</span>
+<a name="463"></a><span class="keyword">native</span> <span class="identifier">GetUserFlagBits</span>(<span class="identifier">client</span>);
+<a name="464"></a>
+<a name="465"></a><span class="comment">/**
+<a name="466"></a> * Returns whether a user can target another user.
+<a name="467"></a> * This is a helper function for CanAdminTarget.
+<a name="468"></a> *
+<a name="469"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="470"></a> * <span class="doctag">@param</span> target		Target player's index.
+<a name="471"></a> * <span class="doctag">@return</span>				True if target is targettable by the player, false otherwise.
+<a name="472"></a> * <span class="doctag">@error</span>				Invalid or unconnected player indexers.
+<a name="473"></a> */</span>
+<a name="474"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">CanUserTarget</span>(<span class="identifier">client</span>, <span class="identifier">target</span>);
+<a name="475"></a>
+<a name="476"></a><span class="comment">/**
+<a name="477"></a> * Runs through the Core-defined admin authorization checks on a player.
+<a name="478"></a> * Has no effect if the player is already an admin.
+<a name="479"></a> *
+<a name="480"></a> * Note: This function is based on the internal cache only.
+<a name="481"></a> *
+<a name="482"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="483"></a> * <span class="doctag">@return</span>				True if access was changed, false if it did not.
+<a name="484"></a> * <span class="doctag">@error</span>				Invalid client index or client not in-game AND authorized.
+<a name="485"></a> */</span>
+<a name="486"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">RunAdminCacheChecks</span>(<span class="identifier">client</span>);
+<a name="487"></a>
+<a name="488"></a><span class="comment">/**
+<a name="489"></a> * Signals that a player has completed post-connection admin checks.
+<a name="490"></a> * Has no effect if the player has already had this event signalled.
+<a name="491"></a> *
+<a name="492"></a> * Note: This must be sent even if no admin id was assigned.
+<a name="493"></a> *
+<a name="494"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="495"></a> * <span class="doctag">@noreturn</span>
+<a name="496"></a> * <span class="doctag">@error</span>				Invalid client index or client not in-game AND authorized.
+<a name="497"></a> */</span>
+<a name="498"></a><span class="keyword">native</span> <span class="identifier">NotifyPostAdminCheck</span>(<span class="identifier">client</span>);
+<a name="499"></a>
+<a name="500"></a><span class="comment">/** 
+<a name="501"></a> * Creates a fake client.
+<a name="502"></a> *
+<a name="503"></a> * <span class="doctag">@param</span> name			Name to use.
+<a name="504"></a> * <span class="doctag">@return</span>				Client index on success, 0 otherwise.
+<a name="505"></a> */</span>
+<a name="506"></a><span class="keyword">native</span> <span class="identifier">CreateFakeClient</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="507"></a>
+<a name="508"></a><span class="comment">/**
+<a name="509"></a> * Sets a convar value on a fake client.
+<a name="510"></a> *
+<a name="511"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="512"></a> * <span class="doctag">@param</span> cvar			ConVar name.
+<a name="513"></a> * <span class="doctag">@param</span> value			ConVar value.
+<a name="514"></a> * <span class="doctag">@noreturn</span>
+<a name="515"></a> * <span class="doctag">@error</span>				Invalid client index, client not connected,
+<a name="516"></a> *						or client not a fake client.
+<a name="517"></a> */</span>
+<a name="518"></a><span class="keyword">native</span> <span class="identifier">SetFakeClientConVar</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">cvar</span>[], <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[]);
+<a name="519"></a>
+<a name="520"></a><span class="comment">/**
+<a name="521"></a> * Returns the client's health.
+<a name="522"></a> *
+<a name="523"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="524"></a> * <span class="doctag">@return</span>				Health value.
+<a name="525"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="526"></a> */</span>
+<a name="527"></a><span class="keyword">native</span> <span class="identifier">GetClientHealth</span>(<span class="identifier">client</span>);
+<a name="528"></a>
+<a name="529"></a><span class="comment">/**
+<a name="530"></a> * Returns the client's model name.
+<a name="531"></a> *
+<a name="532"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="533"></a> * <span class="doctag">@param</span> model			Buffer to store the client's model name.
+<a name="534"></a> * <span class="doctag">@param</span> maxlen		Maximum length of string buffer (includes NULL terminator).
+<a name="535"></a> * <span class="doctag">@noreturn</span>
+<a name="536"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="537"></a> */</span>
+<a name="538"></a><span class="keyword">native</span> <span class="identifier">GetClientModel</span>(<span class="identifier">client</span>, <span class="keyword type">String</span>:<span class="identifier">model</span>[], <span class="identifier">maxlen</span>);
+<a name="539"></a>
+<a name="540"></a><span class="comment">/**
+<a name="541"></a> * Returns the client's weapon name.
+<a name="542"></a> *
+<a name="543"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="544"></a> * <span class="doctag">@param</span> weapon		Buffer to store the client's weapon name.
+<a name="545"></a> * <span class="doctag">@param</span> maxlen		Maximum length of string buffer (includes NULL terminator).
+<a name="546"></a> * <span class="doctag">@noreturn</span>
+<a name="547"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="548"></a> */</span>
+<a name="549"></a><span class="keyword">native</span> <span class="identifier">GetClientWeapon</span>(<span class="identifier">client</span>, <span class="keyword type">String</span>:<span class="identifier">weapon</span>[], <span class="identifier">maxlen</span>);
+<a name="550"></a>
+<a name="551"></a><span class="comment">/**
+<a name="552"></a> * Returns the client's max size vector.
+<a name="553"></a> *
+<a name="554"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="555"></a> * <span class="doctag">@param</span> vec			Destination vector to store the client's max size.
+<a name="556"></a> * <span class="doctag">@noreturn</span>
+<a name="557"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="558"></a> */</span>
+<a name="559"></a><span class="keyword">native</span> <span class="identifier">GetClientMaxs</span>(<span class="identifier">client</span>, <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>]);
+<a name="560"></a>
+<a name="561"></a><span class="comment">/**
+<a name="562"></a> * Returns the client's min size vector.
+<a name="563"></a> *
+<a name="564"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="565"></a> * <span class="doctag">@param</span> vec			Destination vector to store the client's min size.
+<a name="566"></a> * <span class="doctag">@noreturn</span>
+<a name="567"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="568"></a> */</span>
+<a name="569"></a><span class="keyword">native</span> <span class="identifier">GetClientMins</span>(<span class="identifier">client</span>, <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>]);
+<a name="570"></a>
+<a name="571"></a><span class="comment">/**
+<a name="572"></a> * Returns the client's position angle.
+<a name="573"></a> *
+<a name="574"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="575"></a> * <span class="doctag">@param</span> ang			Destination vector to store the client's position angle.
+<a name="576"></a> * <span class="doctag">@noreturn</span>
+<a name="577"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="578"></a> */</span>
+<a name="579"></a><span class="keyword">native</span> <span class="identifier">GetClientAbsAngles</span>(<span class="identifier">client</span>, <span class="keyword type">Float</span>:<span class="identifier">ang</span>[<span class="number">3</span>]);
+<a name="580"></a>
+<a name="581"></a><span class="comment">/**
+<a name="582"></a> * Returns the client's origin vector.
+<a name="583"></a> *
+<a name="584"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="585"></a> * <span class="doctag">@param</span> vec			Destination vector to store the client's origin vector.
+<a name="586"></a> * <span class="doctag">@noreturn</span>
+<a name="587"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="588"></a> */</span>
+<a name="589"></a><span class="keyword">native</span> <span class="identifier">GetClientAbsOrigin</span>(<span class="identifier">client</span>, <span class="keyword type">Float</span>:<span class="identifier">vec</span>[<span class="number">3</span>]);
+<a name="590"></a>
+<a name="591"></a><span class="comment">/**
+<a name="592"></a> * Returns the client's armor.
+<a name="593"></a> *
+<a name="594"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="595"></a> * <span class="doctag">@return</span>				Armor value.
+<a name="596"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="597"></a> */</span>
+<a name="598"></a><span class="keyword">native</span> <span class="identifier">GetClientArmor</span>(<span class="identifier">client</span>);
+<a name="599"></a>
+<a name="600"></a><span class="comment">/**
+<a name="601"></a> * Returns the client's death count.
+<a name="602"></a> *
+<a name="603"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="604"></a> * <span class="doctag">@return</span>				Death count.
+<a name="605"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="606"></a> */</span>
+<a name="607"></a><span class="keyword">native</span> <span class="identifier">GetClientDeaths</span>(<span class="identifier">client</span>);
+<a name="608"></a>
+<a name="609"></a><span class="comment">/**
+<a name="610"></a> * Returns the client's frag count.
+<a name="611"></a> *
+<a name="612"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="613"></a> * <span class="doctag">@return</span>				Frag count.
+<a name="614"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or no mod support.
+<a name="615"></a> */</span>
+<a name="616"></a><span class="keyword">native</span> <span class="identifier">GetClientFrags</span>(<span class="identifier">client</span>);
+<a name="617"></a>
+<a name="618"></a><span class="comment">/**
+<a name="619"></a> * Returns the client's send data rate in bytes/sec.
+<a name="620"></a> *
+<a name="621"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="622"></a> * <span class="doctag">@return</span>				Data rate.
+<a name="623"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="624"></a> */</span>
+<a name="625"></a><span class="keyword">native</span> <span class="identifier">GetClientDataRate</span>(<span class="identifier">client</span>);
+<a name="626"></a>
+<a name="627"></a><span class="comment">/**
+<a name="628"></a> * Returns if a client is timing out
+<a name="629"></a> *
+<a name="630"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="631"></a> * <span class="doctag">@return</span>				True if client is timing out, false otherwise.
+<a name="632"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="633"></a> */</span>
+<a name="634"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">IsClientTimingOut</span>(<span class="identifier">client</span>);
+<a name="635"></a>
+<a name="636"></a><span class="comment">/**
+<a name="637"></a> * Returns the client's connection time in seconds.
+<a name="638"></a> *
+<a name="639"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="640"></a> * <span class="doctag">@return</span>				Connection time.
+<a name="641"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="642"></a> */</span>
+<a name="643"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetClientTime</span>(<span class="identifier">client</span>);
+<a name="644"></a>
+<a name="645"></a><span class="comment">/**
+<a name="646"></a> * Returns the client's current latency (RTT), more accurate than GetAvgLatency but jittering.
+<a name="647"></a> *
+<a name="648"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="649"></a> * <span class="doctag">@param</span> flow			Traffic flowing direction.
+<a name="650"></a> * <span class="doctag">@return</span>				Latency, or -1 if network info is not available.
+<a name="651"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="652"></a> */</span>
+<a name="653"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetClientLatency</span>(<span class="identifier">client</span>, <span class="identifier">NetFlow</span>:<span class="identifier">flow</span>);
+<a name="654"></a>
+<a name="655"></a><span class="comment">/**
+<a name="656"></a> * Returns the client's average packet latency in seconds.
+<a name="657"></a> *
+<a name="658"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="659"></a> * <span class="doctag">@param</span> flow			Traffic flowing direction.
+<a name="660"></a> * <span class="doctag">@return</span>				Latency, or -1 if network info is not available.
+<a name="661"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="662"></a> */</span>
+<a name="663"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetClientAvgLatency</span>(<span class="identifier">client</span>, <span class="identifier">NetFlow</span>:<span class="identifier">flow</span>);
+<a name="664"></a>
+<a name="665"></a><span class="comment">/**
+<a name="666"></a> * Returns the client's average packet loss, values go from 0 to 1 (for percentages).
+<a name="667"></a> *
+<a name="668"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="669"></a> * <span class="doctag">@param</span> flow			Traffic flowing direction.
+<a name="670"></a> * <span class="doctag">@return</span>				Average packet loss, or -1 if network info is not available.
+<a name="671"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="672"></a> */</span>
+<a name="673"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetClientAvgLoss</span>(<span class="identifier">client</span>, <span class="identifier">NetFlow</span>:<span class="identifier">flow</span>);
+<a name="674"></a>
+<a name="675"></a><span class="comment">/**
+<a name="676"></a> * Returns the client's average packet choke, values go from 0 to 1 (for percentages).
+<a name="677"></a> *
+<a name="678"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="679"></a> * <span class="doctag">@param</span> flow			Traffic flowing direction.
+<a name="680"></a> * <span class="doctag">@return</span>				Average packet loss, or -1 if network info is not available.
+<a name="681"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="682"></a> */</span>
+<a name="683"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetClientAvgChoke</span>(<span class="identifier">client</span>, <span class="identifier">NetFlow</span>:<span class="identifier">flow</span>);
+<a name="684"></a>
+<a name="685"></a><span class="comment">/**
+<a name="686"></a> * Returns the client's data flow in bytes/sec.
+<a name="687"></a> *
+<a name="688"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="689"></a> * <span class="doctag">@param</span> flow			Traffic flowing direction.
+<a name="690"></a> * <span class="doctag">@return</span>				Data flow.
+<a name="691"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="692"></a> */</span>
+<a name="693"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetClientAvgData</span>(<span class="identifier">client</span>, <span class="identifier">NetFlow</span>:<span class="identifier">flow</span>);
+<a name="694"></a>
+<a name="695"></a><span class="comment">/**
+<a name="696"></a> * Returns the client's average packet frequency in packets/sec.
+<a name="697"></a> *
+<a name="698"></a> * <span class="doctag">@param</span> client		Player's index.
+<a name="699"></a> * <span class="doctag">@param</span> flow			Traffic flowing direction.
+<a name="700"></a> * <span class="doctag">@return</span>				Packet frequency.
+<a name="701"></a> * <span class="doctag">@error</span>				Invalid client index, client not in game, or fake client.
+<a name="702"></a> */</span>
+<a name="703"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">GetClientAvgPackets</span>(<span class="identifier">client</span>, <span class="identifier">NetFlow</span>:<span class="identifier">flow</span>);
+<a name="704"></a>
+<a name="705"></a><span class="comment">/**
+<a name="706"></a> * Translates an userid index to the real player index.
+<a name="707"></a> *
+<a name="708"></a> * <span class="doctag">@param</span> userid		Userid value.
+<a name="709"></a> * <span class="doctag">@return</span>				Client value.
+<a name="710"></a> * <span class="doctag">@error</span>				Returns 0 if invalid userid.
+<a name="711"></a> */</span>
+<a name="712"></a><span class="keyword">native</span> <span class="identifier">GetClientOfUserId</span>(<span class="identifier">userid</span>);
+<a name="713"></a>
+<a name="714"></a><span class="comment">/**
+<a name="715"></a> * Disconnects a client from the server as soon as the next frame starts.
+<a name="716"></a> *
+<a name="717"></a> * Note: Originally, KickClient() was immediate.  The delay was introduced 
+<a name="718"></a> * because despite warnings, plugins were using it in ways that would crash. 
+<a name="719"></a> * The new safe version can break cases that rely on immediate disconnects, 
+<a name="720"></a> * but ensures that plugins do not accidentally cause crashes.
+<a name="721"></a> *
+<a name="722"></a> * If you need immediate disconnects, use KickClientEx().
+<a name="723"></a> *
+<a name="724"></a> * Note: IsClientInKickQueue() will return true before the kick occurs.
+<a name="725"></a> *
+<a name="726"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="727"></a> * <span class="doctag">@param</span> format		Optional formatting rules for disconnect reason.
+<a name="728"></a> *                      Note that a period is automatically appended to the string by the engine.
+<a name="729"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="730"></a> * <span class="doctag">@noreturn</span>
+<a name="731"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="732"></a> */</span>
+<a name="733"></a><span class="keyword">native</span> <span class="identifier">KickClient</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[]=<span class="string">""</span>, <span class="keyword type">any</span>:...);
+<a name="734"></a>
+<a name="735"></a><span class="comment">/**
+<a name="736"></a> * Immediately disconnects a client from the server.
+<a name="737"></a> *
+<a name="738"></a> * Kicking clients from certain events or callbacks may cause crashes.  If in 
+<a name="739"></a> * doubt, create a short (0.1 second) timer to kick the client in the next 
+<a name="740"></a> * available frame.
+<a name="741"></a> *
+<a name="742"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="743"></a> * <span class="doctag">@param</span> format		Optional formatting rules for disconnect reason.
+<a name="744"></a> *                      Note that a period is automatically appended to the string by the engine.
+<a name="745"></a> * <span class="doctag">@param</span> ...			Variable number of format parameters.
+<a name="746"></a> * <span class="doctag">@noreturn</span>
+<a name="747"></a> * <span class="doctag">@error</span>				Invalid client index, or client not connected.
+<a name="748"></a> */</span>
+<a name="749"></a><span class="keyword">native</span> <span class="identifier">KickClientEx</span>(<span class="identifier">client</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">format</span>[]=<span class="string">""</span>, <span class="keyword type">any</span>:...);
+<a name="750"></a>
+<a name="751"></a><span class="comment">/**
+<a name="752"></a> * Changes a client's team through the mod's generic team changing function.
+<a name="753"></a> * On CS:S, this will kill the player.
+<a name="754"></a> *
+<a name="755"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="756"></a> * <span class="doctag">@param</span> team			Mod-specific team index.
+<a name="757"></a> * <span class="doctag">@noreturn</span>
+<a name="758"></a> * <span class="doctag">@error</span>				Invalid client index, client not connected, or lack of 
+<a name="759"></a> *						mod support.
+<a name="760"></a> */</span>
+<a name="761"></a><span class="keyword">native</span> <span class="identifier">ChangeClientTeam</span>(<span class="identifier">client</span>, <span class="identifier">team</span>);
+<a name="762"></a>
+<a name="763"></a><span class="comment">/**
+<a name="764"></a> * Returns the clients unique serial identifier.
+<a name="765"></a> *
+<a name="766"></a> * <span class="doctag">@param</span> client		Client index.
+<a name="767"></a> * <span class="doctag">@return</span>	Serial number.
+<a name="768"></a> */</span>
+<a name="769"></a><span class="keyword">native</span> <span class="identifier">GetClientSerial</span>(<span class="identifier">client</span>);
+<a name="770"></a>
+<a name="771"></a><span class="comment">/**
+<a name="772"></a> * Returns the client index by its serial number.
+<a name="773"></a> *
+<a name="774"></a> * <span class="doctag">@param</span> serial		Serial number.
+<a name="775"></a> * <span class="doctag">@return</span>				Client index, or 0 for invalid serial.
+<a name="776"></a> */</span>
+<a name="777"></a><span class="keyword">native</span> <span class="identifier">GetClientFromSerial</span>(<span class="identifier">serial</span>);
+<a name="778"></a>
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>

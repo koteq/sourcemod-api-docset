@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<title>dbi.inc</title>
+<link rel="stylesheet" href="style.css"/>
+<pre><a name="1"></a><span class="comment">/**
+<a name="2"></a> * vim: set ts=4 :
+<a name="3"></a> * =============================================================================
+<a name="4"></a> * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+<a name="5"></a> * =============================================================================
+<a name="6"></a> *
+<a name="7"></a> * This file is part of the SourceMod/SourcePawn SDK.
+<a name="8"></a> *
+<a name="9"></a> * This program is free software; you can redistribute it and/or modify it under
+<a name="10"></a> * the terms of the GNU General Public License, version 3.0, as published by the
+<a name="11"></a> * Free Software Foundation.
+<a name="12"></a> * 
+<a name="13"></a> * This program is distributed in the hope that it will be useful, but WITHOUT
+<a name="14"></a> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+<a name="15"></a> * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+<a name="16"></a> * details.
+<a name="17"></a> *
+<a name="18"></a> * You should have received a copy of the GNU General Public License along with
+<a name="19"></a> * this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<a name="20"></a> *
+<a name="21"></a> * As a special exception, AlliedModders LLC gives you permission to link the
+<a name="22"></a> * code of this program (as well as its derivative works) to "Half-Life 2," the
+<a name="23"></a> * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+<a name="24"></a> * by the Valve Corporation.  You must obey the GNU General Public License in
+<a name="25"></a> * all respects for all other code used.  Additionally, AlliedModders LLC grants
+<a name="26"></a> * this exception to all derivative works.  AlliedModders LLC defines further
+<a name="27"></a> * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+<a name="28"></a> * or &lt;http://www.sourcemod.net/license.php&gt;.
+<a name="29"></a> *
+<a name="30"></a> * Version: $Id$
+<a name="31"></a> */</span>
+<a name="32"></a> 
+<a name="33"></a><span class="preprocessor">#if <span class="identifier">defined</span> <span class="identifier">_dbi_included</span>
+<a name="34"></a></span> <span class="preprocessor">#endinput
+<a name="35"></a></span><span class="preprocessor">#endif
+<a name="36"></a></span><span class="preprocessor">#define <span class="identifier">_dbi_included</span>
+<a name="37"></a></span>
+<a name="38"></a><span class="comment">/**
+<a name="39"></a> * <span class="doctag">@handle</span> Driver
+<a name="40"></a> *
+<a name="41"></a> * Contains information about an SQL driver.
+<a name="42"></a> */</span>
+<a name="43"></a> 
+<a name="44"></a><span class="comment">/**
+<a name="45"></a> * <span class="doctag">@handle</span> Database
+<a name="46"></a> *
+<a name="47"></a> * Contains information about a database connection.
+<a name="48"></a> */</span>
+<a name="49"></a> 
+<a name="50"></a><span class="comment">/**
+<a name="51"></a> * <span class="doctag">@handle</span> Query
+<a name="52"></a> *
+<a name="53"></a> * Contains information about an active query and its 
+<a name="54"></a> * result sets.
+<a name="55"></a> */</span>
+<a name="56"></a> 
+<a name="57"></a><span class="comment">/**
+<a name="58"></a> * <span class="doctag">@handle</span> Statement : Query
+<a name="59"></a> *
+<a name="60"></a> * Extends a Query Handle and can be used as a Query Handle.
+<a name="61"></a> * Statement Handles are for prepared queries and contain
+<a name="62"></a> * their own function for binding parameters.  Statement
+<a name="63"></a> * Handles can be used instead of database Handles in a few
+<a name="64"></a> * select functions.
+<a name="65"></a> */</span>
+<a name="66"></a>
+<a name="67"></a><span class="comment">/**
+<a name="68"></a> * Describes a database field fetch status.
+<a name="69"></a> */</span>
+<a name="70"></a><span class="keyword">enum</span> <span class="identifier">DBResult</span>
+<a name="71"></a>{
+<a name="72"></a>	<span class="identifier">DBVal_Error</span> = <span class="number">0</span>,		<span class="comment">/**&lt; Column number/field is invalid. */</span>
+<a name="73"></a>	<span class="identifier">DBVal_TypeMismatch</span> = <span class="number">1</span>,	<span class="comment">/**&lt; You cannot retrieve this data with this type. */</span>
+<a name="74"></a>	<span class="identifier">DBVal_Null</span> = <span class="number">2</span>,			<span class="comment">/**&lt; Field has no data (NULL) */</span>
+<a name="75"></a>	<span class="identifier">DBVal_Data</span> = <span class="number">3</span>,			<span class="comment">/**&lt; Field has data */</span>
+<a name="76"></a>};
+<a name="77"></a>
+<a name="78"></a><span class="comment">/**
+<a name="79"></a> * Describes binding types.
+<a name="80"></a> */</span>
+<a name="81"></a><span class="keyword">enum</span> <span class="identifier">DBBindType</span>
+<a name="82"></a>{
+<a name="83"></a>	<span class="identifier">DBBind_Int</span> = <span class="number">0</span>,			<span class="comment">/**&lt; Bind an integer. */</span>
+<a name="84"></a>	<span class="identifier">DBBind_Float</span> = <span class="number">1</span>,		<span class="comment">/**&lt; Bind a float. */</span>
+<a name="85"></a>	<span class="identifier">DBBind_String</span> = <span class="number">2</span>,		<span class="comment">/**&lt; Bind a string. */</span>
+<a name="86"></a>};
+<a name="87"></a>
+<a name="88"></a><span class="comment">/**
+<a name="89"></a> * Threading priority level.
+<a name="90"></a> */</span>
+<a name="91"></a><span class="keyword">enum</span> <span class="identifier">DBPriority</span>
+<a name="92"></a>{
+<a name="93"></a>	<span class="identifier">DBPrio_High</span> = <span class="number">0</span>,		<span class="comment">/**&lt; High priority. */</span>
+<a name="94"></a>	<span class="identifier">DBPrio_Normal</span> = <span class="number">1</span>,		<span class="comment">/**&lt; Normal priority. */</span>
+<a name="95"></a>	<span class="identifier">DBPrio_Low</span> = <span class="number">2</span>,			<span class="comment">/**&lt; Low priority. */</span>
+<a name="96"></a>};
+<a name="97"></a>
+<a name="98"></a><span class="comment">/**
+<a name="99"></a> * Creates an SQL connection from a named configuration.
+<a name="100"></a> *
+<a name="101"></a> * <span class="doctag">@param</span> confname		Named configuration.
+<a name="102"></a> * <span class="doctag">@param</span> persistent	True to re-use a previous persistent connection if
+<a name="103"></a> *						possible, false otherwise.
+<a name="104"></a> * <span class="doctag">@param</span> error			Error buffer.
+<a name="105"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the error buffer.
+<a name="106"></a> * <span class="doctag">@return</span>				A database connection Handle, or INVALID_HANDLE on failure.
+<a name="107"></a> */</span>
+<a name="108"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_Connect</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">confname</span>[], <span class="keyword type">bool</span>:<span class="identifier">persistent</span>, <span class="keyword type">String</span>:<span class="identifier">error</span>[], <span class="identifier">maxlength</span>);
+<a name="109"></a>
+<a name="110"></a><span class="comment">/**
+<a name="111"></a> * Creates a default SQL connection.
+<a name="112"></a> *
+<a name="113"></a> * <span class="doctag">@param</span> error			Error buffer.
+<a name="114"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the error buffer.
+<a name="115"></a> * <span class="doctag">@param</span> persistent	True to re-use a previous persistent connection
+<a name="116"></a> *						if possible, false otherwise.
+<a name="117"></a> * <span class="doctag">@return</span>				A database connection Handle, or INVALID_HANDLE on failure.
+<a name="118"></a> * 						On failure the error buffer will be filled with a message.
+<a name="119"></a> */</span>
+<a name="120"></a><span class="keyword">stock</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_DefConnect</span>(<span class="keyword type">String</span>:<span class="identifier">error</span>[], <span class="identifier">maxlength</span>, <span class="keyword type">bool</span>:<span class="identifier">persistent</span>=<span class="keyword literal">true</span>)
+<a name="121"></a>{
+<a name="122"></a>	<span class="keyword statement">return</span> <span class="identifier">SQL_Connect</span>(<span class="string">"default"</span>, <span class="identifier">persistent</span>, <span class="identifier">error</span>, <span class="identifier">maxlength</span>);
+<a name="123"></a>}
+<a name="124"></a>
+<a name="125"></a><span class="comment">/**
+<a name="126"></a> * Connects to a database using key value pairs containing the database info.
+<a name="127"></a> * The key/value pairs should match what would be in databases.cfg.
+<a name="128"></a> *
+<a name="129"></a> * I.e. "driver" should be "default" or a driver name (or ommitted for 
+<a name="130"></a> * the default).  For SQLite, only the "database" parameter is needed in addition.
+<a name="131"></a> * For drivers which require external connections, more of the parameters may be 
+<a name="132"></a> * needed.
+<a name="133"></a> *
+<a name="134"></a> * In general it is discouraged to use this function.  Connections should go through 
+<a name="135"></a> * databases.cfg for greatest flexibility on behalf of users.
+<a name="136"></a> *
+<a name="137"></a> * <span class="doctag">@param</span> keyvalues		Key/value pairs from a KeyValues handle, describing the connection.
+<a name="138"></a> * <span class="doctag">@param</span> error			Error buffer.
+<a name="139"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the error buffer.
+<a name="140"></a> * <span class="doctag">@param</span> persistent	True to re-use a previous persistent connection if
+<a name="141"></a> *						possible, false otherwise.
+<a name="142"></a> * <span class="doctag">@return</span>				A database connection Handle, or INVALID_HANDLE on failure.
+<a name="143"></a> * 						On failure the error buffer will be filled with a message.
+<a name="144"></a> * <span class="doctag">@error</span>				Invalid KeyValues handle.
+<a name="145"></a> */</span>
+<a name="146"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_ConnectCustom</span>(<span class="keyword type">Handle</span>:<span class="identifier">keyvalues</span>,
+<a name="147"></a>								<span class="keyword type">String</span>:<span class="identifier">error</span>[],
+<a name="148"></a>								<span class="identifier">maxlength</span>,
+<a name="149"></a>								<span class="keyword type">bool</span>:<span class="identifier">persistent</span>);
+<a name="150"></a>
+<a name="151"></a><span class="comment">/**
+<a name="152"></a> * Grabs a handle to an SQLite database, creating one if it does not exist.  
+<a name="153"></a> *
+<a name="154"></a> * Unless there are extenuating circumstances, you should consider using "sourcemod-local" as the 
+<a name="155"></a> * database name.  This provides some unification between plugins on behalf of users.
+<a name="156"></a> *
+<a name="157"></a> * As a precaution, you should always create some sort of unique prefix to your table names so 
+<a name="158"></a> * there are no conflicts, and you should never drop or modify tables that you do not own.
+<a name="159"></a> *
+<a name="160"></a> * <span class="doctag">@param</span> database		Database name.  
+<a name="161"></a> * <span class="doctag">@param</span> error			Error buffer.
+<a name="162"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the error buffer.
+<a name="163"></a> * <span class="doctag">@return</span>				A database connection Handle, or INVALID_HANDLE on failure.
+<a name="164"></a> * 						On failure the error buffer will be filled with a message.
+<a name="165"></a> */</span>
+<a name="166"></a><span class="keyword">stock</span> <span class="keyword type">Handle</span>:<span class="identifier">SQLite_UseDatabase</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">database</span>[],
+<a name="167"></a>								<span class="keyword type">String</span>:<span class="identifier">error</span>[], 
+<a name="168"></a>								<span class="identifier">maxlength</span>)
+<a name="169"></a>{
+<a name="170"></a>	<span class="keyword">new</span> <span class="keyword type">Handle</span>:<span class="identifier">kv</span>, <span class="keyword type">Handle</span>:<span class="identifier">db</span>;
+<a name="171"></a>
+<a name="172"></a>	<span class="identifier">kv</span> = <span class="identifier">CreateKeyValues</span>(<span class="string">""</span>);
+<a name="173"></a>	<span class="identifier">KvSetString</span>(<span class="identifier">kv</span>, <span class="string">"driver"</span>, <span class="string">"sqlite"</span>);
+<a name="174"></a>	<span class="identifier">KvSetString</span>(<span class="identifier">kv</span>, <span class="string">"database"</span>, <span class="identifier">database</span>);
+<a name="175"></a>
+<a name="176"></a>	<span class="identifier">db</span> = <span class="identifier">SQL_ConnectCustom</span>(<span class="identifier">kv</span>, <span class="identifier">error</span>, <span class="identifier">maxlength</span>, <span class="keyword literal">false</span>);
+<a name="177"></a>
+<a name="178"></a>	<span class="identifier">CloseHandle</span>(<span class="identifier">kv</span>);
+<a name="179"></a>
+<a name="180"></a>	<span class="keyword statement">return</span> <span class="identifier">db</span>;
+<a name="181"></a>}
+<a name="182"></a>
+<a name="183"></a><span class="comment">/**
+<a name="184"></a> * This function is deprecated.  Use SQL_ConnectCustom or SQLite_UseDatabase instead.
+<a name="185"></a> */</span>
+<a name="186"></a><span class="preprocessor">#pragma <span class="identifier">deprecated</span> <span class="identifier">Use</span> <span class="identifier">SQL_ConnectCustom</span> <span class="identifier">instead</span>.
+<a name="187"></a></span><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_ConnectEx</span>(<span class="keyword type">Handle</span>:<span class="identifier">driver</span>, 
+<a name="188"></a>							<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">host</span>[],
+<a name="189"></a>							<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">user</span>[], 
+<a name="190"></a>							<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">pass</span>[],
+<a name="191"></a>							<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">database</span>[],
+<a name="192"></a>							<span class="keyword type">String</span>:<span class="identifier">error</span>[],
+<a name="193"></a>							<span class="identifier">maxlength</span>,
+<a name="194"></a>							<span class="keyword type">bool</span>:<span class="identifier">persistent</span>=<span class="keyword literal">true</span>,
+<a name="195"></a>							<span class="identifier">port</span>=<span class="number">0</span>,
+<a name="196"></a>							<span class="identifier">maxTimeout</span>=<span class="number">0</span>);
+<a name="197"></a>							
+<a name="198"></a><span class="comment">/**
+<a name="199"></a> * Returns if a named configuration is present in databases.cfg.
+<a name="200"></a> *
+<a name="201"></a> * <span class="doctag">@param</span> name			Configuration name.
+<a name="202"></a> * <span class="doctag">@return</span>				True if it exists, false otherwise.
+<a name="203"></a> */</span>
+<a name="204"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_CheckConfig</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]);
+<a name="205"></a>
+<a name="206"></a><span class="comment">/**
+<a name="207"></a> * Returns a driver Handle from a name string.
+<a name="208"></a> *
+<a name="209"></a> * If the driver is not found, SourceMod will attempt
+<a name="210"></a> * to load an extension named dbi.&lt;name&gt;.ext.[dll|so].
+<a name="211"></a> *
+<a name="212"></a> * <span class="doctag">@param</span> name			Driver identification string, or an empty
+<a name="213"></a> *						string to return the default driver.
+<a name="214"></a> * <span class="doctag">@return</span>				Driver Handle, or INVALID_HANDLE on failure.
+<a name="215"></a> */</span>
+<a name="216"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_GetDriver</span>(<span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]=<span class="string">""</span>);
+<a name="217"></a>
+<a name="218"></a><span class="comment">/**
+<a name="219"></a> * Reads the driver of an opened database.
+<a name="220"></a> *
+<a name="221"></a> * <span class="doctag">@param</span> database		Database Handle.
+<a name="222"></a> * <span class="doctag">@param</span> ident			Option buffer to store the identification string.
+<a name="223"></a> * <span class="doctag">@param</span> ident_length	Maximum length of the buffer.
+<a name="224"></a> * <span class="doctag">@return</span>				Driver Handle.
+<a name="225"></a> */</span>
+<a name="226"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_ReadDriver</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>, <span class="keyword type">String</span>:<span class="identifier">ident</span>[]=<span class="string">""</span>, <span class="identifier">ident_length</span>=<span class="number">0</span>);
+<a name="227"></a>
+<a name="228"></a><span class="comment">/**
+<a name="229"></a> * Retrieves a driver's identification string.
+<a name="230"></a> *
+<a name="231"></a> * Example: "mysql", "sqlite"
+<a name="232"></a> *
+<a name="233"></a> * <span class="doctag">@param</span> driver		Driver Handle, or INVALID_HANDLE for the default driver.
+<a name="234"></a> * <span class="doctag">@param</span> ident			Identification string buffer.
+<a name="235"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="236"></a> * <span class="doctag">@noreturn</span>
+<a name="237"></a> * <span class="doctag">@error</span>				Invalid Handle other than INVALID_HANDLE.
+<a name="238"></a> */</span>
+<a name="239"></a><span class="keyword">native</span> <span class="identifier">SQL_GetDriverIdent</span>(<span class="keyword type">Handle</span>:<span class="identifier">driver</span>, <span class="keyword type">String</span>:<span class="identifier">ident</span>[], <span class="identifier">maxlength</span>);
+<a name="240"></a>
+<a name="241"></a><span class="comment">/**
+<a name="242"></a> * Retrieves a driver's product string.
+<a name="243"></a> *
+<a name="244"></a> * Example: "MySQL", "SQLite"
+<a name="245"></a> *
+<a name="246"></a> * <span class="doctag">@param</span> driver		Driver Handle, or INVALID_HANDLE for the default driver.
+<a name="247"></a> * <span class="doctag">@param</span> product		Product string buffer.
+<a name="248"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="249"></a> * <span class="doctag">@noreturn</span>
+<a name="250"></a> * <span class="doctag">@error</span>				Invalid Handle other than INVALID_HANDLE.
+<a name="251"></a> */</span>
+<a name="252"></a><span class="keyword">native</span> <span class="identifier">SQL_GetDriverProduct</span>(<span class="keyword type">Handle</span>:<span class="identifier">driver</span>, <span class="keyword type">String</span>:<span class="identifier">product</span>[], <span class="identifier">maxlength</span>);
+<a name="253"></a>
+<a name="254"></a><span class="comment">/**
+<a name="255"></a> * Sets the character set of the current connection. 
+<a name="256"></a> * Like SET NAMES .. in mysql, but stays after connection problems.
+<a name="257"></a> * 
+<a name="258"></a> * Example: "utf8", "latin1"
+<a name="259"></a> *
+<a name="260"></a> * <span class="doctag">@param</span> database      Database Handle.
+<a name="261"></a> * <span class="doctag">@param</span> characterset  The character set string to change to.
+<a name="262"></a> * <span class="doctag">@return</span>              True, if character set was changed, false otherwise.
+<a name="263"></a> */</span>
+<a name="264"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_SetCharset</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">charset</span>[]);
+<a name="265"></a>
+<a name="266"></a><span class="comment">/**
+<a name="267"></a> * Returns the number of affected rows from the last query.
+<a name="268"></a> *
+<a name="269"></a> * <span class="doctag">@param</span> hndl			A database OR statement Handle.
+<a name="270"></a> * <span class="doctag">@return</span>				Number of rows affected by the last query.
+<a name="271"></a> * <span class="doctag">@error</span>				Invalid database or statement Handle.
+<a name="272"></a> */</span>
+<a name="273"></a><span class="keyword">native</span> <span class="identifier">SQL_GetAffectedRows</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>);
+<a name="274"></a>
+<a name="275"></a><span class="comment">/**
+<a name="276"></a> * Returns the last query's insertion id.
+<a name="277"></a> *
+<a name="278"></a> * <span class="doctag">@param</span> hndl			A database, query, OR statement Handle.
+<a name="279"></a> * <span class="doctag">@return</span>				Last query's insertion id.
+<a name="280"></a> * <span class="doctag">@error</span>				Invalid database, query, or statement Handle.
+<a name="281"></a> */</span>
+<a name="282"></a><span class="keyword">native</span> <span class="identifier">SQL_GetInsertId</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>);
+<a name="283"></a>
+<a name="284"></a><span class="comment">/**
+<a name="285"></a> * Returns the error reported by the last query.
+<a name="286"></a> *
+<a name="287"></a> * <span class="doctag">@param</span> hndl			A database, query, OR statement Handle.
+<a name="288"></a> * <span class="doctag">@param</span> error			Error buffer.
+<a name="289"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="290"></a> * <span class="doctag">@return</span>				True if there was an error, false otherwise.
+<a name="291"></a> * <span class="doctag">@error</span>				Invalid database, query, or statement Handle.
+<a name="292"></a> */</span>
+<a name="293"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_GetError</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword type">String</span>:<span class="identifier">error</span>[], <span class="identifier">maxlength</span>);
+<a name="294"></a>
+<a name="295"></a><span class="comment">/**
+<a name="296"></a> * Escapes a database string for literal insertion.  This is not needed
+<a name="297"></a> * for binding strings in prepared statements.  
+<a name="298"></a> *
+<a name="299"></a> * Generally, database strings are inserted into queries enclosed in 
+<a name="300"></a> * single quotes (').  If user input has a single quote in it, the 
+<a name="301"></a> * quote needs to be escaped.  This function ensures that any unsafe 
+<a name="302"></a> * characters are safely escaped according to the database engine and 
+<a name="303"></a> * the database's character set.
+<a name="304"></a> *
+<a name="305"></a> * NOTE: SourceMod only guarantees properly escaped strings when the query
+<a name="306"></a> * encloses the string in ''. While drivers tend to allow " instead, the string
+<a name="307"></a> * may be not be escaped (for example, on SQLite)!
+<a name="308"></a> *
+<a name="309"></a> * <span class="doctag">@param</span> database			A database Handle.
+<a name="310"></a> * <span class="doctag">@param</span> string		String to quote.
+<a name="311"></a> * <span class="doctag">@param</span> buffer		Buffer to store quoted string in.
+<a name="312"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the buffer.
+<a name="313"></a> * <span class="doctag">@param</span> written		Optionally returns the number of bytes written.
+<a name="314"></a> * <span class="doctag">@return</span>				True on success, false if buffer is not big enough.
+<a name="315"></a> *						The buffer must be at least 2*strlen(string)+1.
+<a name="316"></a> * <span class="doctag">@error</span>				Invalid database or statement Handle.
+<a name="317"></a> */</span>
+<a name="318"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_EscapeString</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>, 
+<a name="319"></a>							 <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">string</span>[], 
+<a name="320"></a>							 <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], 
+<a name="321"></a>							 <span class="identifier">maxlength</span>, 
+<a name="322"></a>							 &amp;<span class="identifier">written</span>=<span class="number">0</span>);
+<a name="323"></a>
+<a name="324"></a><span class="comment">/**
+<a name="325"></a> * This is a backwards compatibility stock.  You should use SQL_EscapeString() 
+<a name="326"></a> * instead, as this function will probably be deprecated in SourceMod 1.1.
+<a name="327"></a> */</span>
+<a name="328"></a><span class="keyword">stock</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_QuoteString</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>,
+<a name="329"></a>						   <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">string</span>[],
+<a name="330"></a>						   <span class="keyword type">String</span>:<span class="identifier">buffer</span>[],
+<a name="331"></a>						   <span class="identifier">maxlength</span>,
+<a name="332"></a>						   &amp;<span class="identifier">written</span>=<span class="number">0</span>)
+<a name="333"></a>{
+<a name="334"></a>	<span class="keyword statement">return</span> <span class="identifier">SQL_EscapeString</span>(<span class="identifier">database</span>, <span class="identifier">string</span>, <span class="identifier">buffer</span>, <span class="identifier">maxlength</span>, <span class="identifier">written</span>);
+<a name="335"></a>}
+<a name="336"></a>
+<a name="337"></a><span class="comment">/**
+<a name="338"></a> * Executes a query and ignores the result set.
+<a name="339"></a> *
+<a name="340"></a> * <span class="doctag">@param</span> database		A database Handle.
+<a name="341"></a> * <span class="doctag">@param</span> query			Query string.
+<a name="342"></a> * <span class="doctag">@param</span> len			Optional parameter to specify the query length, in 
+<a name="343"></a> *						bytes.  This can be used to send binary queries that 
+<a name="344"></a> * 						have a premature terminator.
+<a name="345"></a> * <span class="doctag">@return</span>				True if query succeeded, false otherwise.  Use
+<a name="346"></a> *						SQL_GetError to find the last error.
+<a name="347"></a> * <span class="doctag">@error</span>				Invalid database Handle.
+<a name="348"></a> */</span>
+<a name="349"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_FastQuery</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">query</span>[], <span class="identifier">len</span>=-<span class="number">1</span>);
+<a name="350"></a>
+<a name="351"></a><span class="comment">/**
+<a name="352"></a> * Executes a simple query and returns a new query Handle for
+<a name="353"></a> * receiving the results.
+<a name="354"></a> *
+<a name="355"></a> * <span class="doctag">@param</span> database		A database Handle.
+<a name="356"></a> * <span class="doctag">@param</span> query			Query string.
+<a name="357"></a> * <span class="doctag">@param</span> len			Optional parameter to specify the query length, in 
+<a name="358"></a> *						bytes.  This can be used to send binary queries that 
+<a name="359"></a> * 						have a premature terminator.
+<a name="360"></a> * <span class="doctag">@return</span>				A new Query Handle on success, INVALID_HANDLE
+<a name="361"></a> *						otherwise.  The Handle must be freed with CloseHandle().
+<a name="362"></a> * <span class="doctag">@error</span>				Invalid database Handle.
+<a name="363"></a> */</span>
+<a name="364"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_Query</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">query</span>[], <span class="identifier">len</span>=-<span class="number">1</span>);
+<a name="365"></a>
+<a name="366"></a><span class="comment">/**
+<a name="367"></a> * Creates a new prepared statement query.  Prepared statements can
+<a name="368"></a> * be executed any number of times.  They can also have placeholder
+<a name="369"></a> * parameters, similar to variables, which can be bound safely and
+<a name="370"></a> * securely (for example, you do not need to quote bound strings).
+<a name="371"></a> *
+<a name="372"></a> * Statement handles will work in any function that accepts a Query handle.
+<a name="373"></a> *
+<a name="374"></a> * <span class="doctag">@param</span> database		A database Handle.
+<a name="375"></a> * <span class="doctag">@param</span> query			Query string.
+<a name="376"></a> * <span class="doctag">@param</span> error			Error buffer.
+<a name="377"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the error buffer.
+<a name="378"></a> * <span class="doctag">@return</span>				A new statement Handle on success, INVALID_HANDLE
+<a name="379"></a> *						otherwise.  The Handle must be freed with CloseHandle().
+<a name="380"></a> * <span class="doctag">@error</span>				Invalid database Handle.
+<a name="381"></a> */</span>
+<a name="382"></a><span class="keyword">native</span> <span class="keyword type">Handle</span>:<span class="identifier">SQL_PrepareQuery</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">query</span>[], <span class="keyword type">String</span>:<span class="identifier">error</span>[], <span class="identifier">maxlength</span>);
+<a name="383"></a>
+<a name="384"></a><span class="comment">/**
+<a name="385"></a> * Advances to the next set of results.
+<a name="386"></a> *
+<a name="387"></a> * In some SQL implementations, multiple result sets can exist on one query.  
+<a name="388"></a> * This is possible in MySQL with simple queries when executing a CALL 
+<a name="389"></a> * query.  If this is the case, all result sets must be processed before
+<a name="390"></a> * another query is made.
+<a name="391"></a> *
+<a name="392"></a> * <span class="doctag">@param</span> query			A query Handle.
+<a name="393"></a> * <span class="doctag">@return</span>				True if there was another result set, false otherwise.
+<a name="394"></a> * <span class="doctag">@error</span>				Invalid query Handle.
+<a name="395"></a> */</span>
+<a name="396"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_FetchMoreResults</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>);
+<a name="397"></a>
+<a name="398"></a><span class="comment">/**
+<a name="399"></a> * Returns whether or not a result set exists.  This will
+<a name="400"></a> * return true even if 0 results were returned, but false
+<a name="401"></a> * on queries like UPDATE, INSERT, or DELETE.
+<a name="402"></a> *
+<a name="403"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="404"></a> * <span class="doctag">@return</span>				True if there is a result set, false otherwise.
+<a name="405"></a> * <span class="doctag">@error</span>				Invalid query Handle.
+<a name="406"></a> */</span>
+<a name="407"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_HasResultSet</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>);
+<a name="408"></a>
+<a name="409"></a><span class="comment">/**
+<a name="410"></a> * Retrieves the number of rows in the last result set.
+<a name="411"></a> * 
+<a name="412"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="413"></a> * <span class="doctag">@return</span>				Number of rows in the current result set.
+<a name="414"></a> * <span class="doctag">@error</span>				Invalid query Handle.
+<a name="415"></a> */</span>
+<a name="416"></a><span class="keyword">native</span> <span class="identifier">SQL_GetRowCount</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>);
+<a name="417"></a>
+<a name="418"></a><span class="comment">/**
+<a name="419"></a> * Retrieves the number of fields in the last result set.
+<a name="420"></a> * 
+<a name="421"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="422"></a> * <span class="doctag">@return</span>				Number of fields in the current result set.
+<a name="423"></a> * <span class="doctag">@error</span>				Invalid query Handle.
+<a name="424"></a> */</span>
+<a name="425"></a><span class="keyword">native</span> <span class="identifier">SQL_GetFieldCount</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>);
+<a name="426"></a>
+<a name="427"></a><span class="comment">/**
+<a name="428"></a> * Retrieves the name of a field by index.
+<a name="429"></a> * 
+<a name="430"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="431"></a> * <span class="doctag">@param</span> field			Field number (starting from 0).
+<a name="432"></a> * <span class="doctag">@param</span> name			Name buffer.
+<a name="433"></a> * <span class="doctag">@param</span> maxlength		Maximum length of the name buffer.
+<a name="434"></a> * <span class="doctag">@noreturn</span>
+<a name="435"></a> * <span class="doctag">@error</span>				Invalid query Handle, invalid field index, or
+<a name="436"></a> *						no current result set.
+<a name="437"></a> */</span>
+<a name="438"></a><span class="keyword">native</span> <span class="identifier">SQL_FieldNumToName</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>, <span class="identifier">field</span>, <span class="keyword type">String</span>:<span class="identifier">name</span>[], <span class="identifier">maxlength</span>);
+<a name="439"></a>
+<a name="440"></a><span class="comment">/**
+<a name="441"></a> * Retrieves a field index by name.
+<a name="442"></a> * 
+<a name="443"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="444"></a> * <span class="doctag">@param</span> name			Name of the field (case sensitive).
+<a name="445"></a> * <span class="doctag">@param</span> field			Variable to store field index in.
+<a name="446"></a> * <span class="doctag">@return</span>				True if found, false if not found.
+<a name="447"></a> * <span class="doctag">@error</span>				Invalid query Handle or no current result set.
+<a name="448"></a> */</span>
+<a name="449"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_FieldNameToNum</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[], &amp;<span class="identifier">field</span>);
+<a name="450"></a>
+<a name="451"></a><span class="comment">/**
+<a name="452"></a> * Fetches a row from the current result set.  This must be 
+<a name="453"></a> * successfully called before any results are fetched.
+<a name="454"></a> *
+<a name="455"></a> * If this function fails, SQL_MoreResults() can be used to
+<a name="456"></a> * tell if there was an error or the result set is finished.
+<a name="457"></a> * 
+<a name="458"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="459"></a> * <span class="doctag">@return</span>				True if a row was fetched, false otherwise.
+<a name="460"></a> * <span class="doctag">@error</span>				Invalid query Handle.
+<a name="461"></a> */</span>
+<a name="462"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_FetchRow</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>);
+<a name="463"></a>
+<a name="464"></a><span class="comment">/**
+<a name="465"></a> * Returns if there are more rows.
+<a name="466"></a> * 
+<a name="467"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="468"></a> * <span class="doctag">@return</span>				True if there are more rows, false otherwise.
+<a name="469"></a> * <span class="doctag">@error</span>				Invalid query Handle.
+<a name="470"></a> */</span>
+<a name="471"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_MoreRows</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>);
+<a name="472"></a>
+<a name="473"></a><span class="comment">/**
+<a name="474"></a> * Rewinds a result set back to the first result.
+<a name="475"></a> * 
+<a name="476"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="477"></a> * <span class="doctag">@return</span>				True on success, false otherwise.
+<a name="478"></a> * <span class="doctag">@error</span>				Invalid query Handle or no current result set.
+<a name="479"></a> */</span>
+<a name="480"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_Rewind</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>);
+<a name="481"></a>
+<a name="482"></a><span class="comment">/**
+<a name="483"></a> * Fetches a string from a field in the current row of a result set.  
+<a name="484"></a> * If the result is NULL, an empty string will be returned.  A NULL 
+<a name="485"></a> * check can be done with the result parameter, or SQL_IsFieldNull().
+<a name="486"></a> * 
+<a name="487"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="488"></a> * <span class="doctag">@param</span> field			The field index (starting from 0).
+<a name="489"></a> * <span class="doctag">@param</span> buffer		String buffer.
+<a name="490"></a> * <span class="doctag">@param</span> maxlength		Maximum size of the string buffer.
+<a name="491"></a> * <span class="doctag">@param</span> result		Optional variable to store the status of the return value.
+<a name="492"></a> * <span class="doctag">@return</span>				Number of bytes written.
+<a name="493"></a> * <span class="doctag">@error</span>				Invalid query Handle or field index, invalid
+<a name="494"></a> *						type conversion requested from the database,
+<a name="495"></a> *						or no current result set.
+<a name="496"></a> */</span>
+<a name="497"></a><span class="keyword">native</span> <span class="identifier">SQL_FetchString</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>, <span class="identifier">field</span>, <span class="keyword type">String</span>:<span class="identifier">buffer</span>[], <span class="identifier">maxlength</span>, &amp;<span class="identifier">DBResult</span>:<span class="identifier">result</span>=<span class="identifier">DBVal_Error</span>);
+<a name="498"></a>
+<a name="499"></a><span class="comment">/**
+<a name="500"></a> * Fetches a float from a field in the current row of a result set.  
+<a name="501"></a> * If the result is NULL, a value of 0.0 will be returned.  A NULL 
+<a name="502"></a> * check can be done with the result parameter, or SQL_IsFieldNull().
+<a name="503"></a> * 
+<a name="504"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="505"></a> * <span class="doctag">@param</span> field			The field index (starting from 0).
+<a name="506"></a> * <span class="doctag">@param</span> result		Optional variable to store the status of the return value.
+<a name="507"></a> * <span class="doctag">@return</span>				A float value.
+<a name="508"></a> * <span class="doctag">@error</span>				Invalid query Handle or field index, invalid
+<a name="509"></a> *						type conversion requested from the database,
+<a name="510"></a> *						or no current result set.
+<a name="511"></a> */</span>
+<a name="512"></a><span class="keyword">native</span> <span class="keyword type">Float</span>:<span class="identifier">SQL_FetchFloat</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>, <span class="identifier">field</span>, &amp;<span class="identifier">DBResult</span>:<span class="identifier">result</span>=<span class="identifier">DBVal_Error</span>);
+<a name="513"></a>
+<a name="514"></a><span class="comment">/**
+<a name="515"></a> * Fetches an integer from a field in the current row of a result set.  
+<a name="516"></a> * If the result is NULL, a value of 0 will be returned.  A NULL 
+<a name="517"></a> * check can be done with the result parameter, or SQL_IsFieldNull().
+<a name="518"></a> * 
+<a name="519"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="520"></a> * <span class="doctag">@param</span> field			The field index (starting from 0).
+<a name="521"></a> * <span class="doctag">@param</span> result		Optional variable to store the status of the return value.
+<a name="522"></a> * <span class="doctag">@return</span>				An integer value.
+<a name="523"></a> * <span class="doctag">@error</span>				Invalid query Handle or field index, invalid
+<a name="524"></a> *						type conversion requested from the database,
+<a name="525"></a> *						or no current result set.
+<a name="526"></a> */</span>
+<a name="527"></a><span class="keyword">native</span> <span class="identifier">SQL_FetchInt</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>, <span class="identifier">field</span>, &amp;<span class="identifier">DBResult</span>:<span class="identifier">result</span>=<span class="identifier">DBVal_Error</span>);
+<a name="528"></a>
+<a name="529"></a><span class="comment">/**
+<a name="530"></a> * Returns whether a field's data in the current row of a result set is 
+<a name="531"></a> * NULL or not.  NULL is an SQL type which means "no data."
+<a name="532"></a> * 
+<a name="533"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="534"></a> * <span class="doctag">@param</span> field			The field index (starting from 0).
+<a name="535"></a> * <span class="doctag">@return</span>				True if data is NULL, false otherwise.
+<a name="536"></a> * <span class="doctag">@error</span>				Invalid query Handle or field index, or no
+<a name="537"></a> *						current result set.
+<a name="538"></a> */</span>
+<a name="539"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_IsFieldNull</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>, <span class="identifier">field</span>);
+<a name="540"></a>
+<a name="541"></a><span class="comment">/**
+<a name="542"></a> * Returns the length of a field's data in the current row of a result
+<a name="543"></a> * set.  This only needs to be called for strings to determine how many
+<a name="544"></a> * bytes to use.  Note that the return value does not include the null
+<a name="545"></a> * terminator.
+<a name="546"></a> * 
+<a name="547"></a> * <span class="doctag">@param</span> query			A query (or statement) Handle.
+<a name="548"></a> * <span class="doctag">@param</span> field			The field index (starting from 0).
+<a name="549"></a> * <span class="doctag">@return</span>				Number of bytes for the field's data size.
+<a name="550"></a> * <span class="doctag">@error</span>				Invalid query Handle or field index or no
+<a name="551"></a> *						current result set.
+<a name="552"></a> */</span>
+<a name="553"></a><span class="keyword">native</span> <span class="identifier">SQL_FetchSize</span>(<span class="keyword type">Handle</span>:<span class="identifier">query</span>, <span class="identifier">field</span>);
+<a name="554"></a>
+<a name="555"></a><span class="comment">/**
+<a name="556"></a> * Binds a parameter in a prepared statement to a given integer value.
+<a name="557"></a> * 
+<a name="558"></a> * <span class="doctag">@param</span> statement		A statement (prepared query) Handle.
+<a name="559"></a> * <span class="doctag">@param</span> param			The parameter index (starting from 0).
+<a name="560"></a> * <span class="doctag">@param</span> number		The number to bind.
+<a name="561"></a> * <span class="doctag">@param</span> signed		True to bind the number as signed, false to 
+<a name="562"></a> *						bind it as unsigned.
+<a name="563"></a> * <span class="doctag">@noreturn</span>
+<a name="564"></a> * <span class="doctag">@error</span>				Invalid statement Handle or parameter index, or
+<a name="565"></a> *						SQL error.
+<a name="566"></a> */</span>
+<a name="567"></a><span class="keyword">native</span> <span class="identifier">SQL_BindParamInt</span>(<span class="keyword type">Handle</span>:<span class="identifier">statement</span>, <span class="identifier">param</span>, <span class="identifier">number</span>, <span class="keyword type">bool</span>:<span class="identifier">signed</span>=<span class="keyword literal">true</span>);
+<a name="568"></a>
+<a name="569"></a><span class="comment">/**
+<a name="570"></a> * Binds a parameter in a prepared statement to a given float value.
+<a name="571"></a> * 
+<a name="572"></a> * <span class="doctag">@param</span> statement		A statement (prepared query) Handle.
+<a name="573"></a> * <span class="doctag">@param</span> param			The parameter index (starting from 0).
+<a name="574"></a> * <span class="doctag">@param</span> value			The float number to bind.
+<a name="575"></a> * <span class="doctag">@noreturn</span>
+<a name="576"></a> * <span class="doctag">@error</span>				Invalid statement Handle or parameter index, or
+<a name="577"></a> *						SQL error.
+<a name="578"></a> */</span>
+<a name="579"></a><span class="keyword">native</span> <span class="identifier">SQL_BindParamFloat</span>(<span class="keyword type">Handle</span>:<span class="identifier">statement</span>, <span class="identifier">param</span>, <span class="keyword type">Float</span>:<span class="identifier">value</span>);
+<a name="580"></a>
+<a name="581"></a><span class="comment">/**
+<a name="582"></a> * Binds a parameter in a prepared statement to a given string value.
+<a name="583"></a> * 
+<a name="584"></a> * <span class="doctag">@param</span> statement		A statement (prepared query) Handle.
+<a name="585"></a> * <span class="doctag">@param</span> param			The parameter index (starting from 0).
+<a name="586"></a> * <span class="doctag">@param</span> value			The string to bind.
+<a name="587"></a> * <span class="doctag">@param</span> copy			Whether or not SourceMod should copy the value
+<a name="588"></a> *						locally if necessary.  If the string contents
+<a name="589"></a> *						won't change before calling SQL_Execute(), this
+<a name="590"></a> *						can be set to false for optimization.
+<a name="591"></a> * <span class="doctag">@noreturn</span>
+<a name="592"></a> * <span class="doctag">@error</span>				Invalid statement Handle or parameter index, or
+<a name="593"></a> *						SQL error.
+<a name="594"></a> */</span>
+<a name="595"></a><span class="keyword">native</span> <span class="identifier">SQL_BindParamString</span>(<span class="keyword type">Handle</span>:<span class="identifier">statement</span>, <span class="identifier">param</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">value</span>[], <span class="keyword type">bool</span>:<span class="identifier">copy</span>);
+<a name="596"></a>
+<a name="597"></a><span class="comment">/**
+<a name="598"></a> * Executes a prepared statement.  All parameters must be bound beforehand.
+<a name="599"></a> *
+<a name="600"></a> * <span class="doctag">@param</span> statement		A statement (prepared query) Handle.
+<a name="601"></a> * <span class="doctag">@return</span>				True on success, false on failure.
+<a name="602"></a> * <span class="doctag">@error</span>				Invalid statement Handle.
+<a name="603"></a> */</span>
+<a name="604"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_Execute</span>(<span class="keyword type">Handle</span>:<span class="identifier">statement</span>);
+<a name="605"></a>
+<a name="606"></a><span class="comment">/**
+<a name="607"></a> * Locks a database so threading operations will not interrupt.
+<a name="608"></a> * 
+<a name="609"></a> * If you are using a database Handle for both threading and non-threading,
+<a name="610"></a> * this MUST be called before doing any set of non-threading DB operations.
+<a name="611"></a> * Otherwise you risk corrupting the database driver's memory or network
+<a name="612"></a> * connection.
+<a name="613"></a> * 
+<a name="614"></a> * Leaving a lock on a database and then executing a threaded query results
+<a name="615"></a> * in a dead lock! Make sure to call SQL_UnlockDatabase()!
+<a name="616"></a> *
+<a name="617"></a> * If the lock cannot be acquired, the main thread will pause until the 
+<a name="618"></a> * threaded operation has concluded.
+<a name="619"></a> *
+<a name="620"></a> * <span class="doctag">@param</span> database		A database Handle.
+<a name="621"></a> * <span class="doctag">@noreturn</span>
+<a name="622"></a> * <span class="doctag">@error</span>				Invalid database Handle.
+<a name="623"></a> */</span>
+<a name="624"></a><span class="keyword">native</span> <span class="identifier">SQL_LockDatabase</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>);
+<a name="625"></a>
+<a name="626"></a><span class="comment">/**
+<a name="627"></a> * Unlocks a database so threading operations may continue.
+<a name="628"></a> *
+<a name="629"></a> * <span class="doctag">@param</span> database		A database Handle.
+<a name="630"></a> * <span class="doctag">@noreturn</span>
+<a name="631"></a> * <span class="doctag">@error</span>				Invalid database Handle.
+<a name="632"></a> */</span>
+<a name="633"></a><span class="keyword">native</span> <span class="identifier">SQL_UnlockDatabase</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>);
+<a name="634"></a>
+<a name="635"></a><span class="comment">/**
+<a name="636"></a> * General callback for threaded SQL stuff.
+<a name="637"></a> *
+<a name="638"></a> * <span class="doctag">@param</span> owner			Parent object of the Handle (or INVALID_HANDLE if none).
+<a name="639"></a> * <span class="doctag">@param</span> hndl			Handle to the child object (or INVALID_HANDLE if none).
+<a name="640"></a> * <span class="doctag">@param</span> error			Error string if there was an error.  The error could be 
+<a name="641"></a> *						empty even if an error condition exists, so it is important 
+<a name="642"></a> *						to check the actual Handle value instead.
+<a name="643"></a> * <span class="doctag">@param</span> data			Data passed in via the original threaded invocation.
+<a name="644"></a> * <span class="doctag">@param</span> 
+<a name="645"></a> */</span>
+<a name="646"></a><span class="identifier">functag</span> <span class="keyword">public</span> <span class="identifier">SQLTCallback</span>(<span class="keyword type">Handle</span>:<span class="identifier">owner</span>, <span class="keyword type">Handle</span>:<span class="identifier">hndl</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">error</span>[], <span class="keyword type">any</span>:<span class="identifier">data</span>);
+<a name="647"></a>
+<a name="648"></a><span class="comment">/**
+<a name="649"></a> * Tells whether two database handles both point to the same database 
+<a name="650"></a> * connection.
+<a name="651"></a> *
+<a name="652"></a> * <span class="doctag">@param</span> hndl1			First database Handle.
+<a name="653"></a> * <span class="doctag">@param</span> hndl2			Second database Handle.
+<a name="654"></a> * <span class="doctag">@return</span>				True if the Handles point to the same 
+<a name="655"></a> *						connection, false otherwise.
+<a name="656"></a> * <span class="doctag">@error</span>				Invalid Handle.
+<a name="657"></a> */</span>
+<a name="658"></a><span class="keyword">native</span> <span class="keyword type">bool</span>:<span class="identifier">SQL_IsSameConnection</span>(<span class="keyword type">Handle</span>:<span class="identifier">hndl1</span>, <span class="keyword type">Handle</span>:<span class="identifier">hndl2</span>);
+<a name="659"></a>
+<a name="660"></a><span class="comment">/**
+<a name="661"></a> * Connects to a database via a thread.  This can be used instead of
+<a name="662"></a> * SQL_Connect() if you wish for non-blocking functionality.
+<a name="663"></a> *
+<a name="664"></a> * It is not necessary to use this to use threaded queries.  However, if you 
+<a name="665"></a> * don't (or you mix threaded/non-threaded queries), you should see 
+<a name="666"></a> * SQL_LockDatabase().
+<a name="667"></a> *
+<a name="668"></a> * <span class="doctag">@param</span> callback		Callback; new Handle will be in hndl, owner is the driver.
+<a name="669"></a> *						If no driver was found, the owner is INVALID_HANDLE.
+<a name="670"></a> * <span class="doctag">@param</span> name			Database name.
+<a name="671"></a> * <span class="doctag">@param</span> data			Extra data value to pass to the callback.
+<a name="672"></a> * <span class="doctag">@noreturn</span>
+<a name="673"></a> */</span>
+<a name="674"></a><span class="keyword">native</span> <span class="identifier">SQL_TConnect</span>(<span class="identifier">SQLTCallback</span>:<span class="identifier">callback</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">name</span>[]=<span class="string">"default"</span>, <span class="keyword type">any</span>:<span class="identifier">data</span>=<span class="number">0</span>);
+<a name="675"></a>
+<a name="676"></a><span class="comment">/**
+<a name="677"></a> * Executes a simple query via a thread.  The query Handle is passed through
+<a name="678"></a> * the callback.
+<a name="679"></a> *
+<a name="680"></a> * The database Handle returned through the callback is always a new Handle,
+<a name="681"></a> * and if necessary, SQL_IsSameConnection() should be used to test against
+<a name="682"></a> * other conenctions.
+<a name="683"></a> *
+<a name="684"></a> * The query Handle returned through the callback is temporary and destroyed 
+<a name="685"></a> * at the end of the callback.  If you need to hold onto it, use CloneHandle().
+<a name="686"></a> *
+<a name="687"></a> * <span class="doctag">@param</span> database		A database Handle.
+<a name="688"></a> * <span class="doctag">@param</span> callback		Callback; database is in "owner" and the query Handle
+<a name="689"></a> *						is passed in "hndl".
+<a name="690"></a> * <span class="doctag">@param</span> query			Query string.
+<a name="691"></a> * <span class="doctag">@param</span> data			Extra data value to pass to the callback.
+<a name="692"></a> * <span class="doctag">@param</span> prio			Priority queue to use.
+<a name="693"></a> * <span class="doctag">@noreturn</span>
+<a name="694"></a> * <span class="doctag">@error</span>				Invalid database Handle.
+<a name="695"></a> */</span>
+<a name="696"></a><span class="keyword">native</span> <span class="identifier">SQL_TQuery</span>(<span class="keyword type">Handle</span>:<span class="identifier">database</span>, <span class="identifier">SQLTCallback</span>:<span class="identifier">callback</span>, <span class="keyword">const</span> <span class="keyword type">String</span>:<span class="identifier">query</span>[], <span class="keyword type">any</span>:<span class="identifier">data</span>=<span class="number">0</span>, <span class="identifier">DBPriority</span>:<span class="identifier">prio</span>=<span class="identifier">DBPrio_Normal</span>);
+<!-- 96 empty lines to enable positioning at last anchor -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
